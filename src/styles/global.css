@@ -778,6 +778,29 @@ main {
   color: var(--gold);
 }
 
+.speak-button {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-faint);
+  vertical-align: middle;
+  margin-left: 4px;
+  transition: color 0.15s var(--ease), background 0.15s var(--ease), transform 0.12s var(--ease);
+}
+
+.speak-button:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.speak-button:active {
+  transform: scale(0.9);
+}
+
 .def-block {
   border-left: 3px solid;
   border-radius: 4px var(--radius-sm) var(--radius-sm) 4px;
@@ -1255,6 +1278,408 @@ main {
   flex: none;
   display: inline-flex;
   transform: rotate(180deg);
+}
+
+/* Korean "how to use" guide card on the home hub */
+.guide-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.guide-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: none;
+  border: none;
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+.guide-header-left {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--accent);
+}
+
+.guide-header-left strong {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+.guide-card.open .accordion-chevron {
+  transform: rotate(180deg);
+}
+
+.guide-body {
+  padding: 0 16px 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.guide-steps {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
+.guide-steps li {
+  margin-bottom: 10px;
+}
+
+.guide-steps li:last-child {
+  margin-bottom: 0;
+}
+
+.guide-steps em {
+  font-style: normal;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.streak-banner {
+  border-left-color: var(--accent);
+}
+
+.streak-banner .streak-icon {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Home hub entry cards */
+.entry-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.entry-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 22px 18px;
+  font-family: var(--font-serif);
+  transition: box-shadow 0.18s var(--ease), border-color 0.18s var(--ease),
+    transform 0.12s var(--ease);
+}
+
+.entry-card:hover {
+  box-shadow: var(--shadow-lg);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+}
+
+.entry-card strong {
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
+.entry-card-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entry-card-icon-alt {
+  background: var(--gold-bg);
+  color: var(--gold);
+}
+
+@media (max-width: 420px) {
+  .entry-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ------------------------------ library -------------------------------- */
+
+.book-card {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px;
+  margin-bottom: 14px;
+  font-family: var(--font-serif);
+  transition: box-shadow 0.18s var(--ease), border-color 0.18s var(--ease);
+}
+
+.book-card:hover {
+  box-shadow: var(--shadow);
+  border-color: var(--border-strong);
+}
+
+.book-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+}
+
+.book-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.book-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.book-card-head h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  letter-spacing: -0.01em;
+}
+
+.book-card-author {
+  margin: 2px 0 8px;
+}
+
+.book-card-desc {
+  color: var(--text-soft);
+  margin: 0 0 10px;
+  line-height: 1.55;
+}
+
+/* ------------------------------- reader --------------------------------- */
+
+.reader-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.reader-title {
+  margin: 0;
+  font-size: 1.2rem;
+  letter-spacing: -0.01em;
+}
+
+.reader-chapter-select {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 7px 12px;
+  font-size: 0.84rem;
+  font-family: var(--font-sans);
+  max-width: 100%;
+}
+
+.book-page {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 28px 26px;
+  margin-bottom: 12px;
+  font-size: 1.06rem;
+  line-height: 1.85;
+}
+
+.book-page p {
+  margin: 0 0 1.1em;
+  text-indent: 1.6em;
+}
+
+.book-page p:last-child {
+  margin-bottom: 0;
+}
+
+.reader-page-count {
+  text-align: center;
+  color: var(--text-faint);
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  margin: 0 0 14px;
+}
+
+.reader-nav {
+  display: flex;
+  gap: 10px;
+}
+
+.reader-nav .btn {
+  flex: 1;
+}
+
+/* ----------------------------- progress screen -------------------------- */
+
+.streak-hero {
+  text-align: center;
+}
+
+.streak-hero-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--accent);
+  font-family: var(--font-serif);
+}
+
+.streak-hero-number span {
+  font-size: 3.2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.day-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  margin: 20px 0 22px;
+}
+
+.day-dot {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+}
+
+.day-dot.active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.day-dot.today {
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.share-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-soft);
+  font-family: var(--font-sans);
+  margin: 10px 0 0;
+}
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.stat-tile {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 10px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-tile strong {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--accent);
+  letter-spacing: -0.02em;
+}
+
+.stat-tile span {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.badge-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.badge-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-inset);
+  opacity: 0.5;
+}
+
+.badge-tile.earned {
+  opacity: 1;
+  background: var(--bg-elevated);
+  border-color: var(--gold);
+}
+
+.badge-tile strong {
+  font-size: 0.92rem;
+  letter-spacing: -0.005em;
+}
+
+.badge-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--bg-inset);
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.badge-tile.earned .badge-icon {
+  background: var(--gold-bg);
+  color: var(--gold);
+}
+
+@media (max-width: 420px) {
+  .badge-grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 
 /* --------------------------- error boundary --------------------------- */

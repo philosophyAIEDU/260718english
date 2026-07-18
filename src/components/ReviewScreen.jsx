@@ -8,6 +8,7 @@ import {
   MessageIcon,
   ListIcon,
 } from './Icons.jsx';
+import SpeakButton from './SpeakButton.jsx';
 
 /**
  * Spaced-repetition review: flip-card flashcards over today's due words.
@@ -107,7 +108,10 @@ export default function ReviewScreen({ onDone, onVocabChanged }) {
           aria-label={flipped ? 'Show the word' : 'Show the definition'}
         >
           <div className="flashcard-face front">
-            <p className="flashcard-front-word">{entry.word}</p>
+            <p className="flashcard-front-word">
+              {entry.word}
+              <SpeakButton text={entry.word} size={20} />
+            </p>
             {entry.partOfSpeech && (
               <p className="muted" style={{ fontStyle: 'italic', margin: '4px 0 0' }}>
                 {entry.partOfSpeech}
@@ -124,11 +128,12 @@ export default function ReviewScreen({ onDone, onVocabChanged }) {
               {entry.partOfSpeech && (
                 <span className="vocab-pos">({entry.partOfSpeech})</span>
               )}
+              <SpeakButton text={entry.word} />
             </h3>
             {entry.collinsDefinition && (
               <div className="def-block def-collins">
                 <span className="def-label">
-                  <MessageIcon size={11} /> Collins-style
+                  <MessageIcon size={11} /> Definition
                 </span>
                 {entry.collinsDefinition}
               </div>
@@ -136,7 +141,7 @@ export default function ReviewScreen({ onDone, onVocabChanged }) {
             {entry.longmanSynonyms?.length > 0 && (
               <div className="def-block def-longman">
                 <span className="def-label">
-                  <ListIcon size={11} /> Longman-style
+                  <ListIcon size={11} /> Synonyms
                 </span>
                 {entry.longmanSynonyms.join(' · ')}
               </div>

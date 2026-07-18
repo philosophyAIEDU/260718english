@@ -1,0 +1,35 @@
+[
+  {
+    "id": "wizard-of-oz",
+    "title": "The Wonderful Wizard of Oz",
+    "author": "L. Frank Baum",
+    "year": 1900,
+    "level": "Beginner",
+    "description": "Dorothy is swept away by a cyclone to the magical Land of Oz, where she sets off to meet the Wizard with three unforgettable friends. Simple, clear sentences — a perfect first novel in English.",
+    "source": "Project Gutenberg #55 (public domain)",
+    "chapterCount": 24,
+    "wordCount": 39107
+  },
+  {
+    "id": "sherlock-holmes",
+    "title": "The Adventures of Sherlock Holmes",
+    "author": "Arthur Conan Doyle",
+    "year": 1892,
+    "level": "Intermediate",
+    "description": "Twelve classic detective stories told by Dr. Watson. Each adventure is self-contained, so one story makes a satisfying weekly challenge unit.",
+    "source": "Project Gutenberg #1661 (public domain)",
+    "chapterCount": 12,
+    "wordCount": 104331
+  },
+  {
+    "id": "great-gatsby",
+    "title": "The Great Gatsby",
+    "author": "F. Scott Fitzgerald",
+    "year": 1925,
+    "level": "Advanced",
+    "description": "Nick Carraway narrates the glittering, doomed world of Jay Gatsby in 1920s New York. Rich, literary prose for readers who want a challenge.",
+    "source": "Standard Ebooks / Project Gutenberg #64317 (public domain in the USA)",
+    "chapterCount": 9,
+    "wordCount": 48066
+  }
+]

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { prepareImageForUpload } from '../lib/imageUtils.js';
 import { analyzePageImage, GeminiError } from '../lib/geminiClient.js';
+import { logActivity } from '../lib/db.js';
 import {
   CameraIcon,
   ImageIcon,
@@ -51,6 +52,7 @@ export default function UploadScreen({ apiKey, onResult }) {
         setStatus
       );
       setImage(null); // the photo is discarded once the guide is ready
+      await logActivity({ source: 'photo' });
       onResult(guide);
     } catch (err) {
       if (err instanceof GeminiError) setError(err.message);

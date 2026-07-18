@@ -239,6 +239,83 @@ export const BranchIcon = (p) => (
   </Icon>
 );
 
+export const HelpCircleIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="9" />
+    <path d="M9.3 9.3a2.7 2.7 0 0 1 5.2.9c0 1.8-2.5 2-2.5 3.8" />
+    <circle cx="12" cy="17" r="0.9" fill="currentColor" stroke="none" />
+  </Icon>
+);
+
+export const SpeakerIcon = (p) => (
+  <Icon {...p}>
+    <path d="M4 9.5v5h3.4l4.6 3.8V5.7L7.4 9.5H4Z" />
+    <path d="M16 9a3.6 3.6 0 0 1 0 6" />
+    <path d="M18.3 6.5a7 7 0 0 1 0 11" />
+  </Icon>
+);
+
+export const HomeIcon = (p) => (
+  <Icon {...p}>
+    <path d="M4 11.5 12 4l8 7.5" />
+    <path d="M6 10v9.5a.9.9 0 0 0 .9.9H9.5v-6h5v6h2.6a.9.9 0 0 0 .9-.9V10" />
+  </Icon>
+);
+
+export const FlameIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 3s-1.5 2.6-1.5 4.6c0 1 .5 1.8 1.1 2.5-.3-1.3.1-2.3.9-3.1 0 1.6.9 2.6 1.9 3.7 1.1 1.2 1.8 2.5 1.8 4.1a5.2 5.2 0 0 1-10.4 0c0-2.6 1.4-4 2.4-5.4.9-1.3 1.3-2.7.8-4.4C10.5 4.6 12 3 12 3Z" />
+  </Icon>
+);
+
+export const TrophyIcon = (p) => (
+  <Icon {...p}>
+    <path d="M7 5h10v5a5 5 0 0 1-10 0V5Z" />
+    <path d="M7 6H4.5A2.5 2.5 0 0 0 4.5 11H7" />
+    <path d="M17 6h2.5A2.5 2.5 0 0 1 19.5 11H17" />
+    <path d="M12 15v3" />
+    <path d="M8.5 21h7" />
+    <path d="M9.5 18h5l.6 3H8.9l.6-3Z" />
+  </Icon>
+);
+
+export const ShareIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="6" cy="12" r="2.4" />
+    <circle cx="18" cy="5.5" r="2.4" />
+    <circle cx="18" cy="18.5" r="2.4" />
+    <path d="m8.1 10.8 7.8-4.3M8.1 13.2l7.8 4.3" />
+  </Icon>
+);
+
+export const UploadIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 15.5V4" />
+    <path d="m7 9 5-5 5 5" />
+    <path d="M4 15.5v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+  </Icon>
+);
+
+export const ChevronLeftIcon = (p) => (
+  <Icon {...p}>
+    <path d="m15 6-6 6 6 6" />
+  </Icon>
+);
+
+export const ChevronRightIcon = (p) => (
+  <Icon {...p}>
+    <path d="m9 6 6 6-6 6" />
+  </Icon>
+);
+
+export const CalendarIcon = (p) => (
+  <Icon {...p}>
+    <rect x="3.5" y="5" width="17" height="16" rx="2.4" />
+    <path d="M3.5 9.5h17" />
+    <path d="M8 3v4M16 3v4" />
+  </Icon>
+);
+
 /** Brand mark: an open book with a golden bookmark ribbon. */
 export function BrandMark({ size = 30 }) {
   return (

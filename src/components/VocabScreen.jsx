@@ -1,16 +1,22 @@
-import { useEffect, useMemo, useState } from 'react';
-import { getAllVocab, deleteVocabEntry, updateVocabEntry } from '../lib/db.js';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { getAllVocab, deleteVocabEntry, updateVocabEntry, saveVocabEntry } from '../lib/db.js';
 import { toAnkiCsv, toQuizletText, downloadTextFile } from '../lib/exportUtils.js';
+import { buildDeckExport, parseDeckImport, DeckImportError } from '../lib/deckShare.js';
 import { BOX_INTERVALS_DAYS } from '../lib/spacedRepetition.js';
 import {
   LibraryIcon,
   DownloadIcon,
+  UploadIcon,
+  ShareIcon,
   SearchIcon,
   TagIcon,
   TrashIcon,
   MessageIcon,
   ListIcon,
+  CheckIcon,
+  AlertIcon,
 } from './Icons.jsx';
+import SpeakButton from './SpeakButton.jsx';
 
 /**
  * Word Book: every starred word, with search (word text), register filter,
@@ -21,6 +27,8 @@ export default function VocabScreen({ onVocabChanged }) {
   const [query, setQuery] = useState('');
   const [registerFilter, setRegisterFilter] = useState('all');
   const [tagFilter, setTagFilter] = useState('all');
+  const [importMessage, setImportMessage] = useState(null); // { ok, text }
+  const importInputRef = useRef(null);
 
   const reload = () => {
     getAllVocab()
@@ -85,6 +93,66 @@ export default function VocabScreen({ onVocabChanged }) {
     );
   };
 
+  const exportDeck = () => {
+    const deck = buildDeckExport(entries || []);
+    downloadTextFile(
+      JSON.stringify(deck, null, 2),
+      'readmate-deck.json',
+      'application/json'
+    );
+  };
+
+  const handleImportFile = async (file) => {
+    if (!file) return;
+    setImportMessage(null);
+    try {
+      const text = await file.text();
+      const { words } = parseDeckImport(text);
+      let added = 0;
+      for (const w of words) {
+        const before = await getAllVocab();
+        const existed = before.some(
+          (e) => e.word.trim().toLowerCase() === w.word.trim().toLowerCase()
+        );
+        await saveVocabEntry(w);
+        if (!existed) added += 1;
+      }
+      reload();
+      onVocabChanged?.();
+      setImportMessage({
+        ok: true,
+        text: `Imported ${added} new word${added === 1 ? '' : 's'}${
+          words.length - added > 0 ? ` (${words.length - added} already in your book)` : ''
+        }.`,
+      });
+    } catch (err) {
+      setImportMessage({
+        ok: false,
+        text: err instanceof DeckImportError ? err.message : 'Could not import this file.',
+      });
+    }
+  };
+
+  const importInput = (
+    <input
+      ref={importInputRef}
+      type="file"
+      accept="application/json,.json"
+      hidden
+      onChange={(e) => {
+        handleImportFile(e.target.files?.[0]);
+        e.target.value = '';
+      }}
+    />
+  );
+
+  const importMessageBox = importMessage && (
+    <div className={importMessage.ok ? 'notice' : 'error-box'}>
+      {importMessage.ok ? <CheckIcon size={16} /> : <AlertIcon size={17} />}
+      <span>{importMessage.text}</span>
+    </div>
+  );
+
   if (entries === null) {
     return (
       <div className="card">
@@ -98,22 +166,30 @@ export default function VocabScreen({ onVocabChanged }) {
 
   if (entries.length === 0) {
     return (
-      <div className="empty-state">
-        <div className="empty-icon-ring">
-          <LibraryIcon size={30} />
+      <section>
+        {importInput}
+        <div className="empty-state">
+          <div className="empty-icon-ring">
+            <LibraryIcon size={30} />
+          </div>
+          <h3>Your Word Book is empty</h3>
+          <p>
+            Scan a page and tap the star on any word to start collecting
+            vocabulary. Starred words come back for review on a 1 → 3 → 7 → 14
+            day schedule.
+          </p>
+          <button className="btn" onClick={() => importInputRef.current?.click()}>
+            <UploadIcon size={16} /> Import a shared deck
+          </button>
         </div>
-        <h3>Your Word Book is empty</h3>
-        <p>
-          Scan a page and tap the star on any word to start collecting
-          vocabulary. Starred words come back for review on a 1 → 3 → 7 → 14
-          day schedule.
-        </p>
-      </div>
+        {importMessageBox}
+      </section>
     );
   }
 
   return (
     <section>
+      {importInput}
       <div className="screen-heading">
         <h2>Word Book</h2>
         <span className="count">
@@ -128,7 +204,14 @@ export default function VocabScreen({ onVocabChanged }) {
         <button className="btn" onClick={exportQuizlet}>
           <DownloadIcon size={16} /> Quizlet (TXT)
         </button>
+        <button className="btn" onClick={exportDeck}>
+          <ShareIcon size={16} /> Share Deck
+        </button>
+        <button className="btn" onClick={() => importInputRef.current?.click()}>
+          <UploadIcon size={16} /> Import Deck
+        </button>
       </div>
+      {importMessageBox}
 
       <div className="vocab-toolbar">
         <div className="search-wrap">
@@ -186,6 +269,7 @@ export default function VocabScreen({ onVocabChanged }) {
                 {entry.partOfSpeech && (
                   <span className="vocab-pos">({entry.partOfSpeech})</span>
                 )}
+                <SpeakButton text={entry.word} />
               </h3>
               <span className={`pill pill-register-${entry.register || 'neutral'}`}>
                 {entry.register || 'neutral'}
@@ -195,7 +279,7 @@ export default function VocabScreen({ onVocabChanged }) {
             {entry.collinsDefinition && (
               <div className="def-block def-collins">
                 <span className="def-label">
-                  <MessageIcon size={11} /> Collins-style
+                  <MessageIcon size={11} /> Definition
                 </span>
                 {entry.collinsDefinition}
               </div>
@@ -203,7 +287,7 @@ export default function VocabScreen({ onVocabChanged }) {
             {entry.longmanSynonyms?.length > 0 && (
               <div className="def-block def-longman">
                 <span className="def-label">
-                  <ListIcon size={11} /> Longman-style
+                  <ListIcon size={11} /> Synonyms
                 </span>
                 {entry.longmanSynonyms.join(' · ')}
               </div>

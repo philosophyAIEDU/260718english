@@ -1,31 +1,39 @@
 import { useCallback, useEffect, useState } from 'react';
 import ApiKeyScreen from './components/ApiKeyScreen.jsx';
+import HomeScreen from './components/HomeScreen.jsx';
 import UploadScreen from './components/UploadScreen.jsx';
+import BookLibraryScreen from './components/BookLibraryScreen.jsx';
+import BookReaderScreen from './components/BookReaderScreen.jsx';
 import ResultScreen from './components/ResultScreen.jsx';
 import VocabScreen from './components/VocabScreen.jsx';
 import ReviewScreen from './components/ReviewScreen.jsx';
+import ProgressScreen from './components/ProgressScreen.jsx';
 import {
   BrandMark,
-  CameraIcon,
+  HomeIcon,
   LibraryIcon,
   CardsIcon,
+  TrophyIcon,
   SettingsIcon,
   MoonIcon,
   SunIcon,
-  BellIcon,
-  ArrowLeftIcon,
   SearchIcon,
 } from './components/Icons.jsx';
-import { getSetting, setSetting, countDueVocab } from './lib/db.js';
+import { getSetting, setSetting, countDueVocab, getAllActivity } from './lib/db.js';
+import { currentStreak } from './lib/streaks.js';
 
 /**
  * App shell: theme handling, lightweight view routing, and the bottom tab
  * bar. Views:
- *   home    — photo upload / analyze (UploadScreen)
- *   result  — study guide for the analyzed page (ResultScreen)
- *   vocab   — saved word book (VocabScreen)
- *   review  — spaced-repetition flashcards (ReviewScreen)
- *   settings— API key management (ApiKeyScreen)
+ *   home     — challenge hub: streak/review nudges + Scan/Library entry
+ *   scan     — photo upload / analyze (UploadScreen)
+ *   library  — built-in public-domain book list
+ *   reader   — in-app chapter/page reader for one library book
+ *   result   — study guide for the analyzed page (shared by scan & reader)
+ *   vocab    — saved word book (VocabScreen)
+ *   review   — spaced-repetition flashcards (ReviewScreen)
+ *   progress — streak calendar, badges, shareable progress card
+ *   settings — API key management (ApiKeyScreen)
  */
 export default function App() {
   const [booting, setBooting] = useState(true);
@@ -33,7 +41,10 @@ export default function App() {
   const [theme, setTheme] = useState('light');
   const [view, setView] = useState('home');
   const [result, setResult] = useState(null);
+  const [resultNav, setResultNav] = useState({ backLabel: 'Scan another page', backView: 'home' });
+  const [libraryBookId, setLibraryBookId] = useState(null);
   const [dueCount, setDueCount] = useState(0);
+  const [streak, setStreak] = useState(0);
 
   // Boot: load persisted settings.
   useEffect(() => {
@@ -57,15 +68,18 @@ export default function App() {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
-  const refreshDueCount = useCallback(() => {
+  const refreshChallengeStats = useCallback(() => {
     countDueVocab()
       .then(setDueCount)
       .catch(() => setDueCount(0));
+    getAllActivity()
+      .then((activity) => setStreak(currentStreak(activity.map((a) => a.date))))
+      .catch(() => setStreak(0));
   }, []);
 
   useEffect(() => {
-    if (!booting) refreshDueCount();
-  }, [booting, view, refreshDueCount]);
+    if (!booting) refreshChallengeStats();
+  }, [booting, view, refreshChallengeStats]);
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
@@ -78,8 +92,15 @@ export default function App() {
     setView('home');
   };
 
-  const handleAnalysisResult = (studyGuide) => {
+  const handleScanResult = (studyGuide) => {
     setResult(studyGuide);
+    setResultNav({ backLabel: 'Scan another page', backView: 'scan' });
+    setView('result');
+  };
+
+  const handleLibraryResult = (studyGuide, { backLabel, onBackToSource }) => {
+    setResult(studyGuide);
+    setResultNav({ backLabel, backView: 'reader', onBackToSource });
     setView('result');
   };
 
@@ -136,33 +157,52 @@ export default function App() {
 
         <main>
           {view === 'home' && (
-            <>
-              {dueCount > 0 && (
-                <button className="review-banner" onClick={() => setView('review')}>
-                  <span className="banner-icon">
-                    <BellIcon size={19} />
-                  </span>
-                  <span className="banner-body">
-                    <strong>
-                      Today&apos;s Review: {dueCount} {dueCount === 1 ? 'word' : 'words'}
-                    </strong>
-                    <span className="banner-sub">Keep your streak going</span>
-                  </span>
-                  <span className="banner-arrow">
-                    <ArrowLeftIcon size={18} />
-                  </span>
-                </button>
-              )}
-              <UploadScreen apiKey={apiKey} onResult={handleAnalysisResult} />
-            </>
+            <HomeScreen
+              streak={streak}
+              dueCount={dueCount}
+              onScan={() => setView('scan')}
+              onLibrary={() => setView('library')}
+              onReview={() => setView('review')}
+              onProgress={() => setView('progress')}
+            />
+          )}
+
+          {view === 'scan' && (
+            <UploadScreen apiKey={apiKey} onResult={handleScanResult} />
+          )}
+
+          {view === 'library' && (
+            <BookLibraryScreen
+              onOpenBook={(bookId) => {
+                setLibraryBookId(bookId);
+                setView('reader');
+              }}
+              onBack={() => setView('home')}
+            />
+          )}
+
+          {view === 'reader' && libraryBookId && (
+            <BookReaderScreen
+              bookId={libraryBookId}
+              apiKey={apiKey}
+              onBack={() => setView('library')}
+              onAnalyzed={handleLibraryResult}
+            />
           )}
 
           {view === 'result' &&
             (result ? (
               <ResultScreen
                 result={result}
-                onBack={() => setView('home')}
-                onVocabChanged={refreshDueCount}
+                backLabel={resultNav.backLabel}
+                onBack={() => {
+                  if (resultNav.backView === 'reader' && resultNav.onBackToSource) {
+                    setView('reader');
+                  } else {
+                    setView(resultNav.backView || 'home');
+                  }
+                }}
+                onVocabChanged={refreshChallengeStats}
               />
             ) : (
               <div className="empty-state">
@@ -170,24 +210,26 @@ export default function App() {
                   <SearchIcon size={30} />
                 </div>
                 <h3>No page analyzed yet</h3>
-                <p>Snap a page on the Scan tab to see your study guide here.</p>
+                <p>Scan a page or read from the Library to see your study guide here.</p>
                 <button className="btn btn-primary" onClick={() => setView('home')}>
-                  Go to Scan
+                  Go home
                 </button>
               </div>
             ))}
 
-          {view === 'vocab' && <VocabScreen onVocabChanged={refreshDueCount} />}
+          {view === 'vocab' && <VocabScreen onVocabChanged={refreshChallengeStats} />}
 
           {view === 'review' && (
             <ReviewScreen
               onDone={() => {
-                refreshDueCount();
+                refreshChallengeStats();
                 setView('vocab');
               }}
-              onVocabChanged={refreshDueCount}
+              onVocabChanged={refreshChallengeStats}
             />
           )}
+
+          {view === 'progress' && <ProgressScreen />}
 
           {view === 'settings' && (
             <ApiKeyScreen existingKey={apiKey} onSaved={handleKeySaved} />
@@ -198,10 +240,10 @@ export default function App() {
       <nav className="tab-bar" aria-label="Main navigation">
         <div className="tab-bar-inner">
           <TabButton
-            icon={<CameraIcon size={21} />}
-            label="Scan"
-            active={view === 'home' || view === 'result'}
-            onClick={() => setView(result && view === 'result' ? 'result' : 'home')}
+            icon={<HomeIcon size={21} />}
+            label="Home"
+            active={['home', 'scan', 'library', 'reader', 'result'].includes(view)}
+            onClick={() => setView('home')}
           />
           <TabButton
             icon={<LibraryIcon size={21} />}
@@ -215,6 +257,12 @@ export default function App() {
             active={view === 'review'}
             badge={dueCount}
             onClick={() => setView('review')}
+          />
+          <TabButton
+            icon={<TrophyIcon size={21} />}
+            label="Progress"
+            active={view === 'progress'}
+            onClick={() => setView('progress')}
           />
           <TabButton
             icon={<SettingsIcon size={21} />}

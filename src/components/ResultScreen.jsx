@@ -15,17 +15,23 @@ import {
   ChevronDownIcon,
   ListIcon,
 } from './Icons.jsx';
+import SpeakButton from './SpeakButton.jsx';
 
 /**
  * Study-guide screen. Renders the sections returned by Gemini, in order:
  * Page Summary → Key Vocabulary → Sentence Breakdown → Comprehension Check
  * → Try This. All content is English-only by design.
  */
-export default function ResultScreen({ result, onBack, onVocabChanged }) {
+export default function ResultScreen({
+  result,
+  onBack,
+  onVocabChanged,
+  backLabel = 'Scan another page',
+}) {
   return (
     <section>
       <button className="back-link" onClick={onBack}>
-        <ArrowLeftIcon size={16} /> Scan another page
+        <ArrowLeftIcon size={16} /> {backLabel}
       </button>
 
       <PageSummary summary={result.pageSummary} />
@@ -107,6 +113,7 @@ function VocabCard({ entry, onVocabChanged }) {
         <h3 className="vocab-word">
           {entry.word}
           {entry.partOfSpeech && <span className="vocab-pos">({entry.partOfSpeech})</span>}
+          <SpeakButton text={entry.word} />
         </h3>
         <div className="vocab-head-controls">
           <span className={`pill pill-register-${normalizeRegister(entry.register)}`}>
@@ -126,7 +133,7 @@ function VocabCard({ entry, onVocabChanged }) {
       {entry.collinsDefinition && (
         <div className="def-block def-collins">
           <span className="def-label">
-            <MessageIcon size={11} /> Collins-style
+            <MessageIcon size={11} /> Definition
           </span>
           {entry.collinsDefinition}
         </div>
@@ -135,7 +142,7 @@ function VocabCard({ entry, onVocabChanged }) {
       {entry.longmanSynonyms?.length > 0 && (
         <div className="def-block def-longman">
           <span className="def-label">
-            <ListIcon size={11} /> Longman-style
+            <ListIcon size={11} /> Synonyms
           </span>
           {entry.longmanSynonyms.join(' · ')}
         </div>

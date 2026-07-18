@@ -71,19 +71,43 @@ export class GeminiError extends Error {
  * @returns {Promise<object>}    the parsed study-guide object
  */
 export async function analyzePageImage(apiKey, imageBase64, mimeType, onStatus) {
-  const body = {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-    contents: [
+  return analyzeContent(
+    apiKey,
+    [
+      { inlineData: { mimeType, data: imageBase64 } },
       {
-        role: 'user',
-        parts: [
-          { inlineData: { mimeType, data: imageBase64 } },
-          {
-            text: 'Here is a photo of one page from my English book. Please create my study guide following your instructions exactly.',
-          },
-        ],
+        text: 'Here is a photo of one page from my English book. Please create my study guide following your instructions exactly.',
       },
     ],
+    onStatus
+  );
+}
+
+/**
+ * Analyze a page of plain text (used for the built-in public-domain
+ * Library, where the page text is already known — no OCR needed).
+ *
+ * @param {string} apiKey  the user's Gemini API key
+ * @param {string} pageText the page's plain text
+ * @param {function} onStatus optional progress callback (string)
+ * @returns {Promise<object>} the parsed study-guide object
+ */
+export async function analyzePageText(apiKey, pageText, onStatus) {
+  return analyzeContent(
+    apiKey,
+    [
+      {
+        text: `Here is one page from my English book:\n\n"""\n${pageText}\n"""\n\nPlease create my study guide following your instructions exactly.`,
+      },
+    ],
+    onStatus
+  );
+}
+
+async function analyzeContent(apiKey, userParts, onStatus) {
+  const body = {
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents: [{ role: 'user', parts: userParts }],
     generationConfig: {
       // Higher temperature adds wording variance, which further reduces the
       // chance of the output matching the book text and tripping RECITATION.
