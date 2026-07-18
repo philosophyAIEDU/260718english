@@ -85,7 +85,10 @@ export async function analyzePageImage(apiKey, imageBase64, mimeType, onStatus) 
     ],
     generationConfig: {
       temperature: 0.4,
-      maxOutputTokens: 4096,
+      // No maxOutputTokens cap: on thinking-capable models the cap is also
+      // consumed by internal reasoning tokens, and a low cap can end the
+      // response (finishReason MAX_TOKENS) before any visible text is
+      // produced — which surfaces as a persistent "empty response".
       responseMimeType: 'application/json',
     },
   };
@@ -160,14 +163,34 @@ async function requestOnce(apiKey, body, onStatus) {
 
   const json = await response.json();
   const candidate = json?.candidates?.[0];
-  const text = candidate?.content?.parts?.map((p) => p.text || '').join('') || '';
+  // Skip "thought" parts (thinking-capable models may include reasoning
+  // summaries alongside the answer) and join the visible text parts.
+  const text = (candidate?.content?.parts || [])
+    .filter((p) => typeof p.text === 'string' && !p.thought)
+    .map((p) => p.text)
+    .join('');
 
   if (!text) {
     const blockReason = json?.promptFeedback?.blockReason;
     if (blockReason) {
       throw new GeminiError(`Gemini declined to analyze this image (${blockReason}). Try a clearer photo of a book page.`);
     }
-    throw new GeminiError('Gemini returned an empty response. Please try again.', { retryable: true });
+    const finishReason = candidate?.finishReason;
+    if (finishReason === 'MAX_TOKENS') {
+      throw new GeminiError(
+        'Gemini ran out of space before finishing its answer. Retrying…',
+        { retryable: true }
+      );
+    }
+    if (finishReason === 'SAFETY' || finishReason === 'PROHIBITED_CONTENT') {
+      throw new GeminiError(
+        'Gemini declined to analyze this image. Try a clearer photo showing only the book page.'
+      );
+    }
+    throw new GeminiError(
+      `Gemini returned an empty response${finishReason ? ` (${finishReason})` : ''}. Please try again.`,
+      { retryable: true }
+    );
   }
 
   const parsed = parseStudyGuide(text);
