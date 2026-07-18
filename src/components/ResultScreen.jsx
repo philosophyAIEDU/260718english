@@ -170,6 +170,10 @@ function SentenceBreakdown({ breakdown }) {
       <h2 className="section-title">
         <BranchIcon size={15} /> Sentence Breakdown
       </h2>
+      <p className="muted small" style={{ marginTop: 0 }}>
+        A complex sentence from the page, lightly paraphrased, broken into its
+        grammatical parts.
+      </p>
       <p className="breakdown-sentence">“{breakdown.sentence}”</p>
       {breakdown.parts.map((part, i) => (
         <div className="breakdown-part" key={i}>

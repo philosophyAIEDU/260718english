@@ -26,16 +26,16 @@ The user sends you a photo of one page from an English book. Read the page caref
       "partOfSpeech": "noun | verb | adjective | adverb | phrase | idiom",
       "collinsDefinition": "A full-sentence, Collins COBUILD style explanatory definition, e.g. 'If someone is reluctant to do something, they do not really want to do it.'",
       "longmanSynonyms": ["2-3", "short", "synonyms"],
-      "exampleFromPage": "A very short fragment from the page (10 words or fewer, use … for omitted words) showing the word in context.",
+      "exampleFromPage": "A NEW example sentence that YOU write yourself, using the word in a situation similar to the page's context. Do NOT copy any sentence or phrase from the page.",
       "wordFamily": ["related noun/verb/adjective/adverb forms, each labelled, e.g. 'reluctance (noun)'"],
       "collocations": ["1-2 common collocations, e.g. 'reluctant to admit'"],
       "register": "formal | informal | neutral | literary"
     }
   ],
   "sentenceBreakdown": {
-    "sentence": "One complex sentence quoted from the page.",
+    "sentence": "Pick one grammatically complex sentence from the page, then PARAPHRASE it: keep exactly the same grammatical structure, but change the names and wording so no phrase is copied. Write your paraphrased sentence here.",
     "parts": [
-      { "text": "the clause or phrase", "label": "main clause | relative clause | adverbial clause | participial phrase | etc.", "explanation": "One short sentence explaining what this part does." }
+      { "text": "the clause or phrase (from your paraphrased sentence)", "label": "main clause | relative clause | adverbial clause | participial phrase | etc.", "explanation": "One short sentence explaining what this part does." }
     ]
   },
   "comprehensionQuestions": [
@@ -47,7 +47,7 @@ The user sends you a photo of one page from an English book. Read the page caref
 Rules:
 - Choose 5 to 8 key vocabulary items that are genuinely useful for an intermediate learner.
 - Write 2 or 3 comprehension questions.
-- Copyright care — do NOT reproduce long spans of the page. Write the summary, definitions, explanations, questions, and answers entirely in your own words. The only text you may copy from the page is: (a) the single sentence in sentenceBreakdown, and (b) fragments of 10 words or fewer in exampleFromPage. Never quote whole paragraphs.
+- CRITICAL copyright rule — do NOT reproduce ANY text from the page verbatim. Not one sentence, not one phrase. Every string in your response (summary, definitions, examples, the sentence breakdown, questions, answers) must be written entirely in your own words. For the sentence breakdown, paraphrase the sentence you analyze. If you copy from the page, your entire answer will be blocked and the learner gets nothing.
 - Every string must be plain English text. No Korean, no romanized Korean, no other languages.
 - If the photo is not a readable page of English text, return exactly: {"error": "UNREADABLE_PAGE", "message": "a short English explanation of what went wrong"}.
 - Return ONLY the JSON object. No markdown fences, no commentary.`;
@@ -85,7 +85,9 @@ export async function analyzePageImage(apiKey, imageBase64, mimeType, onStatus) 
       },
     ],
     generationConfig: {
-      temperature: 0.4,
+      // Higher temperature adds wording variance, which further reduces the
+      // chance of the output matching the book text and tripping RECITATION.
+      temperature: 0.8,
       // No maxOutputTokens cap: on thinking-capable models the cap is also
       // consumed by internal reasoning tokens, and a low cap can end the
       // response (finishReason MAX_TOKENS) before any visible text is
