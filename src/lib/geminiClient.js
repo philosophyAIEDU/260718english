@@ -26,7 +26,7 @@ The user sends you a photo of one page from an English book. Read the page caref
       "partOfSpeech": "noun | verb | adjective | adverb | phrase | idiom",
       "collinsDefinition": "A full-sentence, Collins COBUILD style explanatory definition, e.g. 'If someone is reluctant to do something, they do not really want to do it.'",
       "longmanSynonyms": ["2-3", "short", "synonyms"],
-      "exampleFromPage": "The exact sentence (or clause) from the page where the word appears.",
+      "exampleFromPage": "A very short fragment from the page (10 words or fewer, use … for omitted words) showing the word in context.",
       "wordFamily": ["related noun/verb/adjective/adverb forms, each labelled, e.g. 'reluctance (noun)'"],
       "collocations": ["1-2 common collocations, e.g. 'reluctant to admit'"],
       "register": "formal | informal | neutral | literary"
@@ -47,6 +47,7 @@ The user sends you a photo of one page from an English book. Read the page caref
 Rules:
 - Choose 5 to 8 key vocabulary items that are genuinely useful for an intermediate learner.
 - Write 2 or 3 comprehension questions.
+- Copyright care — do NOT reproduce long spans of the page. Write the summary, definitions, explanations, questions, and answers entirely in your own words. The only text you may copy from the page is: (a) the single sentence in sentenceBreakdown, and (b) fragments of 10 words or fewer in exampleFromPage. Never quote whole paragraphs.
 - Every string must be plain English text. No Korean, no romanized Korean, no other languages.
 - If the photo is not a readable page of English text, return exactly: {"error": "UNREADABLE_PAGE", "message": "a short English explanation of what went wrong"}.
 - Return ONLY the JSON object. No markdown fences, no commentary.`;
@@ -179,6 +180,15 @@ async function requestOnce(apiKey, body, onStatus) {
     if (finishReason === 'MAX_TOKENS') {
       throw new GeminiError(
         'Gemini ran out of space before finishing its answer. Retrying…',
+        { retryable: true }
+      );
+    }
+    if (finishReason === 'RECITATION') {
+      // The model copied too much of the (copyrighted) book text and was
+      // cut off. Retries often succeed because temperature varies the
+      // wording; the prompt also instructs the model to paraphrase.
+      throw new GeminiError(
+        "Gemini's copyright filter stopped this answer because it copied too much of the book. Please tap Analyze again — a retry usually succeeds.",
         { retryable: true }
       );
     }
