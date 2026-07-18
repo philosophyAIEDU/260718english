@@ -1,0 +1,25 @@
+{
+  "name": "ReadMate — English Reading Companion",
+  "short_name": "ReadMate",
+  "description": "Snap a page of your English book and get an all-English study guide.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#faf6ef",
+  "theme_color": "#8b5e34",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

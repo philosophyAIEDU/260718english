@@ -1,0 +1,125 @@
+import { useState } from 'react';
+import { setSetting, deleteSetting } from '../lib/db.js';
+
+/**
+ * API key entry / settings screen. The key is stored in IndexedDB on this
+ * device only and is sent exclusively to the Google Gemini API endpoint.
+ */
+export default function ApiKeyScreen({ existingKey = '', onSaved }) {
+  const [key, setKey] = useState(existingKey);
+  const [showKey, setShowKey] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSave = async () => {
+    const trimmed = key.trim();
+    setError('');
+    setMessage('');
+    if (!trimmed) {
+      setError('Please paste your Gemini API key first.');
+      return;
+    }
+    if (trimmed.length < 20) {
+      setError('That looks too short to be a Gemini API key. Please check and try again.');
+      return;
+    }
+    setSaving(true);
+    try {
+      await setSetting('geminiApiKey', trimmed);
+      setMessage('Saved! Your key is stored only on this device.');
+      onSaved?.(trimmed);
+    } catch {
+      setError('Could not save the key on this device. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!window.confirm('Remove the saved API key from this device?')) return;
+    try {
+      await deleteSetting('geminiApiKey');
+      setKey('');
+      setMessage('');
+      onSaved?.('');
+      window.location.reload();
+    } catch {
+      setError('Could not remove the key. Please try again.');
+    }
+  };
+
+  return (
+    <section>
+      <div className="card">
+        <h2 className="section-title">🔑 Gemini API Key</h2>
+        <p className="muted small" style={{ marginTop: 0 }}>
+          ReadMate uses your own Google Gemini API key to read your book pages.
+          Get a free key at{' '}
+          <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
+            aistudio.google.com/apikey
+          </a>
+          , then paste it below.
+        </p>
+
+        <label className="field-label" htmlFor="api-key-input">
+          Your API key
+        </label>
+        <div className="input-with-button">
+          <input
+            id="api-key-input"
+            className="text-input"
+            type={showKey ? 'text' : 'password'}
+            value={key}
+            onChange={(e) => setKey(e.target.value)}
+            placeholder="AIza…"
+            autoComplete="off"
+            spellCheck="false"
+          />
+          <button
+            type="button"
+            className="input-inline-button"
+            onClick={() => setShowKey((s) => !s)}
+            aria-label={showKey ? 'Hide the API key' : 'Show the API key'}
+            title={showKey ? 'Hide' : 'Show'}
+          >
+            {showKey ? '🙈' : '👁️'}
+          </button>
+        </div>
+
+        {error && <div className="error-box">{error}</div>}
+        {message && (
+          <p className="small" style={{ color: 'var(--collins)' }}>
+            ✓ {message}
+          </p>
+        )}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+          <button
+            className="btn btn-primary"
+            style={{ flex: 1 }}
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Saving…' : existingKey ? 'Update key' : 'Save & start reading'}
+          </button>
+          {existingKey && (
+            <button className="btn btn-danger" onClick={handleRemove}>
+              Remove
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="notice">
+        <span aria-hidden="true">🔒</span>
+        <span>
+          이 키는 Google Gemini API 호출에만 쓰이며 다른 서버로 전송되지
+          않습니다. — Your key is used only to call the Google Gemini API and is
+          never sent to any other server. It is stored in this browser
+          (IndexedDB) on this device only. No sign-up, no tracking, no ads.
+        </span>
+      </div>
+    </section>
+  );
+}
