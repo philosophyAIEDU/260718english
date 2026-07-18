@@ -4,6 +4,17 @@ import {
   findVocabByWord,
   deleteVocabEntry,
 } from '../lib/db.js';
+import {
+  ArrowLeftIcon,
+  BookOpenIcon,
+  LibraryIcon,
+  StarIcon,
+  BranchIcon,
+  MessageIcon,
+  PencilIcon,
+  ChevronDownIcon,
+  ListIcon,
+} from './Icons.jsx';
 
 /**
  * Study-guide screen. Renders the sections returned by Gemini, in order:
@@ -13,8 +24,8 @@ import {
 export default function ResultScreen({ result, onBack, onVocabChanged }) {
   return (
     <section>
-      <button className="btn btn-ghost" onClick={onBack} style={{ paddingLeft: 0 }}>
-        ← Scan another page
+      <button className="back-link" onClick={onBack}>
+        <ArrowLeftIcon size={16} /> Scan another page
       </button>
 
       <PageSummary summary={result.pageSummary} />
@@ -33,8 +44,10 @@ export default function ResultScreen({ result, onBack, onVocabChanged }) {
 function PageSummary({ summary }) {
   return (
     <div className="card">
-      <h2 className="section-title">📝 Page Summary</h2>
-      <p style={{ margin: 0 }}>{summary}</p>
+      <h2 className="section-title">
+        <BookOpenIcon size={15} /> Page Summary
+      </h2>
+      <p className="summary-text">{summary}</p>
     </div>
   );
 }
@@ -42,7 +55,9 @@ function PageSummary({ summary }) {
 function KeyVocabulary({ items, onVocabChanged }) {
   return (
     <div className="card">
-      <h2 className="section-title">📚 Key Vocabulary</h2>
+      <h2 className="section-title">
+        <LibraryIcon size={15} /> Key Vocabulary
+      </h2>
       <p className="muted small" style={{ marginTop: 0 }}>
         Tap the star to keep a word in your Word Book for spaced-repetition
         review.
@@ -93,7 +108,7 @@ function VocabCard({ entry, onVocabChanged }) {
           {entry.word}
           {entry.partOfSpeech && <span className="vocab-pos">({entry.partOfSpeech})</span>}
         </h3>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div className="vocab-head-controls">
           <span className={`pill pill-register-${normalizeRegister(entry.register)}`}>
             {entry.register}
           </span>
@@ -103,21 +118,25 @@ function VocabCard({ entry, onVocabChanged }) {
             aria-label={savedId ? 'Remove from Word Book' : 'Save to Word Book'}
             title={savedId ? 'Remove from Word Book' : 'Save to Word Book'}
           >
-            {savedId ? '★' : '☆'}
+            <StarIcon size={21} filled={!!savedId} />
           </button>
         </div>
       </div>
 
       {entry.collinsDefinition && (
         <div className="def-block def-collins">
-          <span className="def-label">🌿 Collins-style</span>
+          <span className="def-label">
+            <MessageIcon size={11} /> Collins-style
+          </span>
           {entry.collinsDefinition}
         </div>
       )}
 
       {entry.longmanSynonyms?.length > 0 && (
         <div className="def-block def-longman">
-          <span className="def-label">💠 Longman-style</span>
+          <span className="def-label">
+            <ListIcon size={11} /> Longman-style
+          </span>
           {entry.longmanSynonyms.join(' · ')}
         </div>
       )}
@@ -128,12 +147,12 @@ function VocabCard({ entry, onVocabChanged }) {
 
       {entry.wordFamily?.length > 0 && (
         <p className="vocab-meta">
-          <strong>Word family</strong> — {entry.wordFamily.join(', ')}
+          <strong>Word family</strong> {entry.wordFamily.join(', ')}
         </p>
       )}
       {entry.collocations?.length > 0 && (
         <p className="vocab-meta">
-          <strong>Collocations</strong> — {entry.collocations.join(' · ')}
+          <strong>Collocations</strong> {entry.collocations.join(' · ')}
         </p>
       )}
     </article>
@@ -148,7 +167,9 @@ function normalizeRegister(register) {
 function SentenceBreakdown({ breakdown }) {
   return (
     <div className="card">
-      <h2 className="section-title">🔍 Sentence Breakdown</h2>
+      <h2 className="section-title">
+        <BranchIcon size={15} /> Sentence Breakdown
+      </h2>
       <p className="breakdown-sentence">“{breakdown.sentence}”</p>
       {breakdown.parts.map((part, i) => (
         <div className="breakdown-part" key={i}>
@@ -167,7 +188,9 @@ function ComprehensionCheck({ questions }) {
   const [openIndex, setOpenIndex] = useState(null);
   return (
     <div className="card">
-      <h2 className="section-title">💬 Comprehension Check</h2>
+      <h2 className="section-title">
+        <MessageIcon size={15} /> Comprehension Check
+      </h2>
       <p className="muted small" style={{ marginTop: 0 }}>
         Answer in your head first, then tap to reveal a model answer.
       </p>
@@ -183,8 +206,8 @@ function ComprehensionCheck({ questions }) {
               <span>
                 {i + 1}. {q.question}
               </span>
-              <span className="accordion-chevron" aria-hidden="true">
-                ▾
+              <span className="accordion-chevron">
+                <ChevronDownIcon size={17} />
               </span>
             </button>
             {open && (
@@ -203,7 +226,9 @@ function TryThis({ prompt }) {
   const [text, setText] = useState('');
   return (
     <div className="card">
-      <h2 className="section-title">✍️ Try This</h2>
+      <h2 className="section-title">
+        <PencilIcon size={15} /> Try This
+      </h2>
       <div className="try-this">
         {prompt}
         <textarea

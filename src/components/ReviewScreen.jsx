@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { getDueVocab, updateVocabEntry } from '../lib/db.js';
 import { applyReview, nextIntervalLabel, GRADES } from '../lib/spacedRepetition.js';
+import {
+  CardsIcon,
+  CheckIcon,
+  RotateIcon,
+  MessageIcon,
+  ListIcon,
+} from './Icons.jsx';
 
 /**
  * Spaced-repetition review: flip-card flashcards over today's due words.
@@ -42,7 +49,9 @@ export default function ReviewScreen({ onDone, onVocabChanged }) {
   if (queue.length === 0) {
     return (
       <div className="empty-state">
-        <span className="empty-icon">🎉</span>
+        <div className="empty-icon-ring">
+          <CheckIcon size={30} />
+        </div>
         <h3>All caught up!</h3>
         <p>
           No words are due for review right now. Words come back on a
@@ -56,7 +65,9 @@ export default function ReviewScreen({ onDone, onVocabChanged }) {
   if (index >= queue.length) {
     return (
       <div className="empty-state">
-        <span className="empty-icon">🏆</span>
+        <div className="empty-icon-ring">
+          <CardsIcon size={28} />
+        </div>
         <h3>Review complete!</h3>
         <p>
           You reviewed {finishedCount} {finishedCount === 1 ? 'word' : 'words'} today.
@@ -102,7 +113,9 @@ export default function ReviewScreen({ onDone, onVocabChanged }) {
                 {entry.partOfSpeech}
               </p>
             )}
-            <p className="flip-hint">Tap to reveal the meaning ↺</p>
+            <span className="flip-hint">
+              <RotateIcon size={14} /> Tap to reveal the meaning
+            </span>
           </div>
 
           <div className="flashcard-face back">
@@ -114,13 +127,17 @@ export default function ReviewScreen({ onDone, onVocabChanged }) {
             </h3>
             {entry.collinsDefinition && (
               <div className="def-block def-collins">
-                <span className="def-label">🌿 Collins-style</span>
+                <span className="def-label">
+                  <MessageIcon size={11} /> Collins-style
+                </span>
                 {entry.collinsDefinition}
               </div>
             )}
             {entry.longmanSynonyms?.length > 0 && (
               <div className="def-block def-longman">
-                <span className="def-label">💠 Longman-style</span>
+                <span className="def-label">
+                  <ListIcon size={11} /> Longman-style
+                </span>
                 {entry.longmanSynonyms.join(' · ')}
               </div>
             )}
@@ -156,7 +173,7 @@ export default function ReviewScreen({ onDone, onVocabChanged }) {
           </button>
         </div>
       ) : (
-        <p className="muted small" style={{ textAlign: 'center' }}>
+        <p className="recall-hint">
           Try to recall the meaning, then tap the card to check yourself.
         </p>
       )}

@@ -1,0 +1,258 @@
+/*
+ * Inline SVG icon set — consistent 24×24 stroke icons (Lucide-style) so the
+ * UI reads as a designed product rather than platform emoji. Icons inherit
+ * `currentColor`, so they follow the theme automatically.
+ */
+
+function Icon({ children, size = 20, strokeWidth = 1.8, ...rest }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+      {...rest}
+    >
+      {children}
+    </svg>
+  );
+}
+
+export const BookOpenIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 7c-2-1.8-5.5-2-8-1v13c2.5-1 6-0.8 8 1 2-1.8 5.5-2 8-1V6c-2.5-1-6-0.8-8 1Z" />
+    <path d="M12 7v13" />
+  </Icon>
+);
+
+export const CameraIcon = (p) => (
+  <Icon {...p}>
+    <path d="M4 8h2.2l1.2-2.1A1.6 1.6 0 0 1 8.8 5h6.4a1.6 1.6 0 0 1 1.4.9L17.8 8H20a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z" />
+    <circle cx="12" cy="13.5" r="3.4" />
+  </Icon>
+);
+
+export const ImageIcon = (p) => (
+  <Icon {...p}>
+    <rect x="3" y="4" width="18" height="16" rx="2.5" />
+    <circle cx="8.7" cy="9.5" r="1.6" />
+    <path d="m21 15.5-4.2-4.2a1.5 1.5 0 0 0-2.1 0L6 20" />
+  </Icon>
+);
+
+export const LibraryIcon = (p) => (
+  <Icon {...p}>
+    <path d="M5 4h2.6v16H5z" />
+    <path d="M10.4 4H13v16h-2.6z" />
+    <path d="m15.4 5.4 2.5-.7 4 15-2.5.7z" />
+  </Icon>
+);
+
+export const CardsIcon = (p) => (
+  <Icon {...p}>
+    <rect x="3" y="7" width="13" height="13" rx="2" />
+    <path d="M8 7V5.5A1.5 1.5 0 0 1 9.5 4H19a2 2 0 0 1 2 2v9.5a1.5 1.5 0 0 1-1.5 1.5H18" />
+  </Icon>
+);
+
+export const SettingsIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="3.1" />
+    <path d="M19.4 13.5a1.6 1.6 0 0 0 .33 1.77l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.77-.33 1.6 1.6 0 0 0-.97 1.47V19.5a2 2 0 1 1-4 0v-.09a1.6 1.6 0 0 0-1.05-1.47 1.6 1.6 0 0 0-1.77.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .33-1.77 1.6 1.6 0 0 0-1.47-.97H3.5a2 2 0 1 1 0-4h.09a1.6 1.6 0 0 0 1.47-1.05 1.6 1.6 0 0 0-.33-1.77l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.6 1.6 0 0 0 1.77.33h.08a1.6 1.6 0 0 0 .97-1.47V3.5a2 2 0 1 1 4 0v.09a1.6 1.6 0 0 0 .97 1.47 1.6 1.6 0 0 0 1.77-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.33 1.77v.08a1.6 1.6 0 0 0 1.47.97h.17a2 2 0 1 1 0 4h-.09a1.6 1.6 0 0 0-1.47.97Z" />
+  </Icon>
+);
+
+export const MoonIcon = (p) => (
+  <Icon {...p}>
+    <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" />
+  </Icon>
+);
+
+export const SunIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2.5v2M12 19.5v2M4.3 4.3l1.4 1.4M18.3 18.3l1.4 1.4M2.5 12h2M19.5 12h2M4.3 19.7l1.4-1.4M18.3 5.7l1.4-1.4" />
+  </Icon>
+);
+
+export const EyeIcon = (p) => (
+  <Icon {...p}>
+    <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+    <circle cx="12" cy="12" r="3" />
+  </Icon>
+);
+
+export const EyeOffIcon = (p) => (
+  <Icon {...p}>
+    <path d="M10.7 6c.43-.06.86-.1 1.3-.1 6 0 9.5 6.1 9.5 6.1a17.5 17.5 0 0 1-2.1 2.9M6.6 6.9C4 8.7 2.5 12 2.5 12S6 18.1 12 18.1c1.5 0 2.9-.36 4.1-.92" />
+    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+    <path d="m3 3 18 18" />
+  </Icon>
+);
+
+export const StarIcon = ({ filled = false, ...p }) => (
+  <Icon {...p} fill={filled ? 'currentColor' : 'none'}>
+    <path d="m12 3.6 2.5 5.2 5.7.8-4.1 4 1 5.6-5.1-2.7-5.1 2.7 1-5.6-4.1-4 5.7-.8L12 3.6Z" />
+  </Icon>
+);
+
+export const ArrowLeftIcon = (p) => (
+  <Icon {...p}>
+    <path d="M19 12H5" />
+    <path d="m11 18-6-6 6-6" />
+  </Icon>
+);
+
+export const SparklesIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 4.5 13.8 9l4.5 1.8-4.5 1.8L12 17l-1.8-4.4L5.7 10.8 10.2 9 12 4.5Z" />
+    <path d="M19 15.5l.9 2.1 2.1.9-2.1.9-.9 2.1-.9-2.1-2.1-.9 2.1-.9.9-2.1Z" />
+    <path d="M5 3l.7 1.7L7.4 5.4l-1.7.7L5 7.8l-.7-1.7-1.7-.7 1.7-.7L5 3Z" />
+  </Icon>
+);
+
+export const DownloadIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 3.5V15" />
+    <path d="m7 10.5 5 5 5-5" />
+    <path d="M4 20.5h16" />
+  </Icon>
+);
+
+export const SearchIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20.5 20.5-4.5-4.5" />
+  </Icon>
+);
+
+export const TagIcon = (p) => (
+  <Icon {...p}>
+    <path d="M3.5 12.2V5a1.5 1.5 0 0 1 1.5-1.5h7.2a2 2 0 0 1 1.4.6l7 7a2 2 0 0 1 0 2.8l-5.8 5.8a2 2 0 0 1-2.8 0l-7-7a2 2 0 0 1-.5-1.5Z" />
+    <circle cx="8.5" cy="8.5" r="1.3" fill="currentColor" stroke="none" />
+  </Icon>
+);
+
+export const TrashIcon = (p) => (
+  <Icon {...p}>
+    <path d="M4 7h16" />
+    <path d="M9.5 7V5.4A1.4 1.4 0 0 1 10.9 4h2.2a1.4 1.4 0 0 1 1.4 1.4V7" />
+    <path d="M6.2 7l.8 12a1.8 1.8 0 0 0 1.8 1.7h6.4a1.8 1.8 0 0 0 1.8-1.7l.8-12" />
+    <path d="M10 11.5v5M14 11.5v5" />
+  </Icon>
+);
+
+export const ChevronDownIcon = (p) => (
+  <Icon {...p}>
+    <path d="m6 9.5 6 6 6-6" />
+  </Icon>
+);
+
+export const BellIcon = (p) => (
+  <Icon {...p}>
+    <path d="M18 9a6 6 0 1 0-12 0c0 5-2 6-2 6h16s-2-1-2-6" />
+    <path d="M10.3 19.5a2 2 0 0 0 3.4 0" />
+  </Icon>
+);
+
+export const KeyIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="8" cy="15.5" r="4.5" />
+    <path d="m11.2 12.3 8.3-8.3" />
+    <path d="M16.5 7 19 9.5M19.5 4 21 5.5" />
+  </Icon>
+);
+
+export const LockIcon = (p) => (
+  <Icon {...p}>
+    <rect x="4.5" y="10.5" width="15" height="10" rx="2" />
+    <path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" />
+    <circle cx="12" cy="15.5" r="1.2" fill="currentColor" stroke="none" />
+  </Icon>
+);
+
+export const AlertIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 3.8 2.8 19.5a1.4 1.4 0 0 0 1.2 2.1h16a1.4 1.4 0 0 0 1.2-2.1L12 3.8Z" />
+    <path d="M12 9.5v4.5" />
+    <circle cx="12" cy="17.5" r="0.9" fill="currentColor" stroke="none" />
+  </Icon>
+);
+
+export const CheckIcon = (p) => (
+  <Icon {...p}>
+    <path d="m4.5 12.5 5 5 10-11" />
+  </Icon>
+);
+
+export const RotateIcon = (p) => (
+  <Icon {...p}>
+    <path d="M3.5 8A9 9 0 0 1 20 10" />
+    <path d="M20.5 16A9 9 0 0 1 4 14" />
+    <path d="M20 4.5V10h-5.5" />
+    <path d="M4 19.5V14h5.5" />
+  </Icon>
+);
+
+export const QuoteIcon = (p) => (
+  <Icon {...p}>
+    <path d="M10 8c-2.8 0-4.5 1.9-4.5 4.6V19H10v-6H7.6c0-2 .9-3 2.4-3V8Z" fill="currentColor" stroke="none" />
+    <path d="M18.5 8c-2.8 0-4.5 1.9-4.5 4.6V19h4.5v-6h-2.4c0-2 .9-3 2.4-3V8Z" fill="currentColor" stroke="none" />
+  </Icon>
+);
+
+export const PencilIcon = (p) => (
+  <Icon {...p}>
+    <path d="M4 20h4.2L20 8.2a2.1 2.1 0 0 0 0-3L18.8 4a2.1 2.1 0 0 0-3 0L4 15.8V20Z" />
+    <path d="m13.5 6.5 4 4" />
+  </Icon>
+);
+
+export const ListIcon = (p) => (
+  <Icon {...p}>
+    <path d="M8.5 6h12M8.5 12h12M8.5 18h12" />
+    <circle cx="4" cy="6" r="1.1" fill="currentColor" stroke="none" />
+    <circle cx="4" cy="12" r="1.1" fill="currentColor" stroke="none" />
+    <circle cx="4" cy="18" r="1.1" fill="currentColor" stroke="none" />
+  </Icon>
+);
+
+export const MessageIcon = (p) => (
+  <Icon {...p}>
+    <path d="M21 12a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1.1L3 21l1.6-5.3A8.5 8.5 0 1 1 21 12Z" />
+  </Icon>
+);
+
+export const BranchIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="6" cy="5" r="2.2" />
+    <circle cx="6" cy="19" r="2.2" />
+    <circle cx="18" cy="9" r="2.2" />
+    <path d="M6 7.2v9.6" />
+    <path d="M18 11.2c0 4-4 3.8-7 4.3-2 .3-3 1-3 1" />
+  </Icon>
+);
+
+/** Brand mark: an open book with a golden bookmark ribbon. */
+export function BrandMark({ size = 30 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 48 48" fill="none" aria-hidden="true">
+      <rect width="48" height="48" rx="12" fill="var(--accent)" />
+      <path
+        d="M24 14c-3.4-2.7-9.4-3-12.4-1.6v20c3-1.4 9-1.1 12.4 1.6 3.4-2.7 9.4-3 12.4-1.6v-20C33.4 11 27.4 11.3 24 14Z"
+        stroke="var(--accent-contrast)"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M24 14v20" stroke="var(--accent-contrast)" strokeWidth="2.4" strokeLinecap="round" />
+      <path d="M30 11.5v8l2.6-2 2.6 2v-9" fill="var(--gold)" stroke="var(--gold)" strokeWidth="1.4" strokeLinejoin="round" />
+    </svg>
+  );
+}

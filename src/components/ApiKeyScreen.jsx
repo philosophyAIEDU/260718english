@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { setSetting, deleteSetting } from '../lib/db.js';
+import { KeyIcon, LockIcon, EyeIcon, EyeOffIcon, AlertIcon, CheckIcon } from './Icons.jsx';
 
 /**
  * API key entry / settings screen. The key is stored in IndexedDB on this
@@ -52,7 +53,9 @@ export default function ApiKeyScreen({ existingKey = '', onSaved }) {
   return (
     <section>
       <div className="card">
-        <h2 className="section-title">🔑 Gemini API Key</h2>
+        <h2 className="section-title">
+          <KeyIcon size={15} /> Gemini API Key
+        </h2>
         <p className="muted small" style={{ marginTop: 0 }}>
           ReadMate uses your own Google Gemini API key to read your book pages.
           Get a free key at{' '}
@@ -83,18 +86,32 @@ export default function ApiKeyScreen({ existingKey = '', onSaved }) {
             aria-label={showKey ? 'Hide the API key' : 'Show the API key'}
             title={showKey ? 'Hide' : 'Show'}
           >
-            {showKey ? '🙈' : '👁️'}
+            {showKey ? <EyeOffIcon size={18} /> : <EyeIcon size={18} />}
           </button>
         </div>
 
-        {error && <div className="error-box">{error}</div>}
+        {error && (
+          <div className="error-box">
+            <AlertIcon size={17} />
+            <span>{error}</span>
+          </div>
+        )}
         {message && (
-          <p className="small" style={{ color: 'var(--collins)' }}>
-            ✓ {message}
+          <p
+            className="small"
+            style={{
+              color: 'var(--collins)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              fontFamily: 'var(--font-sans)',
+            }}
+          >
+            <CheckIcon size={15} /> {message}
           </p>
         )}
 
-        <div style={{ display: 'flex', gap: 10, marginTop: 14 }}>
+        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <button
             className="btn btn-primary"
             style={{ flex: 1 }}
@@ -112,7 +129,7 @@ export default function ApiKeyScreen({ existingKey = '', onSaved }) {
       </div>
 
       <div className="notice">
-        <span aria-hidden="true">🔒</span>
+        <LockIcon size={18} />
         <span>
           이 키는 Google Gemini API 호출에만 쓰이며 다른 서버로 전송되지
           않습니다. — Your key is used only to call the Google Gemini API and is

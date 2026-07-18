@@ -23,7 +23,23 @@ export default class ErrorBoundary extends React.Component {
     if (this.state.error) {
       return (
         <div className="crash-screen">
-          <span style={{ fontSize: '2.6rem' }}>📖</span>
+          <div className="empty-icon-ring">
+            <svg
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M12 3.8 2.8 19.5a1.4 1.4 0 0 0 1.2 2.1h16a1.4 1.4 0 0 0 1.2-2.1L12 3.8Z" />
+              <path d="M12 9.5v4.5" />
+              <circle cx="12" cy="17.5" r="0.9" fill="currentColor" stroke="none" />
+            </svg>
+          </div>
           <h2>Something went wrong</h2>
           <p className="muted">
             Sorry — ReadMate hit an unexpected error. Your saved vocabulary and

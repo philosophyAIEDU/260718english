@@ -4,6 +4,18 @@ import UploadScreen from './components/UploadScreen.jsx';
 import ResultScreen from './components/ResultScreen.jsx';
 import VocabScreen from './components/VocabScreen.jsx';
 import ReviewScreen from './components/ReviewScreen.jsx';
+import {
+  BrandMark,
+  CameraIcon,
+  LibraryIcon,
+  CardsIcon,
+  SettingsIcon,
+  MoonIcon,
+  SunIcon,
+  BellIcon,
+  ArrowLeftIcon,
+  SearchIcon,
+} from './components/Icons.jsx';
 import { getSetting, setSetting, countDueVocab } from './lib/db.js';
 
 /**
@@ -71,11 +83,33 @@ export default function App() {
     setView('result');
   };
 
+  const header = (
+    <header className="app-header">
+      <div className="app-brand">
+        <BrandMark size={34} />
+        <div>
+          <h1>ReadMate</h1>
+          <span className="tagline">Read English, in English</span>
+        </div>
+      </div>
+      <button
+        className="icon-button"
+        onClick={toggleTheme}
+        aria-label="Toggle dark mode"
+        title="Toggle dark mode"
+      >
+        {theme === 'light' ? <MoonIcon size={18} /> : <SunIcon size={18} />}
+      </button>
+    </header>
+  );
+
   if (booting) {
     return (
       <div className="app-shell">
-        <div className="empty-state" style={{ marginTop: 120 }}>
-          <span className="empty-icon">📖</span>
+        <div className="empty-state" style={{ marginTop: 110 }}>
+          <div className="empty-icon-ring">
+            <BrandMark size={40} />
+          </div>
           <h3>ReadMate</h3>
           <p>Opening your reading desk…</p>
         </div>
@@ -87,21 +121,10 @@ export default function App() {
   if (!apiKey) {
     return (
       <div className="app-shell">
-        <header className="app-header">
-          <div className="app-brand">
-            <h1>📖 ReadMate</h1>
-            <span className="tagline">read English, in English</span>
-          </div>
-          <button
-            className="icon-button"
-            onClick={toggleTheme}
-            aria-label="Toggle dark mode"
-            title="Toggle dark mode"
-          >
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
-        </header>
-        <ApiKeyScreen onSaved={handleKeySaved} />
+        {header}
+        <main>
+          <ApiKeyScreen onSaved={handleKeySaved} />
+        </main>
       </div>
     );
   }
@@ -109,31 +132,25 @@ export default function App() {
   return (
     <>
       <div className="app-shell">
-        <header className="app-header">
-          <div className="app-brand">
-            <h1>📖 ReadMate</h1>
-            <span className="tagline">read English, in English</span>
-          </div>
-          <button
-            className="icon-button"
-            onClick={toggleTheme}
-            aria-label="Toggle dark mode"
-            title="Toggle dark mode"
-          >
-            {theme === 'light' ? '🌙' : '☀️'}
-          </button>
-        </header>
+        {header}
 
         <main>
           {view === 'home' && (
             <>
               {dueCount > 0 && (
                 <button className="review-banner" onClick={() => setView('review')}>
-                  <span>
-                    🔔 <strong>Today&apos;s Review: {dueCount} {dueCount === 1 ? 'word' : 'words'}</strong>{' '}
-                    — keep your streak going!
+                  <span className="banner-icon">
+                    <BellIcon size={19} />
                   </span>
-                  <span aria-hidden="true">→</span>
+                  <span className="banner-body">
+                    <strong>
+                      Today&apos;s Review: {dueCount} {dueCount === 1 ? 'word' : 'words'}
+                    </strong>
+                    <span className="banner-sub">Keep your streak going</span>
+                  </span>
+                  <span className="banner-arrow">
+                    <ArrowLeftIcon size={18} />
+                  </span>
                 </button>
               )}
               <UploadScreen apiKey={apiKey} onResult={handleAnalysisResult} />
@@ -149,7 +166,9 @@ export default function App() {
               />
             ) : (
               <div className="empty-state">
-                <span className="empty-icon">🔍</span>
+                <div className="empty-icon-ring">
+                  <SearchIcon size={30} />
+                </div>
                 <h3>No page analyzed yet</h3>
                 <p>Snap a page on the Scan tab to see your study guide here.</p>
                 <button className="btn btn-primary" onClick={() => setView('home')}>
@@ -179,26 +198,26 @@ export default function App() {
       <nav className="tab-bar" aria-label="Main navigation">
         <div className="tab-bar-inner">
           <TabButton
-            icon="📷"
+            icon={<CameraIcon size={21} />}
             label="Scan"
             active={view === 'home' || view === 'result'}
             onClick={() => setView(result && view === 'result' ? 'result' : 'home')}
           />
           <TabButton
-            icon="📚"
+            icon={<LibraryIcon size={21} />}
             label="Word Book"
             active={view === 'vocab'}
             onClick={() => setView('vocab')}
           />
           <TabButton
-            icon="🃏"
+            icon={<CardsIcon size={21} />}
             label="Review"
             active={view === 'review'}
             badge={dueCount}
             onClick={() => setView('review')}
           />
           <TabButton
-            icon="⚙️"
+            icon={<SettingsIcon size={21} />}
             label="Settings"
             active={view === 'settings'}
             onClick={() => setView('settings')}
@@ -216,9 +235,7 @@ function TabButton({ icon, label, active, badge = 0, onClick }) {
       onClick={onClick}
       aria-current={active ? 'page' : undefined}
     >
-      <span className="tab-icon" aria-hidden="true">
-        {icon}
-      </span>
+      {icon}
       {label}
       {badge > 0 && <span className="tab-badge">{badge > 99 ? '99+' : badge}</span>}
     </button>

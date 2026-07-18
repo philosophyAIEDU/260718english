@@ -2,6 +2,15 @@ import { useEffect, useMemo, useState } from 'react';
 import { getAllVocab, deleteVocabEntry, updateVocabEntry } from '../lib/db.js';
 import { toAnkiCsv, toQuizletText, downloadTextFile } from '../lib/exportUtils.js';
 import { BOX_INTERVALS_DAYS } from '../lib/spacedRepetition.js';
+import {
+  LibraryIcon,
+  DownloadIcon,
+  SearchIcon,
+  TagIcon,
+  TrashIcon,
+  MessageIcon,
+  ListIcon,
+} from './Icons.jsx';
 
 /**
  * Word Book: every starred word, with search (word text), register filter,
@@ -90,10 +99,12 @@ export default function VocabScreen({ onVocabChanged }) {
   if (entries.length === 0) {
     return (
       <div className="empty-state">
-        <span className="empty-icon">📚</span>
+        <div className="empty-icon-ring">
+          <LibraryIcon size={30} />
+        </div>
         <h3>Your Word Book is empty</h3>
         <p>
-          Scan a page and tap the ☆ star on any word to start collecting
+          Scan a page and tap the star on any word to start collecting
           vocabulary. Starred words come back for review on a 1 → 3 → 7 → 14
           day schedule.
         </p>
@@ -103,24 +114,34 @@ export default function VocabScreen({ onVocabChanged }) {
 
   return (
     <section>
+      <div className="screen-heading">
+        <h2>Word Book</h2>
+        <span className="count">
+          {filtered.length} of {entries.length} {entries.length === 1 ? 'word' : 'words'}
+        </span>
+      </div>
+
       <div className="export-row">
         <button className="btn" onClick={exportAnki}>
-          ⬇︎ Export for Anki (CSV)
+          <DownloadIcon size={16} /> Anki (CSV)
         </button>
         <button className="btn" onClick={exportQuizlet}>
-          ⬇︎ Export for Quizlet (TXT)
+          <DownloadIcon size={16} /> Quizlet (TXT)
         </button>
       </div>
 
       <div className="vocab-toolbar">
-        <input
-          className="text-input"
-          type="search"
-          placeholder="Search words, definitions, synonyms…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          aria-label="Search your word book"
-        />
+        <div className="search-wrap">
+          <SearchIcon size={16} />
+          <input
+            className="text-input"
+            type="search"
+            placeholder="Search words, definitions, synonyms…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            aria-label="Search your word book"
+          />
+        </div>
         <select
           value={registerFilter}
           onChange={(e) => setRegisterFilter(e.target.value)}
@@ -148,13 +169,11 @@ export default function VocabScreen({ onVocabChanged }) {
         )}
       </div>
 
-      <p className="muted small">
-        {filtered.length} of {entries.length} {entries.length === 1 ? 'word' : 'words'}
-      </p>
-
       {filtered.length === 0 ? (
         <div className="empty-state">
-          <span className="empty-icon">🔍</span>
+          <div className="empty-icon-ring">
+            <SearchIcon size={28} />
+          </div>
           <h3>No matches</h3>
           <p>Try a different search or clear the filters.</p>
         </div>
@@ -175,13 +194,17 @@ export default function VocabScreen({ onVocabChanged }) {
 
             {entry.collinsDefinition && (
               <div className="def-block def-collins">
-                <span className="def-label">🌿 Collins-style</span>
+                <span className="def-label">
+                  <MessageIcon size={11} /> Collins-style
+                </span>
                 {entry.collinsDefinition}
               </div>
             )}
             {entry.longmanSynonyms?.length > 0 && (
               <div className="def-block def-longman">
-                <span className="def-label">💠 Longman-style</span>
+                <span className="def-label">
+                  <ListIcon size={11} /> Longman-style
+                </span>
                 {entry.longmanSynonyms.join(' · ')}
               </div>
             )}
@@ -191,7 +214,7 @@ export default function VocabScreen({ onVocabChanged }) {
 
             <div className="saved-meta-row">
               <span>Saved {formatDate(entry.savedAt)}</span>
-              <span>·</span>
+              <span aria-hidden="true">·</span>
               <span>
                 Next review {formatDate(entry.srs?.dueDate)} (box {entry.srs?.box + 1},
                 every {BOX_INTERVALS_DAYS[entry.srs?.box ?? 0]}d)
@@ -203,12 +226,12 @@ export default function VocabScreen({ onVocabChanged }) {
               ))}
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <div className="entry-actions">
               <button className="btn btn-ghost" onClick={() => handleEditTags(entry)}>
-                🏷️ Tags
+                <TagIcon size={14} /> Tags
               </button>
               <button className="btn btn-ghost" onClick={() => handleDelete(entry)}>
-                🗑️ Remove
+                <TrashIcon size={14} /> Remove
               </button>
             </div>
           </article>

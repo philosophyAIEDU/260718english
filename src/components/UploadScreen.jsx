@@ -1,6 +1,13 @@
 import { useRef, useState } from 'react';
 import { prepareImageForUpload } from '../lib/imageUtils.js';
 import { analyzePageImage, GeminiError } from '../lib/geminiClient.js';
+import {
+  CameraIcon,
+  ImageIcon,
+  SparklesIcon,
+  ArrowLeftIcon,
+  AlertIcon,
+} from './Icons.jsx';
 
 /**
  * Photo upload / analyze screen. The photo is resized and compressed in the
@@ -62,7 +69,10 @@ export default function UploadScreen({ apiKey, onResult }) {
   if (analyzing) {
     return (
       <section>
-        <p className="loading-status">☕ {status || 'Working on your study guide…'}</p>
+        <p className="loading-status">
+          <span className="spinner" aria-hidden="true" />
+          {status || 'Working on your study guide…'}
+        </p>
         <AnalysisSkeleton />
       </section>
     );
@@ -96,24 +106,24 @@ export default function UploadScreen({ apiKey, onResult }) {
       {!image && !preparing && (
         <>
           <button className="drop-zone" onClick={() => cameraInputRef.current?.click()}>
-            <span className="big-icon" aria-hidden="true">
-              📸
+            <span className="drop-zone-icon">
+              <CameraIcon size={28} />
             </span>
             <strong>Snap a page of your book</strong>
-            <br />
             <span className="small">
-              Take a photo of one page and get an all-English study guide.
+              Take a photo of one page and get an all-English study guide —
+              summary, vocabulary, grammar, and comprehension questions.
             </span>
           </button>
-          <div className="upload-actions" style={{ marginTop: 12 }}>
+          <div className="upload-actions" style={{ marginTop: 14 }}>
             <button className="btn" onClick={() => cameraInputRef.current?.click()}>
-              📷 Camera
+              <CameraIcon size={17} /> Camera
             </button>
             <button className="btn" onClick={() => galleryInputRef.current?.click()}>
-              🖼️ Photo library
+              <ImageIcon size={17} /> Photo library
             </button>
           </div>
-          <p className="muted small" style={{ textAlign: 'center' }}>
+          <p className="upload-tip">
             Tip: fill the frame with the page, keep the text sharp, avoid glare.
             <br />
             Photos are compressed on your device and never stored.
@@ -123,7 +133,9 @@ export default function UploadScreen({ apiKey, onResult }) {
 
       {preparing && (
         <div className="empty-state">
-          <span className="empty-icon">🖼️</span>
+          <div className="empty-icon-ring">
+            <ImageIcon size={28} />
+          </div>
           <p>Preparing your photo…</p>
         </div>
       )}
@@ -135,16 +147,21 @@ export default function UploadScreen({ apiKey, onResult }) {
           </div>
           <div className="upload-actions">
             <button className="btn" onClick={reset}>
-              ↩︎ Choose another
+              <ArrowLeftIcon size={16} /> Choose another
             </button>
             <button className="btn btn-primary" onClick={handleAnalyze}>
-              ✨ Analyze this page
+              <SparklesIcon size={17} /> Analyze this page
             </button>
           </div>
         </>
       )}
 
-      {error && <div className="error-box">⚠️ {error}</div>}
+      {error && (
+        <div className="error-box">
+          <AlertIcon size={17} />
+          <span>{error}</span>
+        </div>
+      )}
     </section>
   );
 }
