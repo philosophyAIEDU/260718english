@@ -8,6 +8,7 @@ import ResultScreen from './components/ResultScreen.jsx';
 import VocabScreen from './components/VocabScreen.jsx';
 import ReviewScreen from './components/ReviewScreen.jsx';
 import ProgressScreen from './components/ProgressScreen.jsx';
+import LevelTestScreen from './components/LevelTestScreen.jsx';
 import {
   BrandMark,
   HomeIcon,
@@ -45,16 +46,19 @@ export default function App() {
   const [libraryBookId, setLibraryBookId] = useState(null);
   const [dueCount, setDueCount] = useState(0);
   const [streak, setStreak] = useState(0);
+  const [readingLevel, setReadingLevel] = useState(null);
 
   // Boot: load persisted settings.
   useEffect(() => {
     (async () => {
       try {
-        const [storedKey, storedTheme] = await Promise.all([
+        const [storedKey, storedTheme, storedLevel] = await Promise.all([
           getSetting('geminiApiKey'),
           getSetting('theme'),
+          getSetting('readingLevel'),
         ]);
         if (storedKey) setApiKey(storedKey);
+        if (storedLevel) setReadingLevel(storedLevel);
         const prefersDark =
           window.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
         setTheme(storedTheme || (prefersDark ? 'dark' : 'light'));
@@ -62,6 +66,12 @@ export default function App() {
         setBooting(false);
       }
     })();
+  }, []);
+
+  const refreshReadingLevel = useCallback(() => {
+    getSetting('readingLevel')
+      .then((level) => setReadingLevel(level || null))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -164,15 +174,17 @@ export default function App() {
               onLibrary={() => setView('library')}
               onReview={() => setView('review')}
               onProgress={() => setView('progress')}
+              onCheckinComplete={refreshChallengeStats}
             />
           )}
 
           {view === 'scan' && (
-            <UploadScreen apiKey={apiKey} onResult={handleScanResult} />
+            <UploadScreen apiKey={apiKey} readingLevel={readingLevel} onResult={handleScanResult} />
           )}
 
           {view === 'library' && (
             <BookLibraryScreen
+              readingLevel={readingLevel}
               onOpenBook={(bookId) => {
                 setLibraryBookId(bookId);
                 setView('reader');
@@ -185,6 +197,7 @@ export default function App() {
             <BookReaderScreen
               bookId={libraryBookId}
               apiKey={apiKey}
+              readingLevel={readingLevel}
               onBack={() => setView('library')}
               onAnalyzed={handleLibraryResult}
             />
@@ -232,7 +245,25 @@ export default function App() {
           {view === 'progress' && <ProgressScreen />}
 
           {view === 'settings' && (
-            <ApiKeyScreen existingKey={apiKey} onSaved={handleKeySaved} />
+            <ApiKeyScreen
+              existingKey={apiKey}
+              onSaved={handleKeySaved}
+              readingLevel={readingLevel}
+              onTakeLevelTest={() => setView('levelTest')}
+            />
+          )}
+
+          {view === 'levelTest' && (
+            <LevelTestScreen
+              onBack={() => {
+                refreshReadingLevel();
+                setView('settings');
+              }}
+              onGoToLibrary={() => {
+                refreshReadingLevel();
+                setView('library');
+              }}
+            />
           )}
         </main>
       </div>
@@ -267,7 +298,7 @@ export default function App() {
           <TabButton
             icon={<SettingsIcon size={21} />}
             label="Settings"
-            active={view === 'settings'}
+            active={view === 'settings' || view === 'levelTest'}
             onClick={() => setView('settings')}
           />
         </div>

@@ -14,6 +14,7 @@ import {
   PencilIcon,
   ChevronDownIcon,
   ListIcon,
+  PrinterIcon,
 } from './Icons.jsx';
 import SpeakButton from './SpeakButton.jsx';
 
@@ -30,19 +31,26 @@ export default function ResultScreen({
 }) {
   return (
     <section>
-      <button className="back-link" onClick={onBack}>
-        <ArrowLeftIcon size={16} /> {backLabel}
-      </button>
+      <div className="result-toolbar">
+        <button className="back-link" onClick={onBack}>
+          <ArrowLeftIcon size={16} /> {backLabel}
+        </button>
+        <button className="btn btn-ghost" onClick={() => window.print()}>
+          <PrinterIcon size={16} /> Print
+        </button>
+      </div>
 
-      <PageSummary summary={result.pageSummary} />
-      <KeyVocabulary items={result.keyVocabulary} onVocabChanged={onVocabChanged} />
-      {result.sentenceBreakdown && (
-        <SentenceBreakdown breakdown={result.sentenceBreakdown} />
-      )}
-      {result.comprehensionQuestions?.length > 0 && (
-        <ComprehensionCheck questions={result.comprehensionQuestions} />
-      )}
-      {result.tryThis && <TryThis prompt={result.tryThis} />}
+      <div id="printable-study-guide">
+        <PageSummary summary={result.pageSummary} />
+        <KeyVocabulary items={result.keyVocabulary} onVocabChanged={onVocabChanged} />
+        {result.sentenceBreakdown && (
+          <SentenceBreakdown breakdown={result.sentenceBreakdown} />
+        )}
+        {result.comprehensionQuestions?.length > 0 && (
+          <ComprehensionCheck questions={result.comprehensionQuestions} />
+        )}
+        {result.tryThis && <TryThis prompt={result.tryThis} />}
+      </div>
     </section>
   );
 }
@@ -221,11 +229,9 @@ function ComprehensionCheck({ questions }) {
                 <ChevronDownIcon size={17} />
               </span>
             </button>
-            {open && (
-              <div className="accordion-answer">
-                <p>{q.answer}</p>
-              </div>
-            )}
+            <div className="accordion-answer">
+              <p>{q.answer}</p>
+            </div>
           </div>
         );
       })}

@@ -682,6 +682,13 @@ main {
 
 /* ---------------------------- result screen --------------------------- */
 
+.result-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .back-link {
   display: inline-flex;
   align-items: center;
@@ -947,12 +954,17 @@ main {
 }
 
 .accordion-answer {
+  display: none;
   padding: 12px 15px;
   border-top: 1px solid var(--border);
   background: var(--bg-inset);
   font-size: 0.92rem;
   color: var(--text-soft);
   line-height: 1.65;
+}
+
+.accordion-item.open .accordion-answer {
+  display: block;
 }
 
 .accordion-answer p { margin: 0; }
@@ -1413,6 +1425,58 @@ main {
   }
 }
 
+.checkin-card {
+  margin-top: 6px;
+}
+
+.checkin-card .btn {
+  gap: 10px;
+}
+
+.checkin-hint {
+  text-align: center;
+  margin: 8px 0 0;
+}
+
+/* ---------------------------- level test screen -------------------------- */
+
+.level-test-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.level-test-option {
+  text-align: left;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 12px 15px;
+  font-size: 0.96rem;
+  color: var(--text);
+  font-family: var(--font-serif);
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease);
+}
+
+.level-test-option:hover {
+  border-color: var(--accent);
+}
+
+.level-test-option.selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.app-credit {
+  text-align: center;
+  color: var(--text-faint);
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  margin: 4px 0 0;
+}
+
 /* ------------------------------ library -------------------------------- */
 
 .book-card {
@@ -1468,6 +1532,19 @@ main {
 
 .book-card-author {
   margin: 2px 0 8px;
+}
+
+.recommended-tag {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--gold);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 8px;
 }
 
 .book-card-desc {
@@ -1718,5 +1795,58 @@ main {
   *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ------------------------------- print ---------------------------------- */
+
+@media print {
+  .app-header,
+  .tab-bar,
+  .result-toolbar,
+  .star-button,
+  .speak-button,
+  .try-this textarea,
+  .review-banner,
+  .guide-card {
+    display: none !important;
+  }
+
+  body,
+  .app-shell {
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+    max-width: none !important;
+  }
+
+  #printable-study-guide {
+    padding: 0 24px;
+  }
+
+  .card {
+    box-shadow: none !important;
+    border: none !important;
+    border-bottom: 1px solid #ccc !important;
+    border-radius: 0 !important;
+    page-break-inside: avoid;
+  }
+
+  .def-block,
+  .breakdown-label,
+  .example-quote,
+  .try-this {
+    background: #fff !important;
+    color: #000 !important;
+    border: 1px solid #ccc !important;
+  }
+
+  .accordion-answer {
+    display: block !important;
+    background: #fff !important;
+  }
+
+  .vocab-card {
+    page-break-inside: avoid;
   }
 }

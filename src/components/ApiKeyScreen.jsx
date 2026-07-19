@@ -1,12 +1,25 @@
 import { useState } from 'react';
 import { setSetting, deleteSetting } from '../lib/db.js';
-import { KeyIcon, LockIcon, EyeIcon, EyeOffIcon, AlertIcon, CheckIcon } from './Icons.jsx';
+import {
+  KeyIcon,
+  LockIcon,
+  EyeIcon,
+  EyeOffIcon,
+  AlertIcon,
+  CheckIcon,
+  TrophyIcon,
+} from './Icons.jsx';
 
 /**
  * API key entry / settings screen. The key is stored in IndexedDB on this
  * device only and is sent exclusively to the Google Gemini API endpoint.
  */
-export default function ApiKeyScreen({ existingKey = '', onSaved }) {
+export default function ApiKeyScreen({
+  existingKey = '',
+  onSaved,
+  readingLevel,
+  onTakeLevelTest,
+}) {
   const [key, setKey] = useState(existingKey);
   const [showKey, setShowKey] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -137,6 +150,28 @@ export default function ApiKeyScreen({ existingKey = '', onSaved }) {
           (IndexedDB) on this device only. No sign-up, no tracking, no ads.
         </span>
       </div>
+
+      {onTakeLevelTest && (
+        <div className="card">
+          <h2 className="section-title">
+            <TrophyIcon size={15} /> 영어 레벨 테스트
+          </h2>
+          <p className="muted small" style={{ marginTop: 0 }}>
+            {readingLevel
+              ? `현재 레벨: ${readingLevel}. 학습 가이드의 어휘 난이도와 라이브러리 추천에 반영됩니다.`
+              : '6문제로 내 영어 레벨을 확인하면, 학습 가이드의 어휘 난이도와 라이브러리 추천 도서에 반영돼요.'}
+          </p>
+          <button className="btn" onClick={onTakeLevelTest}>
+            <TrophyIcon size={16} /> {readingLevel ? '다시 테스트하기' : '테스트 시작하기'}
+          </button>
+        </div>
+      )}
+
+      {onTakeLevelTest && (
+        <p className="app-credit">
+          ReadMate — 필로소피 AI 교육의 정신을 담아 만든 프로젝트입니다.
+        </p>
+      )}
     </section>
   );
 }

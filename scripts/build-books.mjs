@@ -61,6 +61,66 @@ const BOOKS = [
       'https://raw.githubusercontent.com/standardebooks/f-scott-fitzgerald_the-great-gatsby/master/src/epub/text/chapter-%d.xhtml',
     chapterCount: 9,
   },
+  {
+    id: 'alice-in-wonderland',
+    title: "Alice's Adventures in Wonderland",
+    author: 'Lewis Carroll',
+    year: 1865,
+    level: 'Beginner',
+    description:
+      'Alice tumbles down a rabbit hole into a nonsensical world of talking rabbits, a grinning cat, and a tea party that never ends. Playful, dreamlike, and full of memorable vocabulary.',
+    source: 'Project Gutenberg #11 (public domain)',
+    kind: 'chapter-roman-titled',
+    url: 'https://raw.githubusercontent.com/GITenberg/Alice-s-Adventures-in-Wonderland_11/master/11.txt',
+  },
+  {
+    id: 'call-of-the-wild',
+    title: 'The Call of the Wild',
+    author: 'Jack London',
+    year: 1903,
+    level: 'Intermediate',
+    description:
+      'Buck, a domesticated dog, is stolen and sold into the brutal life of an Alaskan sled dog during the Klondike Gold Rush. Vivid, adventurous, and fast-paced.',
+    source: 'Project Gutenberg #215 (public domain)',
+    kind: 'chapter-roman-titled',
+    url: 'https://raw.githubusercontent.com/GITenberg/The-Call-of-the-Wild_215/master/215.txt',
+  },
+  {
+    id: 'christmas-carol',
+    title: 'A Christmas Carol',
+    author: 'Charles Dickens',
+    year: 1843,
+    level: 'Intermediate',
+    description:
+      'Miserly Ebenezer Scrooge is visited by three spirits on Christmas Eve who show him his past, present, and future. A short, classic ghost story of redemption.',
+    source: 'Project Gutenberg #46 (public domain)',
+    kind: 'stave-roman-titled',
+    url: 'https://raw.githubusercontent.com/GITenberg/A-Christmas-Carol_46/master/46.txt',
+  },
+  {
+    id: 'pride-and-prejudice',
+    title: 'Pride and Prejudice',
+    author: 'Jane Austen',
+    year: 1813,
+    level: 'Advanced',
+    description:
+      "Elizabeth Bennet navigates manners, marriage, and misunderstandings with the proud Mr. Darcy. Witty, socially observant prose with long, elegant sentences.",
+    source: 'Project Gutenberg #1342 (public domain)',
+    kind: 'chapter-arabic-bare',
+    url: 'https://raw.githubusercontent.com/GITenberg/Pride-and-Prejudice_1342/master/1342.txt',
+  },
+  {
+    id: 'secret-garden',
+    title: 'The Secret Garden',
+    author: 'Frances Hodgson Burnett',
+    year: 1911,
+    level: 'Beginner',
+    description:
+      'A sickly, unloved orphan discovers a locked, forgotten garden on her uncle’s Yorkshire estate — and it changes everything. Gentle pacing, clear sentences.',
+    source: 'Project Gutenberg #113 (public domain)',
+    kind: 'chapter-roman-bare',
+    url: 'https://raw.githubusercontent.com/GITenberg/The-Secret-Garden_113/master/113.txt',
+  },
 ];
 
 async function fetchText(url) {
@@ -105,7 +165,7 @@ function toParagraphs(chunk) {
     )
     .filter((p) => p && !/^\[Illustration[^\]]*\]$/i.test(p))
     .map((p) => p.replace(/\[Illustration[^\]]*\]/gi, '').trim())
-    .filter(Boolean);
+    .filter((p) => p && !/^(the\s+)?end\.?$/i.test(p));
 }
 
 /**
@@ -191,12 +251,82 @@ function parseGutenbergRoman(text) {
   );
 }
 
+function parseChapterRomanTitled(text) {
+  // Headings look like "CHAPTER I. Down the Rabbit-Hole" (Alice) or
+  // "Chapter I. Into the Primitive" (Call of the Wild) — title case is
+  // already correct in the source, so just strip the "Chapter <roman>. "
+  // prefix without re-casing it.
+  return splitByHeadings(
+    stripGutenberg(text),
+    /^\s{0,4}(CHAPTER|Chapter)\s+[IVXLC]+\.\s+[A-Z]/,
+    (t) => t.replace(/^(CHAPTER|Chapter)\s+[IVXLC]+\.\s+/, '').trim()
+  );
+}
+
+function parseStaveRomanTitled(text) {
+  // A Christmas Carol calls its chapters "staves": "STAVE I:  MARLEY'S GHOST".
+  return splitByHeadings(
+    stripGutenberg(text),
+    /^\s{0,4}STAVE\s+[IVXLC]+:\s*[A-Z]/,
+    (t) => {
+      const m = t.match(/^STAVE\s+([IVXLC]+):\s*(.+)$/);
+      return m ? `Stave ${m[1]}: ${titleCase(m[2])}` : t.trim();
+    }
+  );
+}
+
+function parseChapterArabicBare(text) {
+  // Headings are just "Chapter 1", "Chapter 2", … with no title text
+  // (Pride and Prejudice's original chapters have no titles).
+  return splitByHeadings(
+    stripGutenberg(text),
+    /^\s{0,4}Chapter\s+\d+\s*$/,
+    (t) => t.trim().replace(/\s{2,}/g, ' ')
+  );
+}
+
+/** True for a short, all-caps line — the shape of an inline chapter title. */
+function looksLikeCapsTitle(line) {
+  return (
+    !!line &&
+    line.split(/\s+/).length <= 8 &&
+    /[A-Z]/.test(line) &&
+    line === line.toUpperCase()
+  );
+}
+
+function parseChapterRomanBare(text) {
+  // Headings are just "CHAPTER I", "CHAPTER II", … with the real title
+  // printed as its own all-caps line right after (not on the same line, and
+  // not repeated before each chapter body — only Alice/Call-of-the-Wild-style
+  // books put it inline). Promote that line into the title when present.
+  const chapters = splitByHeadings(
+    stripGutenberg(text),
+    /^\s{0,4}CHAPTER\s+[IVXLC]+\s*$/,
+    (t) => t.trim().replace(/^CHAPTER/, 'Chapter').replace(/\s{2,}/g, ' ')
+  );
+  return chapters.map((c) => {
+    const [first, ...rest] = c.paragraphs;
+    if (looksLikeCapsTitle(first)) {
+      return { title: `${c.title}: ${titleCase(first)}`, paragraphs: rest };
+    }
+    return c;
+  });
+}
+
 function titleCase(s) {
   const small = new Set(['a', 'an', 'and', 'as', 'at', 'but', 'by', 'for', 'in', 'of', 'on', 'or', 'the', 'to', 'with']);
   return s
     .toLowerCase()
     .split(' ')
-    .map((w, i) => (i > 0 && small.has(w) ? w : w.charAt(0).toUpperCase() + w.slice(1)))
+    .map((w, i) => {
+      const bareWord = w.replace(/^[^a-z]+/, '');
+      if (i > 0 && small.has(bareWord)) return w;
+      // Capitalize the first letter, wherever it is (skips leading quotes/dashes).
+      const letterIndex = w.search(/[a-z]/);
+      if (letterIndex === -1) return w;
+      return w.slice(0, letterIndex) + w[letterIndex].toUpperCase() + w.slice(letterIndex + 1);
+    })
     .join(' ');
 }
 
@@ -232,6 +362,15 @@ const countWords = (chapters) =>
     0
   );
 
+const PLAIN_TEXT_PARSERS = {
+  'gutenberg-numbered': parseGutenbergNumbered,
+  'gutenberg-roman': parseGutenbergRoman,
+  'chapter-roman-titled': parseChapterRomanTitled,
+  'stave-roman-titled': parseStaveRomanTitled,
+  'chapter-arabic-bare': parseChapterArabicBare,
+  'chapter-roman-bare': parseChapterRomanBare,
+};
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
   const manifest = [];
@@ -246,10 +385,9 @@ async function main() {
       }
     } else {
       const text = await fetchText(book.url);
-      chapters =
-        book.kind === 'gutenberg-roman'
-          ? parseGutenbergRoman(text)
-          : parseGutenbergNumbered(text);
+      const parse = PLAIN_TEXT_PARSERS[book.kind];
+      if (!parse) throw new Error(`Unknown book kind: ${book.kind}`);
+      chapters = parse(text);
     }
 
     const { kind, url, urlTemplate, chapterCount, ...meta } = book;

@@ -52,6 +52,20 @@ Rules:
 - If the photo is not a readable page of English text, return exactly: {"error": "UNREADABLE_PAGE", "message": "a short English explanation of what went wrong"}.
 - Return ONLY the JSON object. No markdown fences, no commentary.`;
 
+const LEVEL_INSTRUCTIONS = {
+  Beginner:
+    "The learner's self-assessed English level is Beginner. Choose the simplest, highest-frequency vocabulary items worth highlighting, keep every definition and explanation in short, plain sentences, and keep the sentence breakdown to a short, simple sentence.",
+  Intermediate:
+    "The learner's self-assessed English level is Intermediate. Choose everyday-to-moderately-advanced vocabulary items, and write definitions and explanations in clear but not oversimplified English.",
+  Advanced:
+    "The learner's self-assessed English level is Advanced. You may highlight more sophisticated or nuanced vocabulary, and give a more detailed grammatical analysis in the sentence breakdown.",
+};
+
+function systemPromptFor(level) {
+  const extra = LEVEL_INSTRUCTIONS[level];
+  return extra ? `${SYSTEM_PROMPT}\n\n${extra}` : SYSTEM_PROMPT;
+}
+
 export class GeminiError extends Error {
   constructor(message, { status, retryable = false } = {}) {
     super(message);
@@ -67,10 +81,11 @@ export class GeminiError extends Error {
  * @param {string} apiKey        the user's Gemini API key
  * @param {string} imageBase64   raw base64 JPEG payload (no data: prefix)
  * @param {string} mimeType      e.g. "image/jpeg"
- * @param {function} onStatus    optional progress callback (string)
+ * @param {object} [options]     { level?: 'Beginner'|'Intermediate'|'Advanced', onStatus?: function }
  * @returns {Promise<object>}    the parsed study-guide object
  */
-export async function analyzePageImage(apiKey, imageBase64, mimeType, onStatus) {
+export async function analyzePageImage(apiKey, imageBase64, mimeType, options = {}) {
+  const { level, onStatus } = options;
   return analyzeContent(
     apiKey,
     [
@@ -79,6 +94,7 @@ export async function analyzePageImage(apiKey, imageBase64, mimeType, onStatus) 
         text: 'Here is a photo of one page from my English book. Please create my study guide following your instructions exactly.',
       },
     ],
+    level,
     onStatus
   );
 }
@@ -89,10 +105,11 @@ export async function analyzePageImage(apiKey, imageBase64, mimeType, onStatus) 
  *
  * @param {string} apiKey  the user's Gemini API key
  * @param {string} pageText the page's plain text
- * @param {function} onStatus optional progress callback (string)
+ * @param {object} [options] { level?: 'Beginner'|'Intermediate'|'Advanced', onStatus?: function }
  * @returns {Promise<object>} the parsed study-guide object
  */
-export async function analyzePageText(apiKey, pageText, onStatus) {
+export async function analyzePageText(apiKey, pageText, options = {}) {
+  const { level, onStatus } = options;
   return analyzeContent(
     apiKey,
     [
@@ -100,13 +117,14 @@ export async function analyzePageText(apiKey, pageText, onStatus) {
         text: `Here is one page from my English book:\n\n"""\n${pageText}\n"""\n\nPlease create my study guide following your instructions exactly.`,
       },
     ],
+    level,
     onStatus
   );
 }
 
-async function analyzeContent(apiKey, userParts, onStatus) {
+async function analyzeContent(apiKey, userParts, level, onStatus) {
   const body = {
-    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    systemInstruction: { parts: [{ text: systemPromptFor(level) }] },
     contents: [{ role: 'user', parts: userParts }],
     generationConfig: {
       // Higher temperature adds wording variance, which further reduces the

@@ -31,5 +31,60 @@
     "source": "Standard Ebooks / Project Gutenberg #64317 (public domain in the USA)",
     "chapterCount": 9,
     "wordCount": 48066
+  },
+  {
+    "id": "alice-in-wonderland",
+    "title": "Alice's Adventures in Wonderland",
+    "author": "Lewis Carroll",
+    "year": 1865,
+    "level": "Beginner",
+    "description": "Alice tumbles down a rabbit hole into a nonsensical world of talking rabbits, a grinning cat, and a tea party that never ends. Playful, dreamlike, and full of memorable vocabulary.",
+    "source": "Project Gutenberg #11 (public domain)",
+    "chapterCount": 12,
+    "wordCount": 26366
+  },
+  {
+    "id": "call-of-the-wild",
+    "title": "The Call of the Wild",
+    "author": "Jack London",
+    "year": 1903,
+    "level": "Intermediate",
+    "description": "Buck, a domesticated dog, is stolen and sold into the brutal life of an Alaskan sled dog during the Klondike Gold Rush. Vivid, adventurous, and fast-paced.",
+    "source": "Project Gutenberg #215 (public domain)",
+    "chapterCount": 7,
+    "wordCount": 31721
+  },
+  {
+    "id": "christmas-carol",
+    "title": "A Christmas Carol",
+    "author": "Charles Dickens",
+    "year": 1843,
+    "level": "Intermediate",
+    "description": "Miserly Ebenezer Scrooge is visited by three spirits on Christmas Eve who show him his past, present, and future. A short, classic ghost story of redemption.",
+    "source": "Project Gutenberg #46 (public domain)",
+    "chapterCount": 5,
+    "wordCount": 28402
+  },
+  {
+    "id": "pride-and-prejudice",
+    "title": "Pride and Prejudice",
+    "author": "Jane Austen",
+    "year": 1813,
+    "level": "Advanced",
+    "description": "Elizabeth Bennet navigates manners, marriage, and misunderstandings with the proud Mr. Darcy. Witty, socially observant prose with long, elegant sentences.",
+    "source": "Project Gutenberg #1342 (public domain)",
+    "chapterCount": 61,
+    "wordCount": 121439
+  },
+  {
+    "id": "secret-garden",
+    "title": "The Secret Garden",
+    "author": "Frances Hodgson Burnett",
+    "year": 1911,
+    "level": "Beginner",
+    "description": "A sickly, unloved orphan discovers a locked, forgotten garden on her uncle’s Yorkshire estate — and it changes everything. Gentle pacing, clear sentences.",
+    "source": "Project Gutenberg #113 (public domain)",
+    "chapterCount": 27,
+    "wordCount": 80372
   }
 ]

@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { getSetting, setSetting } from '../lib/db.js';
+import {
+  getSetting,
+  setSetting,
+  logActivity,
+  getAllActivity,
+  getAllVocab,
+  getAllBookProgress,
+} from '../lib/db.js';
+import { isActiveToday } from '../lib/streaks.js';
+import { computeStats } from '../lib/statsUtils.js';
+import { renderProgressCard, shareOrDownloadCard } from '../lib/progressCard.js';
 import {
   CameraIcon,
   LibraryIcon,
@@ -8,6 +18,9 @@ import {
   ArrowLeftIcon,
   HelpCircleIcon,
   ChevronDownIcon,
+  CheckSquareIcon,
+  ShareIcon,
+  AlertIcon,
 } from './Icons.jsx';
 
 /**
@@ -17,9 +30,19 @@ import {
  * a page: scan a photo of a physical book, or open a built-in public-domain
  * book from the Library.
  */
-export default function HomeScreen({ streak, dueCount, onScan, onLibrary, onReview, onProgress }) {
+export default function HomeScreen({
+  streak,
+  dueCount,
+  onScan,
+  onLibrary,
+  onReview,
+  onProgress,
+  onCheckinComplete,
+}) {
   const [guideOpen, setGuideOpen] = useState(false);
   const [guideReady, setGuideReady] = useState(false);
+  const [checkingIn, setCheckingIn] = useState(false);
+  const [checkinMessage, setCheckinMessage] = useState('');
 
   useEffect(() => {
     getSetting('homeGuideCollapsed').then((collapsed) => {
@@ -32,6 +55,51 @@ export default function HomeScreen({ streak, dueCount, onScan, onLibrary, onRevi
     const next = !guideOpen;
     setGuideOpen(next);
     if (guideReady) setSetting('homeGuideCollapsed', !next).catch(() => {});
+  };
+
+  const handleCheckinAndShare = async () => {
+    if (checkingIn) return;
+    setCheckingIn(true);
+    setCheckinMessage('');
+    try {
+      const before = await getAllActivity();
+      if (!isActiveToday(before.map((a) => a.date))) {
+        await logActivity({ source: 'checkin' });
+      }
+      onCheckinComplete?.();
+
+      const [activity, vocab, bookProgress, theme] = await Promise.all([
+        getAllActivity(),
+        getAllVocab(),
+        getAllBookProgress(),
+        getSetting('theme'),
+      ]);
+      const stats = computeStats({ activity, vocab, bookProgress });
+      const currentBook = bookProgress
+        .filter((b) => !b.bookCompleted)
+        .sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))[0];
+      const blob = await renderProgressCard({
+        streak: stats.currentStreak,
+        longestStreak: stats.longestStreak,
+        vocabCount: stats.vocabCount,
+        booksCompleted: stats.booksCompleted,
+        bookTitle: currentBook?.bookTitle,
+        chapterTitle: currentBook ? `Chapter ${currentBook.chapterIndex + 1}` : '',
+        theme: theme || 'light',
+      });
+      const result = await shareOrDownloadCard(blob, 'readmate-progress.png');
+      setCheckinMessage(
+        result === 'shared'
+          ? '공유 완료! 오늘도 수고했어요.'
+          : result === 'downloaded'
+          ? '이미지가 저장됐어요 — 챌린지 방에 공유해보세요!'
+          : ''
+      );
+    } catch {
+      setCheckinMessage('이미지를 만들지 못했어요. 다시 시도해주세요.');
+    } finally {
+      setCheckingIn(false);
+    }
   };
 
   return (
@@ -146,6 +214,32 @@ export default function HomeScreen({ streak, dueCount, onScan, onLibrary, onRevi
         Library book for today's challenge page. Either way, your progress
         counts toward your streak.
       </p>
+
+      <div className="checkin-card">
+        <button
+          className="btn btn-block"
+          onClick={handleCheckinAndShare}
+          disabled={checkingIn}
+        >
+          <CheckSquareIcon size={17} />
+          {checkingIn ? '만드는 중…' : '오늘 학습 완료 체크 & 공유'}
+          <ShareIcon size={15} />
+        </button>
+        <p className="muted small checkin-hint">
+          오늘 읽은 것을 체크하면 챌린지 인증 이미지가 만들어져요. 바로
+          저장하거나 공유할 수 있어요.
+        </p>
+        {checkinMessage && (
+          <p className="small share-message">
+            {checkinMessage.startsWith('이미지를 만들지') ? (
+              <AlertIcon size={14} />
+            ) : (
+              <CheckSquareIcon size={14} />
+            )}{' '}
+            {checkinMessage}
+          </p>
+        )}
+      </div>
     </section>
   );
 }

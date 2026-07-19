@@ -239,6 +239,22 @@ export const BranchIcon = (p) => (
   </Icon>
 );
 
+export const PrinterIcon = (p) => (
+  <Icon {...p}>
+    <path d="M7 8.5V4.6a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1V8.5" />
+    <rect x="4.5" y="8.5" width="15" height="8" rx="1.6" />
+    <path d="M7 14.5h10V20a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-5.5Z" />
+    <circle cx="16.3" cy="11.3" r="0.9" fill="currentColor" stroke="none" />
+  </Icon>
+);
+
+export const CheckSquareIcon = (p) => (
+  <Icon {...p}>
+    <rect x="4" y="4" width="16" height="16" rx="3.2" />
+    <path d="m8 12.2 2.6 2.6L16.5 9" />
+  </Icon>
+);
+
 export const HelpCircleIcon = (p) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="9" />

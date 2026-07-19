@@ -17,7 +17,7 @@ import {
  * jumping around. "Analyze this page" sends the page's plain text straight
  * to Gemini — no photo, no OCR, since we already have the text.
  */
-export default function BookReaderScreen({ bookId, apiKey, onBack, onAnalyzed }) {
+export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack, onAnalyzed }) {
   const [book, setBook] = useState(null); // null = loading
   const [error, setError] = useState('');
   const [flatIndex, setFlatIndex] = useState(0);
@@ -167,7 +167,10 @@ export default function BookReaderScreen({ bookId, apiKey, onBack, onAnalyzed })
     setStatus('Sending the page to Gemini…');
     try {
       const pageText = current.paragraphs.join('\n\n');
-      const guide = await analyzePageText(apiKey, pageText, setStatus);
+      const guide = await analyzePageText(apiKey, pageText, {
+        level: readingLevel,
+        onStatus: setStatus,
+      });
       await logActivity({
         source: 'library',
         bookId,

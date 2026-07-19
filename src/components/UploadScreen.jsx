@@ -15,7 +15,7 @@ import {
  * browser (max 1600 px, JPEG) before being sent to Gemini, and is kept only
  * in memory — never persisted.
  */
-export default function UploadScreen({ apiKey, onResult }) {
+export default function UploadScreen({ apiKey, readingLevel, onResult }) {
   const [image, setImage] = useState(null); // { base64, mimeType, previewUrl }
   const [preparing, setPreparing] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
@@ -45,12 +45,10 @@ export default function UploadScreen({ apiKey, onResult }) {
     setAnalyzing(true);
     setStatus('Sending the page to Gemini…');
     try {
-      const guide = await analyzePageImage(
-        apiKey,
-        image.base64,
-        image.mimeType,
-        setStatus
-      );
+      const guide = await analyzePageImage(apiKey, image.base64, image.mimeType, {
+        level: readingLevel,
+        onStatus: setStatus,
+      });
       setImage(null); // the photo is discarded once the guide is ready
       await logActivity({ source: 'photo' });
       onResult(guide);
