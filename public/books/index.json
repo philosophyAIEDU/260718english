@@ -8,7 +8,8 @@
     "description": "Dorothy is swept away by a cyclone to the magical Land of Oz, where she sets off to meet the Wizard with three unforgettable friends. Simple, clear sentences — a perfect first novel in English.",
     "source": "Project Gutenberg #55 (public domain)",
     "chapterCount": 24,
-    "wordCount": 39107
+    "wordCount": 39107,
+    "totalPages": 167
   },
   {
     "id": "sherlock-holmes",
@@ -19,7 +20,8 @@
     "description": "Twelve classic detective stories told by Dr. Watson. Each adventure is self-contained, so one story makes a satisfying weekly challenge unit.",
     "source": "Project Gutenberg #1661 (public domain)",
     "chapterCount": 12,
-    "wordCount": 104331
+    "wordCount": 104331,
+    "totalPages": 447
   },
   {
     "id": "great-gatsby",
@@ -30,7 +32,8 @@
     "description": "Nick Carraway narrates the glittering, doomed world of Jay Gatsby in 1920s New York. Rich, literary prose for readers who want a challenge.",
     "source": "Standard Ebooks / Project Gutenberg #64317 (public domain in the USA)",
     "chapterCount": 9,
-    "wordCount": 48066
+    "wordCount": 48066,
+    "totalPages": 197
   },
   {
     "id": "alice-in-wonderland",
@@ -41,7 +44,8 @@
     "description": "Alice tumbles down a rabbit hole into a nonsensical world of talking rabbits, a grinning cat, and a tea party that never ends. Playful, dreamlike, and full of memorable vocabulary.",
     "source": "Project Gutenberg #11 (public domain)",
     "chapterCount": 12,
-    "wordCount": 26366
+    "wordCount": 26366,
+    "totalPages": 112
   },
   {
     "id": "call-of-the-wild",
@@ -52,7 +56,8 @@
     "description": "Buck, a domesticated dog, is stolen and sold into the brutal life of an Alaskan sled dog during the Klondike Gold Rush. Vivid, adventurous, and fast-paced.",
     "source": "Project Gutenberg #215 (public domain)",
     "chapterCount": 7,
-    "wordCount": 31721
+    "wordCount": 31721,
+    "totalPages": 148
   },
   {
     "id": "christmas-carol",
@@ -63,7 +68,8 @@
     "description": "Miserly Ebenezer Scrooge is visited by three spirits on Christmas Eve who show him his past, present, and future. A short, classic ghost story of redemption.",
     "source": "Project Gutenberg #46 (public domain)",
     "chapterCount": 5,
-    "wordCount": 28402
+    "wordCount": 28402,
+    "totalPages": 118
   },
   {
     "id": "pride-and-prejudice",
@@ -74,7 +80,8 @@
     "description": "Elizabeth Bennet navigates manners, marriage, and misunderstandings with the proud Mr. Darcy. Witty, socially observant prose with long, elegant sentences.",
     "source": "Project Gutenberg #1342 (public domain)",
     "chapterCount": 61,
-    "wordCount": 121439
+    "wordCount": 121439,
+    "totalPages": 532
   },
   {
     "id": "secret-garden",
@@ -85,6 +92,55 @@
     "description": "A sickly, unloved orphan discovers a locked, forgotten garden on her uncle’s Yorkshire estate — and it changes everything. Gentle pacing, clear sentences.",
     "source": "Project Gutenberg #113 (public domain)",
     "chapterCount": 27,
-    "wordCount": 80372
+    "wordCount": 80372,
+    "totalPages": 339
+  },
+  {
+    "id": "anne-of-green-gables",
+    "title": "Anne of Green Gables",
+    "author": "L. M. Montgomery",
+    "year": 1908,
+    "level": "Beginner",
+    "description": "A talkative orphan girl is sent by mistake to an elderly brother and sister on Prince Edward Island, and wins over the whole town. Warm, gentle, and funny.",
+    "source": "Project Gutenberg #45 (public domain)",
+    "chapterCount": 38,
+    "wordCount": 101982,
+    "totalPages": 432
+  },
+  {
+    "id": "treasure-island",
+    "title": "Treasure Island",
+    "author": "Robert Louis Stevenson",
+    "year": 1883,
+    "level": "Intermediate",
+    "description": "Young Jim Hawkins finds a pirate treasure map and sails into danger and mutiny aboard the Hispaniola. Classic pirate adventure, brisk and exciting.",
+    "source": "Project Gutenberg #120 (public domain)",
+    "chapterCount": 34,
+    "wordCount": 67671,
+    "totalPages": 295
+  },
+  {
+    "id": "jekyll-and-hyde",
+    "title": "The Strange Case of Dr. Jekyll and Mr. Hyde",
+    "author": "Robert Louis Stevenson",
+    "year": 1886,
+    "level": "Intermediate",
+    "description": "A London lawyer investigates the sinister connection between the respectable Dr. Jekyll and the monstrous Mr. Hyde. A short, gripping gothic mystery.",
+    "source": "Project Gutenberg #43 (public domain)",
+    "chapterCount": 10,
+    "wordCount": 25527,
+    "totalPages": 106
+  },
+  {
+    "id": "frankenstein",
+    "title": "Frankenstein",
+    "author": "Mary Shelley",
+    "year": 1818,
+    "level": "Advanced",
+    "description": "Victor Frankenstein creates a living being from dead flesh — and pays the price for playing god. Dense, philosophical gothic prose.",
+    "source": "Project Gutenberg #84 (public domain)",
+    "chapterCount": 24,
+    "wordCount": 69355,
+    "totalPages": 312
   }
 ]

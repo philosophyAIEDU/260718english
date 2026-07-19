@@ -14,6 +14,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { paginateParagraphs } from '../src/lib/pagination.js';
 
 const OUT_DIR = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -121,6 +122,54 @@ const BOOKS = [
     kind: 'chapter-roman-bare',
     url: 'https://raw.githubusercontent.com/GITenberg/The-Secret-Garden_113/master/113.txt',
   },
+  {
+    id: 'anne-of-green-gables',
+    title: 'Anne of Green Gables',
+    author: 'L. M. Montgomery',
+    year: 1908,
+    level: 'Beginner',
+    description:
+      'A talkative orphan girl is sent by mistake to an elderly brother and sister on Prince Edward Island, and wins over the whole town. Warm, gentle, and funny.',
+    source: 'Project Gutenberg #45 (public domain)',
+    kind: 'chapter-roman-titled',
+    url: 'https://raw.githubusercontent.com/GITenberg/Anne-of-Green-Gables_45/master/45.txt',
+  },
+  {
+    id: 'treasure-island',
+    title: 'Treasure Island',
+    author: 'Robert Louis Stevenson',
+    year: 1883,
+    level: 'Intermediate',
+    description:
+      'Young Jim Hawkins finds a pirate treasure map and sails into danger and mutiny aboard the Hispaniola. Classic pirate adventure, brisk and exciting.',
+    source: 'Project Gutenberg #120 (public domain)',
+    kind: 'chapter-number-bare-titled',
+    url: 'https://raw.githubusercontent.com/GITenberg/Treasure-Island_120/master/120.txt',
+  },
+  {
+    id: 'jekyll-and-hyde',
+    title: 'The Strange Case of Dr. Jekyll and Mr. Hyde',
+    author: 'Robert Louis Stevenson',
+    year: 1886,
+    level: 'Intermediate',
+    description:
+      'A London lawyer investigates the sinister connection between the respectable Dr. Jekyll and the monstrous Mr. Hyde. A short, gripping gothic mystery.',
+    source: 'Project Gutenberg #43 (public domain)',
+    kind: 'chapter-caps-bare',
+    url: 'https://raw.githubusercontent.com/GITenberg/The-Strange-Case-of-Dr.-Jekyll-and-Mr.-Hyde_43/master/43.txt',
+  },
+  {
+    id: 'frankenstein',
+    title: 'Frankenstein',
+    author: 'Mary Shelley',
+    year: 1818,
+    level: 'Advanced',
+    description:
+      'Victor Frankenstein creates a living being from dead flesh — and pays the price for playing god. Dense, philosophical gothic prose.',
+    source: 'Project Gutenberg #84 (public domain)',
+    kind: 'chapter-arabic-bare',
+    url: 'https://raw.githubusercontent.com/GITenberg/Frankenstein_84/master/84.txt',
+  },
 ];
 
 async function fetchText(url) {
@@ -165,6 +214,10 @@ function toParagraphs(chunk) {
     )
     .filter((p) => p && !/^\[Illustration[^\]]*\]$/i.test(p))
     .map((p) => p.replace(/\[Illustration[^\]]*\]/gi, '').trim())
+    // Strip a leading "|" — some transcriptions use it to mark where a
+    // decorative drop-cap goes at the start of a chapter (e.g. "|MRS.
+    // Rachel Lynde lived...").
+    .map((p) => p.replace(/^\|\s*/, ''))
     .filter((p) => p && !/^(the\s+)?end\.?$/i.test(p));
 }
 
@@ -223,7 +276,13 @@ function splitByHeadings(body, headingRe, cleanTitle) {
   if (current) chapters.push(current);
   return chapters
     .map((c) => ({ title: c.title, paragraphs: toParagraphs(c.text) }))
-    .filter((c) => c.paragraphs.length > 0);
+    .filter((c) => {
+      // Guards against loose heading regexes (e.g. an all-caps heuristic)
+      // matching a stray title-page line or a letter's signature line: a
+      // real chapter always has far more than a few words of body text.
+      const wordCount = c.paragraphs.reduce((s, p) => s + p.split(/\s+/).length, 0);
+      return wordCount >= 30;
+    });
 }
 
 function parseGutenbergNumbered(text) {
@@ -292,6 +351,33 @@ function looksLikeCapsTitle(line) {
     line.split(/\s+/).length <= 8 &&
     /[A-Z]/.test(line) &&
     line === line.toUpperCase()
+  );
+}
+
+function parseChapterNumberBareTitled(text) {
+  // Headings are a bare number alone on its own line ("1", "2", …), with
+  // the real chapter title as the very next paragraph (Treasure Island).
+  const chapters = splitByHeadings(
+    stripGutenberg(text),
+    /^\s{0,2}\d{1,2}\s*$/,
+    (t) => `Chapter ${t.trim()}`
+  );
+  return chapters.map((c) => {
+    const [first, ...rest] = c.paragraphs;
+    return first ? { title: `${c.title}: ${first}`, paragraphs: rest } : c;
+  });
+}
+
+function parseChapterCapsBare(text) {
+  // Headings are a short all-caps line with no numbering at all, e.g.
+  // "STORY OF THE DOOR" (Dr. Jekyll and Mr. Hyde). Riskier than a numbered
+  // anchor — the shared word-count filter in splitByHeadings drops the
+  // false positives this book has (its own title page, a letter's
+  // all-caps signature line).
+  return splitByHeadings(
+    stripGutenberg(text),
+    /^[A-Z][A-Z'.,; -]{3,45}[A-Z]$/,
+    (t) => titleCase(t.trim())
   );
 }
 
@@ -369,6 +455,8 @@ const PLAIN_TEXT_PARSERS = {
   'stave-roman-titled': parseStaveRomanTitled,
   'chapter-arabic-bare': parseChapterArabicBare,
   'chapter-roman-bare': parseChapterRomanBare,
+  'chapter-number-bare-titled': parseChapterNumberBareTitled,
+  'chapter-caps-bare': parseChapterCapsBare,
 };
 
 async function main() {
@@ -396,13 +484,22 @@ async function main() {
       path.join(OUT_DIR, `${book.id}.json`),
       JSON.stringify(record)
     );
+    // Total page count (same pagination the in-app reader uses), so the
+    // Library list can show a 14-day reading plan without fetching the
+    // full book JSON.
+    const totalPages = chapters.reduce(
+      (sum, c) => sum + paginateParagraphs(c.paragraphs).length,
+      0
+    );
+
     manifest.push({
       ...meta,
       chapterCount: chapters.length,
       wordCount: countWords(chapters),
+      totalPages,
     });
     console.log(
-      `${book.id}: ${chapters.length} chapters, ${countWords(chapters).toLocaleString()} words`
+      `${book.id}: ${chapters.length} chapters, ${countWords(chapters).toLocaleString()} words, ${totalPages} pages`
     );
   }
 

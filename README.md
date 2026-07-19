@@ -53,9 +53,11 @@ npm run build
 ## 🎯 챌린지 핵심 기능
 
 - **📷 Scan a Page** — 내가 읽는 책 한 페이지를 사진으로 찍어 AI 학습 가이드를 받습니다.
-- **📖 Read the Library** — 계정·비용 없이 바로 읽을 수 있는 무료 고전 영어 원서 8종이
-  들어있습니다 (아래 목록 참고). 페이지를 넘기며 읽다가 "Analyze this page"를 누르면
-  사진 없이 바로 학습 가이드가 만들어집니다.
+- **📖 Read the Library** — 계정·비용 없이 바로 읽을 수 있는 무료 고전 영어 원서 12종이
+  들어있습니다 (아래 목록 참고). Beginner(초록) · Intermediate(골드) · Advanced(자주)
+  레벨별로 색상 구분되어 묶여 있고, 각 책마다 **14일 챌린지 기준 하루 페이지 수**가
+  표시됩니다. 리더 화면에서도 지금이 14일 중 며칠째인지 확인할 수 있어요. 페이지를
+  넘기며 읽다가 "Analyze this page"를 누르면 사진 없이 바로 학습 가이드가 만들어집니다.
 - **🔊 발음 듣기** — 단어 옆 스피커 아이콘을 누르면 브라우저 내장 음성으로 발음을 들을 수 있습니다.
 - **📊 영어 레벨 테스트** — 설정 탭에서 6문항 테스트로 내 레벨(Beginner/Intermediate/Advanced)을
   확인하면, 학습 가이드의 어휘 난이도와 라이브러리 추천 도서가 그에 맞게 조정됩니다.
@@ -70,16 +72,24 @@ npm run build
 
 ### 📚 내장 무료 원서 목록 (모두 저작권 만료, 공개 도메인)
 
-| 레벨 | 책 | 저자 | 챕터 |
-|---|---|---|---|
-| Beginner | The Wonderful Wizard of Oz | L. Frank Baum | 24 |
-| Beginner | Alice's Adventures in Wonderland | Lewis Carroll | 12 |
-| Beginner | The Secret Garden | Frances Hodgson Burnett | 27 |
-| Intermediate | The Adventures of Sherlock Holmes | Arthur Conan Doyle | 12 |
-| Intermediate | The Call of the Wild | Jack London | 7 |
-| Intermediate | A Christmas Carol | Charles Dickens | 5 |
-| Advanced | The Great Gatsby | F. Scott Fitzgerald | 9 |
-| Advanced | Pride and Prejudice | Jane Austen | 61 |
+| 레벨 | 책 | 저자 | 챕터 | 14일 기준 하루 페이지 |
+|---|---|---|---|---|
+| 🟢 Beginner | The Wonderful Wizard of Oz | L. Frank Baum | 24 | ~12 |
+| 🟢 Beginner | Alice's Adventures in Wonderland | Lewis Carroll | 12 | ~8 |
+| 🟢 Beginner | The Secret Garden | Frances Hodgson Burnett | 27 | ~25 |
+| 🟢 Beginner | Anne of Green Gables | L. M. Montgomery | 38 | ~31 |
+| 🟡 Intermediate | The Adventures of Sherlock Holmes | Arthur Conan Doyle | 12 | ~32 |
+| 🟡 Intermediate | The Call of the Wild | Jack London | 7 | ~11 |
+| 🟡 Intermediate | A Christmas Carol | Charles Dickens | 5 | ~9 |
+| 🟡 Intermediate | Treasure Island | Robert Louis Stevenson | 34 | ~22 |
+| 🟡 Intermediate | The Strange Case of Dr. Jekyll and Mr. Hyde | Robert Louis Stevenson | 10 | ~8 |
+| 🟣 Advanced | The Great Gatsby | F. Scott Fitzgerald | 9 | ~15 |
+| 🟣 Advanced | Pride and Prejudice | Jane Austen | 61 | ~38 |
+| 🟣 Advanced | Frankenstein | Mary Shelley | 24 | ~23 |
+
+"14일 기준 하루 페이지"는 그 책을 14일 챌린지 안에 완독하려면 하루에 몇 "페이지"
+(앱 내 약 280단어 단위)를 읽어야 하는지 보여줍니다. 챌린지 그룹의 속도에 맞는
+책을 고를 때 참고하세요.
 
 새 책을 추가하려면 `scripts/build-books.mjs`의 `BOOKS` 목록에 항목을 추가하고
 `node scripts/build-books.mjs`를 실행하세요. `public/books/*.json`이 새로 생성됩니다.
@@ -147,3 +157,7 @@ public/
   스트릭은 자정이 지나기 전까지 유지됩니다.
 - **레벨 테스트 결과는 어디에 쓰이나요?** → 학습 가이드의 어휘 난이도(Gemini 프롬프트)와
   라이브러리의 "Recommended for you" 표시에 반영됩니다. 설정 탭에서 언제든 다시 볼 수 있습니다.
+- **14일 완독 플랜은 강제인가요?** → 아니요, 참고용 안내입니다. "14-Day Plan · ~N pages/day"는
+  그 책을 14일 안에 끝내려면 하루 몇 페이지씩 읽어야 하는지 계산해서 보여줄 뿐이고, 리더
+  화면의 "Day X of 14"도 지금 읽은 양 기준으로 계산되는 참고 지표입니다. 실제 진도는
+  자유롭게 조절하면 됩니다.

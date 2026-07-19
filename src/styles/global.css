@@ -40,6 +40,12 @@
   --danger-bg: #f8e9e6;
   --gold: #a87e24;
   --gold-bg: #f6edd8;
+  --level-beginner: #3f7d4a;
+  --level-beginner-bg: #e8f2e7;
+  --level-intermediate: #a87e24;
+  --level-intermediate-bg: #f6edd8;
+  --level-advanced: #8a3b6c;
+  --level-advanced-bg: #f5e6ef;
   --shadow-sm: 0 1px 2px rgba(46, 33, 16, 0.06);
   --shadow: 0 1px 2px rgba(46, 33, 16, 0.05), 0 6px 20px -6px rgba(46, 33, 16, 0.1);
   --shadow-lg: 0 2px 6px rgba(46, 33, 16, 0.06), 0 18px 44px -12px rgba(46, 33, 16, 0.18);
@@ -70,6 +76,12 @@
   --danger-bg: #392722;
   --gold: #dcb15c;
   --gold-bg: #362e1b;
+  --level-beginner: #7ac48a;
+  --level-beginner-bg: #22301f;
+  --level-intermediate: #dcb15c;
+  --level-intermediate-bg: #362e1b;
+  --level-advanced: #d68fbb;
+  --level-advanced-bg: #362430;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -8px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.35), 0 20px 48px -12px rgba(0, 0, 0, 0.65);
@@ -481,6 +493,10 @@ main {
 .pill-register-informal { background: var(--gold-bg); color: var(--gold); }
 .pill-register-neutral { background: var(--bg-inset); color: var(--text-soft); }
 .pill-register-literary { background: var(--collins-bg); color: var(--collins); }
+
+.pill-level-beginner { background: var(--level-beginner-bg); color: var(--level-beginner); }
+.pill-level-intermediate { background: var(--level-intermediate-bg); color: var(--level-intermediate); }
+.pill-level-advanced { background: var(--level-advanced-bg); color: var(--level-advanced); }
 
 .notice {
   display: flex;
@@ -1487,6 +1503,7 @@ main {
   text-align: left;
   background: var(--bg-card);
   border: 1px solid var(--border);
+  border-left: 4px solid var(--border-strong);
   border-radius: var(--radius);
   box-shadow: var(--shadow-sm);
   padding: 16px;
@@ -1500,6 +1517,10 @@ main {
   border-color: var(--border-strong);
 }
 
+.book-card-beginner { border-left-color: var(--level-beginner); }
+.book-card-intermediate { border-left-color: var(--level-intermediate); }
+.book-card-advanced { border-left-color: var(--level-advanced); }
+
 .book-card-icon {
   width: 44px;
   height: 44px;
@@ -1511,6 +1532,10 @@ main {
   justify-content: center;
   flex: none;
 }
+
+.book-card-beginner .book-card-icon { background: var(--level-beginner-bg); color: var(--level-beginner); }
+.book-card-intermediate .book-card-icon { background: var(--level-intermediate-bg); color: var(--level-intermediate); }
+.book-card-advanced .book-card-icon { background: var(--level-advanced-bg); color: var(--level-advanced); }
 
 .book-card-body {
   flex: 1;
@@ -1552,6 +1577,54 @@ main {
   margin: 0 0 10px;
   line-height: 1.55;
 }
+
+.plan-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--bg-inset);
+  color: var(--text-soft);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 10px;
+  margin: 0 0 8px;
+}
+
+.level-section {
+  margin-bottom: 6px;
+}
+
+.level-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 22px 0 12px;
+  font-family: var(--font-sans);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.level-section:first-child .level-section-header {
+  margin-top: 4px;
+}
+
+.level-section-header .level-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.level-section-beginner .level-section-header { color: var(--level-beginner); }
+.level-section-beginner .level-dot { background: var(--level-beginner); }
+.level-section-intermediate .level-section-header { color: var(--level-intermediate); }
+.level-section-intermediate .level-dot { background: var(--level-intermediate); }
+.level-section-advanced .level-section-header { color: var(--level-advanced); }
+.level-section-advanced .level-dot { background: var(--level-advanced); }
 
 /* ------------------------------- reader --------------------------------- */
 

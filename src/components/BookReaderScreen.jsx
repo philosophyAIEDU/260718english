@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { paginateParagraphs } from '../lib/pagination.js';
+import { paginateParagraphs, dayForPageIndex, CHALLENGE_DAYS } from '../lib/pagination.js';
 import { getBookProgress, saveBookProgress, logActivity } from '../lib/db.js';
 import { analyzePageText, GeminiError } from '../lib/geminiClient.js';
 import {
@@ -242,6 +242,8 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
 
       <p className="reader-page-count">
         Page {current.pageIndexInChapter + 1} of {current.pageCountInChapter} in this chapter
+        {' · '}
+        Day {dayForPageIndex(flatIndex, flatPages.length)} of {CHALLENGE_DAYS}
       </p>
 
       <div className="reader-nav">
