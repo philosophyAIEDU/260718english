@@ -6,6 +6,23 @@
 
 const TARGET_WORDS_PER_PAGE = 280;
 
+/*
+ * Beginners do better with shorter, more digestible chunks — a big wall of
+ * text is discouraging before you've built any reading stamina. Pages
+ * shrink by level so a Beginner "page" is a lighter commitment than an
+ * Advanced one. Both the build script (for the Library's page/day chip)
+ * and the in-app reader use this same table, so the two always agree.
+ */
+const WORDS_PER_PAGE_BY_LEVEL = {
+  Beginner: 150,
+  Intermediate: 220,
+  Advanced: 280,
+};
+
+export function targetWordsForLevel(level) {
+  return WORDS_PER_PAGE_BY_LEVEL[level] || TARGET_WORDS_PER_PAGE;
+}
+
 function wordCount(str) {
   return str.split(/\s+/).filter(Boolean).length;
 }

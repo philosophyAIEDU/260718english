@@ -18,76 +18,83 @@
   --ease: cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
+/*
+ * Palette follows Philosophy AI Education's brand: creamy gold background
+ * (#FFFBF0), a golden-mustard accent family (#8B6508 deep / #C18900
+ * primary), and warm dark-brown text (#2D1B00) — see
+ * ~/.claude/skills/philosophy-ai-pptx-creator/SKILL.md and
+ * philosophy-ai-education-materials-creator/SKILL.md for the source values.
+ */
 :root[data-theme='light'] {
-  --bg: #f7f3ea;
-  --bg-elevated: #fffefb;
-  --bg-card: #fffdf8;
-  --bg-inset: #f0eadc;
-  --text: #292219;
-  --text-soft: #756753;
-  --text-faint: #9c8f7a;
-  --border: #e4dcc9;
-  --border-strong: #d3c8ae;
-  --accent: #7d5327;
-  --accent-hover: #6b4620;
-  --accent-soft: #f1e6d3;
-  --accent-contrast: #fffdf8;
+  --bg: #fffbf0;
+  --bg-elevated: #fffdf8;
+  --bg-card: #fffefb;
+  --bg-inset: #f7ecc9;
+  --text: #2d1b00;
+  --text-soft: #5d4037;
+  --text-faint: #8d6e63;
+  --border: #ecdfb0;
+  --border-strong: #ddc688;
+  --accent: #8b6508;
+  --accent-hover: #6f5106;
+  --accent-soft: #f7ecc9;
+  --accent-contrast: #fffbf0;
   --collins: #206a51;
   --collins-bg: #e6f2ec;
   --longman: #2c5c95;
   --longman-bg: #e8eff8;
   --danger: #a23a2e;
   --danger-bg: #f8e9e6;
-  --gold: #a87e24;
-  --gold-bg: #f6edd8;
+  --gold: #c18900;
+  --gold-bg: #f9ecc7;
   --level-beginner: #3f7d4a;
   --level-beginner-bg: #e8f2e7;
-  --level-intermediate: #a87e24;
-  --level-intermediate-bg: #f6edd8;
+  --level-intermediate: #c18900;
+  --level-intermediate-bg: #f9ecc7;
   --level-advanced: #8a3b6c;
   --level-advanced-bg: #f5e6ef;
-  --shadow-sm: 0 1px 2px rgba(46, 33, 16, 0.06);
-  --shadow: 0 1px 2px rgba(46, 33, 16, 0.05), 0 6px 20px -6px rgba(46, 33, 16, 0.1);
-  --shadow-lg: 0 2px 6px rgba(46, 33, 16, 0.06), 0 18px 44px -12px rgba(46, 33, 16, 0.18);
-  --header-bg: rgba(247, 243, 234, 0.86);
-  --tabbar-bg: rgba(255, 253, 248, 0.92);
-  --focus-ring: rgba(125, 83, 39, 0.35);
+  --shadow-sm: 0 1px 2px rgba(45, 27, 0, 0.07);
+  --shadow: 0 1px 2px rgba(45, 27, 0, 0.05), 0 6px 20px -6px rgba(45, 27, 0, 0.12);
+  --shadow-lg: 0 2px 6px rgba(45, 27, 0, 0.07), 0 18px 44px -12px rgba(45, 27, 0, 0.2);
+  --header-bg: rgba(255, 251, 240, 0.86);
+  --tabbar-bg: rgba(255, 254, 251, 0.92);
+  --focus-ring: rgba(139, 101, 8, 0.35);
 }
 
 :root[data-theme='dark'] {
-  --bg: #191611;
-  --bg-elevated: #221e17;
-  --bg-card: #232019;
-  --bg-inset: #2c2820;
-  --text: #eae2d1;
-  --text-soft: #a99b84;
-  --text-faint: #7d7260;
-  --border: #373227;
-  --border-strong: #4a4335;
-  --accent: #d2a267;
-  --accent-hover: #ddb27e;
-  --accent-soft: #37301f;
-  --accent-contrast: #1c1812;
+  --bg: #1d1608;
+  --bg-elevated: #241b0c;
+  --bg-card: #261c0d;
+  --bg-inset: #2f230f;
+  --text: #f7ecd2;
+  --text-soft: #cdb68e;
+  --text-faint: #96805c;
+  --border: #3d2f14;
+  --border-strong: #503f1a;
+  --accent: #d9a227;
+  --accent-hover: #e6b246;
+  --accent-soft: #3d2f10;
+  --accent-contrast: #1d1608;
   --collins: #74c7a3;
   --collins-bg: #22332b;
   --longman: #8db4e4;
   --longman-bg: #222c39;
   --danger: #df8d81;
   --danger-bg: #392722;
-  --gold: #dcb15c;
-  --gold-bg: #362e1b;
+  --gold: #e8b83f;
+  --gold-bg: #3d2f10;
   --level-beginner: #7ac48a;
   --level-beginner-bg: #22301f;
-  --level-intermediate: #dcb15c;
-  --level-intermediate-bg: #362e1b;
+  --level-intermediate: #e8b83f;
+  --level-intermediate-bg: #3d2f10;
   --level-advanced: #d68fbb;
   --level-advanced-bg: #362430;
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.35);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px -8px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 2px 6px rgba(0, 0, 0, 0.35), 0 20px 48px -12px rgba(0, 0, 0, 0.65);
-  --header-bg: rgba(25, 22, 17, 0.86);
-  --tabbar-bg: rgba(35, 32, 25, 0.92);
-  --focus-ring: rgba(210, 162, 103, 0.4);
+  --header-bg: rgba(29, 22, 8, 0.86);
+  --tabbar-bg: rgba(38, 28, 13, 0.92);
+  --focus-ring: rgba(217, 162, 39, 0.4);
 }
 
 * {
@@ -1652,6 +1659,47 @@ main {
   font-size: 0.84rem;
   font-family: var(--font-sans);
   max-width: 100%;
+}
+
+.beginner-tip {
+  margin-bottom: 14px;
+}
+
+.reader-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.reading-time {
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  color: var(--text-faint);
+}
+
+.font-size-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.font-size-control .icon-button {
+  width: 32px;
+  height: 32px;
+}
+
+.font-size-control .icon-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.font-size-label {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  color: var(--text-soft);
+  font-size: 0.9rem;
 }
 
 .book-page {

@@ -14,7 +14,7 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { paginateParagraphs } from '../src/lib/pagination.js';
+import { paginateParagraphs, targetWordsForLevel } from '../src/lib/pagination.js';
 
 const OUT_DIR = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -484,11 +484,12 @@ async function main() {
       path.join(OUT_DIR, `${book.id}.json`),
       JSON.stringify(record)
     );
-    // Total page count (same pagination the in-app reader uses), so the
-    // Library list can show a 14-day reading plan without fetching the
-    // full book JSON.
+    // Total page count (same level-aware pagination the in-app reader
+    // uses), so the Library list can show a 14-day reading plan without
+    // fetching the full book JSON.
+    const targetWords = targetWordsForLevel(book.level);
     const totalPages = chapters.reduce(
-      (sum, c) => sum + paginateParagraphs(c.paragraphs).length,
+      (sum, c) => sum + paginateParagraphs(c.paragraphs, targetWords).length,
       0
     );
 

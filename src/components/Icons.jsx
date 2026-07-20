@@ -255,6 +255,18 @@ export const CheckSquareIcon = (p) => (
   </Icon>
 );
 
+export const MinusIcon = (p) => (
+  <Icon {...p}>
+    <path d="M5 12h14" />
+  </Icon>
+);
+
+export const PlusIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 5v14M5 12h14" />
+  </Icon>
+);
+
 export const HelpCircleIcon = (p) => (
   <Icon {...p}>
     <circle cx="12" cy="12" r="9" />

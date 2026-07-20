@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { paginateParagraphs, dayForPageIndex, CHALLENGE_DAYS } from '../lib/pagination.js';
-import { getBookProgress, saveBookProgress, logActivity } from '../lib/db.js';
+import {
+  paginateParagraphs,
+  targetWordsForLevel,
+  dayForPageIndex,
+  CHALLENGE_DAYS,
+} from '../lib/pagination.js';
+import { getBookProgress, saveBookProgress, logActivity, getSetting, setSetting } from '../lib/db.js';
 import { analyzePageText, GeminiError } from '../lib/geminiClient.js';
 import {
   ArrowLeftIcon,
@@ -8,7 +13,18 @@ import {
   ChevronRightIcon,
   SparklesIcon,
   AlertIcon,
+  MinusIcon,
+  PlusIcon,
 } from './Icons.jsx';
+
+// Reading challenges are aimed at learners still building stamina, so
+// text size defaults a step larger than the rest of the UI and can be
+// bumped up further — a big, easy-to-track line is one less obstacle
+// between a beginner and finishing the page.
+// Absolute rem sizes (not multipliers) — step 0 matches .book-page's
+// default 1.06rem exactly, then steps up for easier reading.
+const FONT_SCALES = [1.06, 1.22, 1.38, 1.54];
+const AVERAGE_READING_WPM = 130; // conservative pace, comfortable for beginners
 
 /**
  * In-app reader for one Library book. Chapters are flattened into a single
@@ -25,6 +41,19 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   const [status, setStatus] = useState('');
   const [analyzeError, setAnalyzeError] = useState('');
   const [progress, setProgress] = useState(null);
+  const [fontStep, setFontStep] = useState(0);
+
+  useEffect(() => {
+    getSetting('readerFontStep').then((step) => {
+      if (typeof step === 'number' && FONT_SCALES[step]) setFontStep(step);
+    });
+  }, []);
+
+  const changeFontStep = (delta) => {
+    const next = Math.max(0, Math.min(FONT_SCALES.length - 1, fontStep + delta));
+    setFontStep(next);
+    setSetting('readerFontStep', next).catch(() => {});
+  };
 
   useEffect(() => {
     let alive = true;
@@ -56,9 +85,10 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
 
   const flatPages = useMemo(() => {
     if (!book) return [];
+    const targetWords = targetWordsForLevel(book.level);
     const pages = [];
     book.chapters.forEach((chapter, chapterIndex) => {
-      const chapterPages = paginateParagraphs(chapter.paragraphs);
+      const chapterPages = paginateParagraphs(chapter.paragraphs, targetWords);
       chapterPages.forEach((page, pageIndexInChapter) => {
         pages.push({
           chapterIndex,
@@ -234,7 +264,46 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
         </select>
       </div>
 
-      <div className="book-page">
+      {book.level === 'Beginner' && (
+        <div className="notice beginner-tip">
+          <SparklesIcon size={16} />
+          <span>
+            초보자 팁: 모르는 단어가 나와도 괜찮아요! 문장 전체 느낌을 먼저
+            파악하고, 별표로 저장해서 나중에 복습하세요.
+          </span>
+        </div>
+      )}
+
+      <div className="reader-toolbar">
+        <span className="reading-time">
+          ~{Math.max(1, Math.round(current.wordCount / AVERAGE_READING_WPM))} min read
+        </span>
+        <div className="font-size-control">
+          <button
+            className="icon-button"
+            onClick={() => changeFontStep(-1)}
+            disabled={fontStep === 0}
+            aria-label="Decrease text size"
+            title="Decrease text size"
+          >
+            <MinusIcon size={15} />
+          </button>
+          <span className="font-size-label" aria-hidden="true">
+            A
+          </span>
+          <button
+            className="icon-button"
+            onClick={() => changeFontStep(1)}
+            disabled={fontStep === FONT_SCALES.length - 1}
+            aria-label="Increase text size"
+            title="Increase text size"
+          >
+            <PlusIcon size={15} />
+          </button>
+        </div>
+      </div>
+
+      <div className="book-page" style={{ fontSize: `${FONT_SCALES[fontStep]}rem` }}>
         {current.paragraphs.map((p, i) => (
           <p key={i}>{p}</p>
         ))}
