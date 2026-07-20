@@ -255,6 +255,13 @@ export const CheckSquareIcon = (p) => (
   </Icon>
 );
 
+export const ClockIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="12" cy="12" r="8.5" />
+    <path d="M12 7.5V12l3 2" />
+  </Icon>
+);
+
 export const MinusIcon = (p) => (
   <Icon {...p}>
     <path d="M5 12h14" />

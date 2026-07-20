@@ -16,6 +16,7 @@ import {
   MinusIcon,
   PlusIcon,
 } from './Icons.jsx';
+import BookCover from './BookCover.jsx';
 
 // Reading challenges are aimed at learners still building stamina, so
 // text size defaults a step larger than the rest of the UI and can be
@@ -249,19 +250,22 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
       </button>
 
       <div className="reader-head">
-        <h2 className="reader-title">{book.title}</h2>
-        <select
-          className="reader-chapter-select"
-          value={current.chapterIndex}
-          onChange={(e) => jumpToChapter(e.target.value)}
-          aria-label="Jump to chapter"
-        >
-          {book.chapters.map((ch, i) => (
-            <option key={i} value={i}>
-              {ch.title}
-            </option>
-          ))}
-        </select>
+        <BookCover bookId={bookId} size="sm" />
+        <div className="reader-head-body">
+          <h2 className="reader-title">{book.title}</h2>
+          <select
+            className="reader-chapter-select"
+            value={current.chapterIndex}
+            onChange={(e) => jumpToChapter(e.target.value)}
+            aria-label="Jump to chapter"
+          >
+            {book.chapters.map((ch, i) => (
+              <option key={i} value={i}>
+                {ch.title}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {book.level === 'Beginner' && (

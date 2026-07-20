@@ -45,8 +45,11 @@ export default function HomeScreen({
   const [checkinMessage, setCheckinMessage] = useState('');
 
   useEffect(() => {
+    // Collapsed by default for a clean, uncluttered first impression; the
+    // learner can expand the how-to whenever they want. Only a previously
+    // stored preference of "open" (false) re-opens it.
     getSetting('homeGuideCollapsed').then((collapsed) => {
-      setGuideOpen(!collapsed); // never set -> undefined -> open by default
+      setGuideOpen(collapsed === false);
       setGuideReady(true);
     });
   }, []);
@@ -104,6 +107,14 @@ export default function HomeScreen({
 
   return (
     <section>
+      <div className="home-welcome">
+        <h2>오늘도 영어 원서 한 페이지 📖</h2>
+        <p className="muted small">
+          부담 갖지 말고 딱 한 페이지씩. 매일 조금씩 읽으면 어느새 한 권을
+          끝내게 돼요.
+        </p>
+      </div>
+
       <div className={`guide-card ${guideOpen ? 'open' : ''}`}>
         <button className="guide-header" onClick={toggleGuide} aria-expanded={guideOpen}>
           <span className="guide-header-left">
@@ -193,27 +204,21 @@ export default function HomeScreen({
       )}
 
       <div className="entry-grid">
+        <button className="entry-card entry-card-alt" onClick={onLibrary}>
+          <span className="entry-card-icon entry-card-icon-alt">
+            <LibraryIcon size={26} />
+          </span>
+          <strong>라이브러리 읽기</strong>
+          <span className="small muted">무료 영어 원서 12권 · 바로 시작</span>
+        </button>
         <button className="entry-card" onClick={onScan}>
           <span className="entry-card-icon">
             <CameraIcon size={26} />
           </span>
-          <strong>Scan a Page</strong>
-          <span className="small muted">Photograph a page from your own book</span>
-        </button>
-        <button className="entry-card" onClick={onLibrary}>
-          <span className="entry-card-icon entry-card-icon-alt">
-            <LibraryIcon size={26} />
-          </span>
-          <strong>Read the Library</strong>
-          <span className="small muted">Classic public-domain novels, built in</span>
+          <strong>내 책 찍기</strong>
+          <span className="small muted">읽고 있는 책 페이지를 사진으로</span>
         </button>
       </div>
-
-      <p className="upload-tip">
-        Fill your day: scan a page from what you're reading, or open a
-        Library book for today's challenge page. Either way, your progress
-        counts toward your streak.
-      </p>
 
       <div className="checkin-card">
         <button

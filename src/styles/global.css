@@ -26,39 +26,39 @@
  * philosophy-ai-education-materials-creator/SKILL.md for the source values.
  */
 :root[data-theme='light'] {
-  --bg: #fffbf0;
-  --bg-elevated: #fffdf8;
-  --bg-card: #fffefb;
-  --bg-inset: #f7ecc9;
-  --text: #2d1b00;
-  --text-soft: #5d4037;
-  --text-faint: #8d6e63;
-  --border: #ecdfb0;
-  --border-strong: #ddc688;
-  --accent: #8b6508;
-  --accent-hover: #6f5106;
-  --accent-soft: #f7ecc9;
-  --accent-contrast: #fffbf0;
-  --collins: #206a51;
-  --collins-bg: #e6f2ec;
-  --longman: #2c5c95;
-  --longman-bg: #e8eff8;
-  --danger: #a23a2e;
-  --danger-bg: #f8e9e6;
-  --gold: #c18900;
-  --gold-bg: #f9ecc7;
-  --level-beginner: #3f7d4a;
-  --level-beginner-bg: #e8f2e7;
-  --level-intermediate: #c18900;
-  --level-intermediate-bg: #f9ecc7;
-  --level-advanced: #8a3b6c;
-  --level-advanced-bg: #f5e6ef;
-  --shadow-sm: 0 1px 2px rgba(45, 27, 0, 0.07);
-  --shadow: 0 1px 2px rgba(45, 27, 0, 0.05), 0 6px 20px -6px rgba(45, 27, 0, 0.12);
-  --shadow-lg: 0 2px 6px rgba(45, 27, 0, 0.07), 0 18px 44px -12px rgba(45, 27, 0, 0.2);
-  --header-bg: rgba(255, 251, 240, 0.86);
-  --tabbar-bg: rgba(255, 254, 251, 0.92);
-  --focus-ring: rgba(139, 101, 8, 0.35);
+  --bg: #fff7e3;
+  --bg-elevated: #ffffff;
+  --bg-card: #ffffff;
+  --bg-inset: #fdf1d4;
+  --text: #35270d;
+  --text-soft: #6b5334;
+  --text-faint: #9c8259;
+  --border: #f0e2bd;
+  --border-strong: #e6d29a;
+  --accent: #a5720a;
+  --accent-hover: #895e07;
+  --accent-soft: #fdeec4;
+  --accent-contrast: #ffffff;
+  --collins: #1f8a63;
+  --collins-bg: #e4f6ee;
+  --longman: #2f6bb0;
+  --longman-bg: #e7f0fb;
+  --danger: #c0472f;
+  --danger-bg: #fceae5;
+  --gold: #d99a1a;
+  --gold-bg: #fdefc9;
+  --level-beginner: #3a9b5a;
+  --level-beginner-bg: #e5f7ea;
+  --level-intermediate: #d99a1a;
+  --level-intermediate-bg: #fdefc9;
+  --level-advanced: #a24a86;
+  --level-advanced-bg: #fbe9f4;
+  --shadow-sm: 0 1px 2px rgba(120, 85, 20, 0.08);
+  --shadow: 0 2px 4px rgba(120, 85, 20, 0.06), 0 8px 22px -8px rgba(120, 85, 20, 0.16);
+  --shadow-lg: 0 3px 8px rgba(120, 85, 20, 0.08), 0 20px 46px -12px rgba(120, 85, 20, 0.24);
+  --header-bg: rgba(255, 247, 227, 0.9);
+  --tabbar-bg: rgba(255, 255, 255, 0.94);
+  --focus-ring: rgba(176, 125, 10, 0.35);
 }
 
 :root[data-theme='dark'] {
@@ -1392,6 +1392,21 @@ main {
 }
 
 /* Home hub entry cards */
+.home-welcome {
+  margin: 2px 0 16px;
+}
+
+.home-welcome h2 {
+  margin: 0 0 4px;
+  font-size: 1.4rem;
+  letter-spacing: -0.015em;
+}
+
+.home-welcome p {
+  margin: 0;
+  line-height: 1.6;
+}
+
 .entry-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1403,7 +1418,7 @@ main {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 8px;
+  gap: 9px;
   text-align: left;
   background: var(--bg-card);
   border: 1px solid var(--border);
@@ -1411,35 +1426,62 @@ main {
   box-shadow: var(--shadow);
   padding: 22px 18px;
   font-family: var(--font-serif);
+  overflow: hidden;
+  position: relative;
   transition: box-shadow 0.18s var(--ease), border-color 0.18s var(--ease),
     transform 0.12s var(--ease);
+}
+
+/* A soft colored glow in the corner so the two entries feel bright and
+   distinct rather than two plain boxes. */
+.entry-card::after {
+  content: '';
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  opacity: 0.6;
+  z-index: 0;
+}
+
+.entry-card-alt::after {
+  background: var(--level-beginner-bg);
+}
+
+.entry-card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .entry-card:hover {
   box-shadow: var(--shadow-lg);
   border-color: var(--border-strong);
-  transform: translateY(-1px);
+  transform: translateY(-2px);
 }
 
 .entry-card strong {
-  font-size: 1.05rem;
+  font-size: 1.08rem;
   letter-spacing: -0.01em;
 }
 
 .entry-card-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent);
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: linear-gradient(140deg, var(--gold), var(--accent));
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 4px 10px -3px rgba(120, 85, 20, 0.4);
 }
 
 .entry-card-icon-alt {
-  background: var(--gold-bg);
-  color: var(--gold);
+  background: linear-gradient(140deg, #57c97a, #2f9e5b);
+  box-shadow: 0 4px 10px -3px rgba(30, 110, 60, 0.4);
 }
 
 @media (max-width: 420px) {
@@ -1502,47 +1544,119 @@ main {
 
 /* ------------------------------ library -------------------------------- */
 
+/* Colorful book-cover thumbnail (see components/BookCover.jsx) */
+.book-cover {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  border-radius: 8px 11px 11px 8px;
+  box-shadow: 0 3px 8px -2px rgba(60, 40, 5, 0.35);
+  overflow: hidden;
+}
+
+.book-cover-emoji {
+  font-size: 1.9rem;
+  line-height: 1;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.2));
+}
+
+/* The book "spine": a darker strip with a highlight down the binding edge. */
+.book-cover-spine {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 7px;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0.28),
+    rgba(0, 0, 0, 0.06) 55%,
+    rgba(255, 255, 255, 0.35) 60%,
+    transparent 72%
+  );
+}
+
+.book-cover-md {
+  width: 58px;
+  height: 82px;
+}
+
+.book-cover-sm {
+  width: 44px;
+  height: 62px;
+  border-radius: 6px 8px 8px 6px;
+}
+
+.book-cover-sm .book-cover-emoji {
+  font-size: 1.4rem;
+}
+
+/* Starter nudge banner for first-time readers */
+.starter-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: linear-gradient(135deg, var(--accent-soft), var(--bg-card));
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 14px 16px;
+  margin-bottom: 18px;
+  font-family: var(--font-serif);
+  transition: transform 0.12s var(--ease), box-shadow 0.18s var(--ease);
+}
+
+.starter-banner:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.starter-banner-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.starter-banner-label {
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent);
+}
+
+.starter-banner strong {
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+}
+
 .book-card {
   display: flex;
-  gap: 14px;
+  gap: 15px;
   align-items: flex-start;
   width: 100%;
   text-align: left;
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-left: 4px solid var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-sm);
   padding: 16px;
   margin-bottom: 14px;
   font-family: var(--font-serif);
-  transition: box-shadow 0.18s var(--ease), border-color 0.18s var(--ease);
+  transition: transform 0.12s var(--ease), box-shadow 0.18s var(--ease),
+    border-color 0.18s var(--ease);
 }
 
 .book-card:hover {
-  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
   border-color: var(--border-strong);
 }
-
-.book-card-beginner { border-left-color: var(--level-beginner); }
-.book-card-intermediate { border-left-color: var(--level-intermediate); }
-.book-card-advanced { border-left-color: var(--level-advanced); }
-
-.book-card-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 10px;
-  background: var(--accent-soft);
-  color: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
-
-.book-card-beginner .book-card-icon { background: var(--level-beginner-bg); color: var(--level-beginner); }
-.book-card-intermediate .book-card-icon { background: var(--level-intermediate-bg); color: var(--level-intermediate); }
-.book-card-advanced .book-card-icon { background: var(--level-advanced-bg); color: var(--level-advanced); }
 
 .book-card-body {
   flex: 1;
@@ -1558,13 +1672,52 @@ main {
 
 .book-card-head h3 {
   margin: 0;
-  font-size: 1.08rem;
+  font-size: 1.1rem;
   letter-spacing: -0.01em;
 }
 
 .book-card-author {
   margin: 2px 0 8px;
 }
+
+.book-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0 0 10px;
+}
+
+.meta-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-inset);
+  color: var(--text-soft);
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 3px 9px;
+}
+
+.difficulty-meter {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 2px;
+}
+
+.diff-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border-strong);
+}
+
+.book-card-beginner .diff-dot.on { background: var(--level-beginner); }
+.book-card-intermediate .diff-dot.on { background: var(--level-intermediate); }
+.book-card-advanced .diff-dot.on { background: var(--level-advanced); }
 
 .recommended-tag {
   display: flex;
@@ -1585,18 +1738,10 @@ main {
   line-height: 1.55;
 }
 
-.plan-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  background: var(--bg-inset);
-  color: var(--text-soft);
-  font-family: var(--font-sans);
-  font-size: 0.72rem;
+.continue-line {
   font-weight: 600;
-  border-radius: 999px;
-  padding: 3px 10px;
-  margin: 0 0 8px;
+  color: var(--accent) !important;
+  font-family: var(--font-sans);
 }
 
 .level-section {
@@ -1607,23 +1752,32 @@ main {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin: 22px 0 12px;
+  margin: 24px 0 13px;
   font-family: var(--font-sans);
-  font-size: 0.78rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.09em;
 }
 
 .level-section:first-child .level-section-header {
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
 .level-section-header .level-dot {
-  width: 10px;
-  height: 10px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   flex: none;
+}
+
+.level-section-hint {
+  font-family: var(--font-serif);
+  font-size: 0.82rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-faint);
 }
 
 .level-section-beginner .level-section-header { color: var(--level-beginner); }
@@ -1638,10 +1792,16 @@ main {
 .reader-head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 14px;
   margin-bottom: 14px;
-  flex-wrap: wrap;
+}
+
+.reader-head-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .reader-title {
@@ -1655,10 +1815,11 @@ main {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
   color: var(--text);
-  padding: 7px 12px;
+  padding: 8px 12px;
   font-size: 0.84rem;
   font-family: var(--font-sans);
   max-width: 100%;
+  width: 100%;
 }
 
 .beginner-tip {

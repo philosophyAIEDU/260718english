@@ -8,22 +8,23 @@
 const WIDTH = 1080;
 const HEIGHT = 1350; // 4:5, friendly for most chat apps and Instagram
 
+// Mirrors the Philosophy AI Education brand palette used in global.css.
 const PALETTE = {
   light: {
-    bg: '#f7f3ea',
-    card: '#fffdf8',
-    text: '#292219',
-    soft: '#756753',
-    accent: '#7d5327',
-    gold: '#a87e24',
+    bg: '#fff7e3',
+    card: '#ffffff',
+    text: '#35270d',
+    soft: '#6b5334',
+    accent: '#a5720a',
+    gold: '#d99a1a',
   },
   dark: {
-    bg: '#191611',
-    card: '#232019',
-    text: '#eae2d1',
-    soft: '#a99b84',
-    accent: '#d2a267',
-    gold: '#dcb15c',
+    bg: '#1d1608',
+    card: '#261c0d',
+    text: '#f7ecd2',
+    soft: '#cdb68e',
+    accent: '#d9a227',
+    gold: '#e8b83f',
   },
 };
 
