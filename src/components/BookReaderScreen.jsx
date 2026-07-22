@@ -216,6 +216,12 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
       onAnalyzed(guide, {
         backLabel: 'Back to reader',
         onBackToSource: onBack,
+        source: {
+          type: 'library',
+          paragraphs: current.paragraphs,
+          bookTitle: book.title,
+          chapterTitle: current.chapterTitle,
+        },
       });
     } catch (err) {
       if (err instanceof GeminiError) setAnalyzeError(err.message);

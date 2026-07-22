@@ -15,16 +15,23 @@ import {
   ChevronDownIcon,
   ListIcon,
   PrinterIcon,
+  ImageIcon,
+  QuoteIcon,
 } from './Icons.jsx';
 import SpeakButton from './SpeakButton.jsx';
 
 /**
  * Study-guide screen. Renders the sections returned by Gemini, in order:
- * Page Summary → Key Vocabulary → Sentence Breakdown → Comprehension Check
- * → Try This. All content is English-only by design.
+ * Page Summary → Original Source → Key Vocabulary → Sentence Breakdown →
+ * Comprehension Check → Try This. All Gemini-written content is
+ * English-only by design; `sourceContent` (the scanned photo or the
+ * Library page's own text) is the one thing on this screen that isn't
+ * generated — it's included so Print produces a record with both the
+ * summary and what it was based on.
  */
 export default function ResultScreen({
   result,
+  sourceContent,
   onBack,
   onVocabChanged,
   backLabel = 'Scan another page',
@@ -42,6 +49,7 @@ export default function ResultScreen({
 
       <div id="printable-study-guide">
         <PageSummary summary={result.pageSummary} />
+        <OriginalSource source={sourceContent} />
         <KeyVocabulary items={result.keyVocabulary} onVocabChanged={onVocabChanged} />
         {result.sentenceBreakdown && (
           <SentenceBreakdown breakdown={result.sentenceBreakdown} />
@@ -53,6 +61,47 @@ export default function ResultScreen({
       </div>
     </section>
   );
+}
+
+function OriginalSource({ source }) {
+  if (!source) return null;
+
+  if (source.type === 'photo' && source.imageDataUrl) {
+    return (
+      <div className="card original-source">
+        <h2 className="section-title">
+          <ImageIcon size={15} /> Original Page (Photo)
+        </h2>
+        <img
+          src={source.imageDataUrl}
+          alt="The scanned book page this study guide was made from"
+          className="original-source-image"
+        />
+      </div>
+    );
+  }
+
+  if (source.type === 'library' && source.paragraphs?.length > 0) {
+    return (
+      <div className="card original-source">
+        <h2 className="section-title">
+          <QuoteIcon size={15} /> Original Text
+        </h2>
+        {(source.bookTitle || source.chapterTitle) && (
+          <p className="muted small" style={{ marginTop: 0 }}>
+            {[source.bookTitle, source.chapterTitle].filter(Boolean).join(' — ')}
+          </p>
+        )}
+        <div className="original-source-text">
+          {source.paragraphs.map((p, i) => (
+            <p key={i}>{p}</p>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 function PageSummary({ summary }) {

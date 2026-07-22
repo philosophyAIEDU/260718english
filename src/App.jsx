@@ -42,6 +42,7 @@ export default function App() {
   const [theme, setTheme] = useState('light');
   const [view, setView] = useState('home');
   const [result, setResult] = useState(null);
+  const [sourceContent, setSourceContent] = useState(null);
   const [resultNav, setResultNav] = useState({ backLabel: 'Scan another page', backView: 'home' });
   const [libraryBookId, setLibraryBookId] = useState(null);
   const [dueCount, setDueCount] = useState(0);
@@ -102,14 +103,16 @@ export default function App() {
     setView('home');
   };
 
-  const handleScanResult = (studyGuide) => {
+  const handleScanResult = (studyGuide, source) => {
     setResult(studyGuide);
+    setSourceContent(source || null);
     setResultNav({ backLabel: 'Scan another page', backView: 'scan' });
     setView('result');
   };
 
-  const handleLibraryResult = (studyGuide, { backLabel, onBackToSource }) => {
+  const handleLibraryResult = (studyGuide, { backLabel, onBackToSource, source }) => {
     setResult(studyGuide);
+    setSourceContent(source || null);
     setResultNav({ backLabel, backView: 'reader', onBackToSource });
     setView('result');
   };
@@ -207,8 +210,10 @@ export default function App() {
             (result ? (
               <ResultScreen
                 result={result}
+                sourceContent={sourceContent}
                 backLabel={resultNav.backLabel}
                 onBack={() => {
+                  setSourceContent(null); // photo previews live only in memory for this view
                   if (resultNav.backView === 'reader' && resultNav.onBackToSource) {
                     setView('reader');
                   } else {

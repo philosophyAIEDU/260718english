@@ -49,9 +49,14 @@ export default function UploadScreen({ apiKey, readingLevel, onResult }) {
         level: readingLevel,
         onStatus: setStatus,
       });
-      setImage(null); // the photo is discarded once the guide is ready
+      // The photo is never saved to IndexedDB or disk. A copy of the
+      // preview stays in memory only for this result view (so it can be
+      // shown/printed alongside the study guide) and is dropped as soon
+      // as the learner navigates away.
+      const imageDataUrl = image.previewUrl;
+      setImage(null);
       await logActivity({ source: 'photo' });
-      onResult(guide);
+      onResult(guide, { type: 'photo', imageDataUrl });
     } catch (err) {
       if (err instanceof GeminiError) setError(err.message);
       else setError('Something unexpected went wrong. Please try again.');

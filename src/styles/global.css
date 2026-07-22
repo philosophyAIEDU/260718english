@@ -738,6 +738,33 @@ main {
   line-height: 1.75;
 }
 
+.original-source-image {
+  display: block;
+  width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+  border-radius: var(--radius-sm);
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+}
+
+.original-source-text {
+  font-style: italic;
+  font-size: 0.98rem;
+  line-height: 1.75;
+  color: var(--text-soft);
+  border-left: 3px solid var(--border-strong);
+  padding-left: 14px;
+}
+
+.original-source-text p {
+  margin: 0 0 0.9em;
+}
+
+.original-source-text p:last-child {
+  margin-bottom: 0;
+}
+
 .vocab-card {
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -2130,5 +2157,19 @@ main {
 
   .vocab-card {
     page-break-inside: avoid;
+  }
+
+  .original-source {
+    page-break-inside: avoid;
+  }
+
+  .original-source-image {
+    max-height: 320px;
+    border: 1px solid #ccc !important;
+  }
+
+  .original-source-text {
+    color: #000 !important;
+    border-left: 3px solid #ccc;
   }
 }
