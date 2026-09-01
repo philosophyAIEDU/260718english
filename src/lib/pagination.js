@@ -52,15 +52,15 @@ export function paginateParagraphs(paragraphs, targetWords = TARGET_WORDS_PER_PA
   return pages;
 }
 
-/** Reading challenges on ReadMate run in 14-day cycles. */
-export const CHALLENGE_DAYS = 14;
+/** Reading challenges on ReadMate run in 30-day (one-month) cycles. */
+export const CHALLENGE_DAYS = 30;
 
-/** Pages/day needed to finish a book of `totalPages` within one 14-day cycle. */
+/** Pages/day needed to finish a book of `totalPages` within one 30-day cycle. */
 export function pagesPerDay(totalPages, days = CHALLENGE_DAYS) {
   return Math.max(1, Math.ceil(totalPages / days));
 }
 
-/** Which challenge day (1–14) a given page index falls on. */
+/** Which challenge day (1–30) a given page index falls on. */
 export function dayForPageIndex(pageIndex, totalPages, days = CHALLENGE_DAYS) {
   const perDay = pagesPerDay(totalPages, days);
   return Math.min(days, Math.floor(pageIndex / perDay) + 1);

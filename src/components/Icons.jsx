@@ -343,6 +343,22 @@ export const ChevronRightIcon = (p) => (
   </Icon>
 );
 
+export const UsersIcon = (p) => (
+  <Icon {...p}>
+    <circle cx="9" cy="8" r="3.2" />
+    <path d="M3.5 19c0-3 2.5-5.2 5.5-5.2s5.5 2.2 5.5 5.2" />
+    <path d="M16 8.4a3 3 0 1 1 3.6 2.9" />
+    <path d="M15 13.9c2.6.4 4.5 2.3 4.5 5" />
+  </Icon>
+);
+
+export const ShieldIcon = (p) => (
+  <Icon {...p}>
+    <path d="M12 3.4 19 6v5.5c0 5-3 8.4-7 9.1-4-.7-7-4.1-7-9.1V6l7-2.6Z" />
+    <path d="m8.6 12 2.5 2.5 4.3-4.6" />
+  </Icon>
+);
+
 export const CalendarIcon = (p) => (
   <Icon {...p}>
     <rect x="3.5" y="5" width="17" height="16" rx="2.4" />

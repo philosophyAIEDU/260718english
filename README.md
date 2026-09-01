@@ -1,10 +1,20 @@
-# 📖 ReadMate — 영어 원문 읽기 챌린지
+# 📖 ReadMate — [Read & Build] 챌린지
 
 영어 원서의 한 페이지를 **사진으로 찍어 올리거나**, 앱에 내장된 **무료 고전 영어 원서**를 바로 읽으면,
 Google Gemini AI가 그 페이지를 읽고 **100% 영어로 된 학습 가이드**(요약 · 핵심 단어 · 문장 분석 ·
 이해도 퀴즈)를 만들어 주는 웹앱입니다. 별표(⭐)로 저장한 단어는 **1일 → 3일 → 7일 → 14일 간격
 반복 복습**으로 다시 만나게 되고, 연속 학습일(스트릭)·뱃지·진행상황 공유 기능으로 여러 명이
 함께하는 **영어 원문 읽기 챌린지**를 운영할 수 있습니다.
+
+**[Read & Build] 챌린지**는 한 달(주 7일 인증)간 원서를 읽거나 들으면서, AI로 나만의 학습앱도
+함께 빌드해보는 프로그램입니다. 이 저장소는 그 챌린지를 위해 두 가지를 더 갖추고 있습니다:
+
+- **Firebase 기반 다자 인증** — 참가자가 이름을 골라 매일 "읽었어요/들었어요"를 인증하면
+  Firestore에 기록되고, 운영자는 관리자 화면에서 전체 참가자의 인증 현황과 누적 미인증
+  횟수(6회부터 킥아웃 대상)를 한눈에 봅니다. Firebase를 설정하지 않으면 이 기능은 그냥
+  숨겨지고 앱은 평소처럼 개인 학습 도구로만 동작합니다.
+- **듣기 인증** — 원서 읽기가 부담스러우면 오디오만 들어도 인증됩니다. 라이브러리 원서에
+  낭독 mp3를 붙이면 리더 화면에 재생 플레이어가 나타납니다.
 
 > 학습 내용(요약·단어 설명·퀴즈 등)이 영어로만 제공되는 이유: 영어를 한국어로 번역하지 않고
 > **영어를 영어로 이해하는 몰입 학습**을 위해서입니다. (이 README와 앱의 안내 문구처럼
@@ -58,10 +68,17 @@ npm run build
 - **📷 Scan a Page** — 내가 읽는 책 한 페이지를 사진으로 찍어 AI 학습 가이드를 받습니다.
 - **📖 Read the Library** — 계정·비용 없이 바로 읽을 수 있는 무료 고전 영어 원서 12종이
   들어있습니다 (아래 목록 참고). Beginner(초록) · Intermediate(골드) · Advanced(자주)
-  레벨별로 색상 구분되어 묶여 있고, 각 책마다 **14일 챌린지 기준 하루 페이지 수**가
-  표시됩니다. 리더 화면에서도 지금이 14일 중 며칠째인지 확인할 수 있어요. 페이지를
+  레벨별로 색상 구분되어 묶여 있고, 각 책마다 **30일(한 달) 챌린지 기준 하루 페이지 수**가
+  표시됩니다. 리더 화면에서도 지금이 30일 중 며칠째인지 확인할 수 있어요. 페이지를
   넘기며 읽다가 "Analyze this page"를 누르면 사진 없이 바로 학습 가이드가 만들어집니다.
+- **🎧 듣기 인증** — 원문 읽기가 부담스러우면 들어도 됩니다. 책에 낭독 mp3를 붙여두면
+  (아래 [듣기 파일 추가하기](#-듣기-파일-추가하기) 참고) 리더 화면에 재생 플레이어가 나타나고,
+  다 들었으면 홈 화면에서 "들었어요"로 인증할 수 있습니다.
 - **🔊 발음 듣기** — 단어 옆 스피커 아이콘을 누르면 브라우저 내장 음성으로 발음을 들을 수 있습니다.
+- **👥 챌린지 인증 & 관리자 대시보드** — Firebase를 설정하면(아래 [Firebase 설정
+  방법](#-firebase-설정-방법-챌린지-인증) 참고), 참가자가 이름을 골라 매일 읽기/듣기 인증을
+  제출하고, 운영자는 관리자 화면에서 전체 참가자의 인증 현황·누적 미인증 횟수·킥아웃 대상
+  여부를 확인하고 명단을 관리할 수 있습니다. 설정하지 않으면 이 기능은 자동으로 숨겨집니다.
 - **📊 영어 레벨 테스트** — 설정 탭에서 6문항 테스트로 내 레벨(Beginner/Intermediate/Advanced)을
   확인하면, 학습 가이드의 어휘 난이도와 라이브러리 추천 도서가 그에 맞게 조정됩니다.
 - **🔥 스트릭 & 뱃지** — Progress 탭에서 연속 학습일, 완독한 챕터/책 수, 저장한 단어 수에 따른
@@ -86,32 +103,102 @@ npm run build
 - **컬러풀한 책 표지** — 라이브러리의 12권이 각자 다른 색·이모지 표지를 가져서, 실제
   책방처럼 마음에 드는 책을 눈으로 골라볼 수 있어요. 처음이라면 "처음이신가요?" 배너에서
   추천하는 가장 쉬운 책부터 시작하면 됩니다.
-- **한눈에 보는 난이도·시간** — 각 책 카드에 "하루 ~N분", "14일 완독", 난이도 점(●○○)이
+- **한눈에 보는 난이도·시간** — 각 책 카드에 "하루 ~N분", "30일 완독", 난이도 점(●○○)이
   표시되어 부담 없이 고를 수 있습니다.
 
 ### 📚 내장 무료 원서 목록 (모두 저작권 만료, 공개 도메인)
 
-| 레벨 | 책 | 저자 | 챕터 | 14일 기준 하루 페이지 |
+| 레벨 | 책 | 저자 | 챕터 | 30일 기준 하루 페이지 |
 |---|---|---|---|---|
-| 🟢 Beginner | The Wonderful Wizard of Oz | L. Frank Baum | 24 | ~12 |
+| 🟢 Beginner | The Wonderful Wizard of Oz | L. Frank Baum | 24 | ~11 |
 | 🟢 Beginner | Alice's Adventures in Wonderland | Lewis Carroll | 12 | ~8 |
-| 🟢 Beginner | The Secret Garden | Frances Hodgson Burnett | 27 | ~25 |
-| 🟢 Beginner | Anne of Green Gables | L. M. Montgomery | 38 | ~31 |
-| 🟡 Intermediate | The Adventures of Sherlock Holmes | Arthur Conan Doyle | 12 | ~32 |
-| 🟡 Intermediate | The Call of the Wild | Jack London | 7 | ~11 |
-| 🟡 Intermediate | A Christmas Carol | Charles Dickens | 5 | ~9 |
-| 🟡 Intermediate | Treasure Island | Robert Louis Stevenson | 34 | ~22 |
-| 🟡 Intermediate | The Strange Case of Dr. Jekyll and Mr. Hyde | Robert Louis Stevenson | 10 | ~8 |
-| 🟣 Advanced | The Great Gatsby | F. Scott Fitzgerald | 9 | ~15 |
-| 🟣 Advanced | Pride and Prejudice | Jane Austen | 61 | ~38 |
-| 🟣 Advanced | Frankenstein | Mary Shelley | 24 | ~23 |
+| 🟢 Beginner | The Secret Garden | Frances Hodgson Burnett | 27 | ~22 |
+| 🟢 Beginner | Anne of Green Gables | L. M. Montgomery | 38 | ~27 |
+| 🟡 Intermediate | The Adventures of Sherlock Holmes | Arthur Conan Doyle | 12 | ~19 |
+| 🟡 Intermediate | The Call of the Wild | Jack London | 7 | ~7 |
+| 🟡 Intermediate | A Christmas Carol | Charles Dickens | 5 | ~6 |
+| 🟡 Intermediate | Treasure Island | Robert Louis Stevenson | 34 | ~13 |
+| 🟡 Intermediate | The Strange Case of Dr. Jekyll and Mr. Hyde | Robert Louis Stevenson | 10 | ~5 |
+| 🟣 Advanced | The Great Gatsby | F. Scott Fitzgerald | 9 | ~7 |
+| 🟣 Advanced | Pride and Prejudice | Jane Austen | 61 | ~18 |
+| 🟣 Advanced | Frankenstein | Mary Shelley | 24 | ~11 |
 
-"14일 기준 하루 페이지"는 그 책을 14일 챌린지 안에 완독하려면 하루에 몇 "페이지"
-(앱 내 약 280단어 단위)를 읽어야 하는지 보여줍니다. 챌린지 그룹의 속도에 맞는
+"30일 기준 하루 페이지"는 그 책을 30일(한 달) 챌린지 안에 완독하려면 하루에 몇 "페이지"
+(레벨별 150~280단어 단위)를 읽어야 하는지 보여줍니다. 챌린지 그룹의 속도에 맞는
 책을 고를 때 참고하세요.
 
 새 책을 추가하려면 `scripts/build-books.mjs`의 `BOOKS` 목록에 항목을 추가하고
 `node scripts/build-books.mjs`를 실행하세요. `public/books/*.json`이 새로 생성됩니다.
+
+### 🎧 듣기 파일 추가하기
+
+라이브러리 책의 각 챕터에 낭독 mp3를 아래 경로·이름 규칙으로 넣으면, 리더 화면이 자동으로
+그 파일을 찾아 재생 플레이어를 보여줍니다 (파일이 없으면 플레이어도 그냥 나타나지 않을 뿐,
+아무 문제 없습니다).
+
+```
+public/audio/<bookId>/ch<챕터 번호(1부터)>.mp3
+```
+
+예를 들어 `wizard-of-oz`의 1장 낭독 파일은 `public/audio/wizard-of-oz/ch1.mp3`,
+2장은 `public/audio/wizard-of-oz/ch2.mp3`처럼 넣으면 됩니다. `<bookId>`는
+`public/books/index.json`에 있는 그 책의 `id`와 같아야 합니다. 로컬 TTS로 직접 만든
+mp3를 그대로 이 경로에 넣어 커밋하면 배포된 사이트에서도 바로 재생됩니다.
+
+## 🔥 Firebase 설정 방법 (챌린지 인증)
+
+이 기능은 [필로소피 AI 교육의 "퍼스널메이커스 독서 챌린지" 인증 시스템](https://github.com/philosophyAIEDU/260818comingssoni)과
+같은 구조(Firestore 컬렉션·킥아웃 판정 로직)로 만들어졌습니다. `src/lib/challengeConfig.js`의
+`firebase.projectId`가 비어 있으면 관련 화면이 전부 자동으로 숨겨지므로, 설정 전까지는 아무것도
+바뀌지 않습니다.
+
+1. [Firebase 콘솔](https://console.firebase.google.com)에서 새 프로젝트를 만듭니다. (기존
+   `260818comingssoni` 프로젝트와는 **별도 프로젝트**를 새로 만드는 걸 권장합니다 — 챌린지
+   기간·킥아웃 기준·참가자 명단이 서로 다르기 때문입니다.)
+2. **Firestore Database**를 활성화합니다 (프로덕션 모드, 리전은 `asia-northeast3` 등 가까운 곳).
+3. **Authentication → Sign-in method**에서 **Google** 로그인을 사용 설정합니다 (관리자 로그인용 —
+   참가자는 로그인 없이 이름만 고르므로 필요 없습니다).
+4. **프로젝트 설정 → 일반 → 내 앱**에서 웹 앱(`</>`)을 추가하고, 표시되는 `firebaseConfig` 값을
+   복사합니다.
+5. `src/lib/challengeConfig.js`를 열어:
+   - `firebase` 객체에 4번에서 복사한 값을 붙여넣고,
+   - `startDate` / `endDate`를 실제 챌린지 기간(한 달)으로,
+   - `adminEmails`에 운영진 구글 계정을 추가합니다.
+6. **Firestore 보안 규칙**을 설정합니다 (콘솔의 Firestore → 규칙 탭). 예시:
+
+   ```
+   rules_version = '2';
+   service cloud.firestore {
+     match /databases/{database}/documents {
+       function isAdmin() {
+         return request.auth != null &&
+           request.auth.token.email in ['warmcomfortforyou@gmail.com'];
+       }
+       match /participants/{id} {
+         allow read: if true;         // 인증 화면의 이름 선택 목록
+         allow write: if isAdmin();   // 명단 등록/수정/킥아웃은 관리자만
+       }
+       match /submissions/{id} {
+         allow read: if true;
+         allow create, update: if true; // 참가자는 로그인 없이 직접 인증을 남깁니다
+         allow delete: if isAdmin();
+       }
+     }
+   }
+   ```
+
+   > 참가자는 로그인하지 않으므로 `submissions` 쓰기를 완전히 막을 수는 없습니다 (누구나 다른
+   > 사람 이름으로 제출할 수 있는 구조는 원본인 260818comingssoni도 동일합니다). 부정 제출이
+   > 걱정되면 인증 피드 등 추가 검증 수단을 붙이거나, 운영자 대시보드의 제출 시각을 참고해
+   > 수동으로 확인하세요.
+
+7. **배포 후**에는 Firebase 콘솔의 **Authentication → 설정 → 승인된 도메인**에 배포 도메인(예:
+   `your-app.netlify.app`)을 추가해야 관리자 Google 로그인 팝업이 동작합니다.
+8. 배포된 앱을 열면:
+   - **홈 화면**에 "[Read & Build] 챌린지 인증" 카드가 나타나 참가자가 이름을 고르고 매일
+     읽기/듣기를 인증할 수 있습니다 (아직 명단이 없다면 8번의 관리자 화면에서 먼저 등록하세요).
+   - **설정 탭** 맨 아래 "운영자이신가요?" 카드에서 Google 로그인으로 관리자 대시보드에
+     들어가 명단을 등록하고, 일일현황·킥아웃 대상을 확인합니다.
 
 ## 🔒 개인정보
 
@@ -123,7 +210,12 @@ npm run build
   다른 화면으로 이동하면 즉시 사라집니다.
 - "체크 & 공유"로 만든 이미지에는 책 원문이나 개인정보가 들어가지 않으며, 저장·공유 여부는
   전적으로 사용자가 직접 선택합니다.
-- 회원가입 · 로그인 · 광고 · 추적 스크립트가 전혀 없습니다.
+- 광고 · 추적 스크립트가 전혀 없습니다.
+- **Firebase가 설정된 경우에만 예외입니다**: 운영자가 등록한 참가자 닉네임과, 참가자가 직접
+  제출한 "날짜 · 읽었는지/들었는지 · (선택) 책 제목"만 Firestore에 저장되어 같은 챌린지의
+  운영자·참가자가 볼 수 있습니다. 이메일·로그인은 참가자 쪽에는 전혀 없고, 관리자 화면에
+  로그인할 때만(운영진 화이트리스트 계정) Google 인증을 사용합니다. Firebase를 설정하지
+  않으면 이 문단은 해당 사항이 없습니다 — 다른 모든 데이터는 여전히 이 기기에만 남습니다.
 
 ## 🗂 프로젝트 구조
 
@@ -141,9 +233,12 @@ src/
     ResultScreen.jsx           # 학습 결과 (요약/단어/문장분석/퀴즈/라이팅/인쇄)
     VocabScreen.jsx            # 단어장 (검색·필터·태그·내보내기·덱 공유)
     ReviewScreen.jsx           # 간격 반복 플래시카드 복습
-    ProgressScreen.jsx         # 스트릭·뱃지·진행상황 공유 카드
+    ProgressScreen.jsx         # 스트릭·뱃지·진행상황 공유 카드 + 챌린지 인증 캘린더
     LevelTestScreen.jsx        # 6문항 영어 레벨 테스트
     SpeakButton.jsx            # 발음 듣기 버튼 (브라우저 내장 TTS)
+    ChallengeCheckin.jsx       # [Read & Build] 참가자 선택 + 매일 읽기/듣기 인증 (홈 화면)
+    ChallengeAttendance.jsx    # 챌린지 인증 캘린더 (Progress 화면)
+    AdminScreen.jsx            # 운영자 대시보드 (일일현황 매트릭스 + 명단 관리)
     ErrorBoundary.jsx          # 앱 전체 오류 방지
   lib/
     geminiClient.js            # Gemini API 호출 (재시도 + 레벨별 프롬프트)
@@ -158,8 +253,12 @@ src/
     imageUtils.js              # 사진 리사이즈/압축 (최대 1600px JPEG)
     exportUtils.js             # Anki CSV / Quizlet TXT 내보내기
     speech.js                   # 브라우저 내장 TTS 래퍼
+    challengeConfig.js         # 챌린지 기간·킥아웃 기준·Firebase 설정  ← 설정은 여기만 수정
+    challengeUtils.js          # 인증 날짜/집계 로직 (260818comingssoni의 utils.js 포트)
+    challengeStore.js          # Firestore 어댑터 (참가자/인증/관리자 인증)
 public/
   books/                       # 내장 원서 JSON (빌드 산출물, 커밋됨)
+  audio/<bookId>/ch<N>.mp3     # (선택) 챕터별 듣기 파일 — 직접 넣는 폴더, 기본은 비어 있음
   manifest.webmanifest, sw.js  # PWA 설치 + 오프라인 지원
 ```
 
@@ -178,7 +277,16 @@ public/
   스트릭은 자정이 지나기 전까지 유지됩니다.
 - **레벨 테스트 결과는 어디에 쓰이나요?** → 학습 가이드의 어휘 난이도(Gemini 프롬프트)와
   라이브러리의 "Recommended for you" 표시에 반영됩니다. 설정 탭에서 언제든 다시 볼 수 있습니다.
-- **14일 완독 플랜은 강제인가요?** → 아니요, 참고용 안내입니다. "14-Day Plan · ~N pages/day"는
-  그 책을 14일 안에 끝내려면 하루 몇 페이지씩 읽어야 하는지 계산해서 보여줄 뿐이고, 리더
-  화면의 "Day X of 14"도 지금 읽은 양 기준으로 계산되는 참고 지표입니다. 실제 진도는
+- **30일 완독 플랜은 강제인가요?** → 아니요, 참고용 안내입니다. "30-Day Plan · ~N pages/day"는
+  그 책을 30일 안에 끝내려면 하루 몇 페이지씩 읽어야 하는지 계산해서 보여줄 뿐이고, 리더
+  화면의 "Day X of 30"도 지금 읽은 양 기준으로 계산되는 참고 지표입니다. 실제 진도는
   자유롭게 조절하면 됩니다.
+- **챌린지 인증과 개인 스트릭은 다른 건가요?** → 네. 홈 화면 상단의 "[Read & Build] 챌린지 인증"
+  카드(Firebase 설정 시에만 보임)는 운영자가 킥아웃 판정에 쓰는 **공식 인증**이고, 그 아래
+  "체크 & 공유"는 개인 스트릭·공유 이미지를 위한 **로컬 전용** 기능입니다. 챌린지 인증을 하면
+  로컬 스트릭에도 자동으로 반영되지만, 반대로 "체크 & 공유"만 눌러서는 챌린지 인증이 되지
+  않습니다 — 반드시 인증 카드의 "오늘 인증하기"를 눌러야 Firestore에 기록됩니다.
+- **미인증이 몇 번이면 킥아웃인가요?** → `src/lib/challengeConfig.js`의 `kickoutThreshold`(기본
+  6회)입니다. `riskThreshold`(기본 4회)부터는 "위험" 경고가 먼저 표시됩니다. 오늘은 24시
+  마감 전이라 아직 미인증으로 확정되지 않으며, 판정 기준 시간대는 `timezone`(기본
+  `Asia/Seoul`)입니다.
