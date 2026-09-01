@@ -42,12 +42,12 @@ export const CHALLENGE_CONFIG = {
   //
   // (README의 "Firebase 설정 방법"에 단계별 안내가 있습니다.)
   firebase: {
-    apiKey: '',
-    authDomain: '',
-    projectId: '',
-    storageBucket: '',
-    messagingSenderId: '',
-    appId: '',
+    apiKey: 'AIzaSyCtYndq3kLtucP5kiKoQfakzaqlkVTGn6M',
+    authDomain: 'readandbuild-fbc7f.firebaseapp.com',
+    projectId: 'readandbuild-fbc7f',
+    storageBucket: 'readandbuild-fbc7f.firebasestorage.app',
+    messagingSenderId: '1083825369067',
+    appId: '1:1083825369067:web:3e9d5ad1f72c83108e33ae',
   },
 };
 
