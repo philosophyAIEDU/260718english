@@ -10,6 +10,7 @@ import {
 import { isActiveToday } from '../lib/streaks.js';
 import { computeStats } from '../lib/statsUtils.js';
 import { renderProgressCard, shareOrDownloadCard } from '../lib/progressCard.js';
+import ChallengeCheckin from './ChallengeCheckin.jsx';
 import {
   CameraIcon,
   LibraryIcon,
@@ -170,6 +171,8 @@ export default function HomeScreen({
           </div>
         )}
       </div>
+
+      <ChallengeCheckin />
 
       {streak > 0 && (
         <button className="review-banner streak-banner" onClick={onProgress}>

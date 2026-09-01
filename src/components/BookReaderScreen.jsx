@@ -15,6 +15,7 @@ import {
   AlertIcon,
   MinusIcon,
   PlusIcon,
+  SpeakerIcon,
 } from './Icons.jsx';
 import BookCover from './BookCover.jsx';
 
@@ -43,6 +44,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   const [analyzeError, setAnalyzeError] = useState('');
   const [progress, setProgress] = useState(null);
   const [fontStep, setFontStep] = useState(0);
+  const [audioSrc, setAudioSrc] = useState(null);
 
   useEffect(() => {
     getSetting('readerFontStep').then((step) => {
@@ -112,6 +114,26 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [flatPages.length]);
+
+  // Listening support: if a narration file exists for the current chapter
+  // (see README "듣기 파일 추가하기" — public/audio/<bookId>/ch<N>.mp3, 1-based),
+  // show a player so learners who'd rather listen than read can still
+  // follow along and check in as "들었어요" from the Home screen.
+  const currentChapterIndex = flatPages[flatIndex]?.chapterIndex;
+  useEffect(() => {
+    if (currentChapterIndex == null) {
+      setAudioSrc(null);
+      return;
+    }
+    const src = `${import.meta.env.BASE_URL}audio/${bookId}/ch${currentChapterIndex + 1}.mp3`;
+    let alive = true;
+    fetch(src, { method: 'HEAD' })
+      .then((r) => alive && setAudioSrc(r.ok ? src : null))
+      .catch(() => alive && setAudioSrc(null));
+    return () => {
+      alive = false;
+    };
+  }, [bookId, currentChapterIndex]);
 
   if (error) {
     return (
@@ -281,6 +303,20 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
             초보자 팁: 모르는 단어가 나와도 괜찮아요! 문장 전체 느낌을 먼저
             파악하고, 별표로 저장해서 나중에 복습하세요.
           </span>
+        </div>
+      )}
+
+      {audioSrc && (
+        <div className="audio-player-card">
+          <SpeakerIcon size={17} />
+          <div className="audio-player-body">
+            <strong>이 챕터 듣기</strong>
+            <span className="muted small">
+              읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈
+              화면에서 &quot;들었어요&quot;로 인증하세요.
+            </span>
+            <audio controls src={audioSrc} style={{ width: '100%', marginTop: 6 }} />
+          </div>
         </div>
       )}
 

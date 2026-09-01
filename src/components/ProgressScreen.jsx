@@ -4,6 +4,7 @@ import { computeStats } from '../lib/statsUtils.js';
 import { recentDayGrid } from '../lib/streaks.js';
 import { evaluateBadges } from '../lib/badges.js';
 import { renderProgressCard, shareOrDownloadCard } from '../lib/progressCard.js';
+import ChallengeAttendance from './ChallengeAttendance.jsx';
 import { FlameIcon, TrophyIcon, ShareIcon, CheckIcon, AlertIcon } from './Icons.jsx';
 
 /**
@@ -114,6 +115,8 @@ export default function ProgressScreen() {
           </p>
         )}
       </div>
+
+      <ChallengeAttendance />
 
       <div className="stat-row">
         <div className="stat-tile">

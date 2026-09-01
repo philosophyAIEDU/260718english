@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { setSetting, deleteSetting } from '../lib/db.js';
+import { isFirebaseConfigured } from '../lib/challengeConfig.js';
 import {
   KeyIcon,
   LockIcon,
@@ -8,6 +9,7 @@ import {
   AlertIcon,
   CheckIcon,
   TrophyIcon,
+  ShieldIcon,
 } from './Icons.jsx';
 
 /**
@@ -19,6 +21,7 @@ export default function ApiKeyScreen({
   onSaved,
   readingLevel,
   onTakeLevelTest,
+  onOpenAdmin,
 }) {
   const [key, setKey] = useState(existingKey);
   const [showKey, setShowKey] = useState(false);
@@ -163,6 +166,21 @@ export default function ApiKeyScreen({
           </p>
           <button className="btn" onClick={onTakeLevelTest}>
             <TrophyIcon size={16} /> {readingLevel ? '다시 테스트하기' : '테스트 시작하기'}
+          </button>
+        </div>
+      )}
+
+      {isFirebaseConfigured() && onOpenAdmin && (
+        <div className="card">
+          <h2 className="section-title">
+            <ShieldIcon size={15} /> 운영자이신가요?
+          </h2>
+          <p className="muted small" style={{ marginTop: 0 }}>
+            챌린지 참가자 전체의 인증 현황을 보고 명단을 관리하려면 관리자
+            화면으로 이동하세요. 운영진 구글 계정 로그인이 필요합니다.
+          </p>
+          <button className="btn" onClick={onOpenAdmin}>
+            <ShieldIcon size={16} /> 관리자 대시보드 열기
           </button>
         </div>
       )}

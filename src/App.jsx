@@ -9,6 +9,7 @@ import VocabScreen from './components/VocabScreen.jsx';
 import ReviewScreen from './components/ReviewScreen.jsx';
 import ProgressScreen from './components/ProgressScreen.jsx';
 import LevelTestScreen from './components/LevelTestScreen.jsx';
+import AdminScreen from './components/AdminScreen.jsx';
 import {
   BrandMark,
   HomeIcon,
@@ -255,8 +256,11 @@ export default function App() {
               onSaved={handleKeySaved}
               readingLevel={readingLevel}
               onTakeLevelTest={() => setView('levelTest')}
+              onOpenAdmin={() => setView('admin')}
             />
           )}
+
+          {view === 'admin' && <AdminScreen onBack={() => setView('settings')} />}
 
           {view === 'levelTest' && (
             <LevelTestScreen
@@ -303,7 +307,7 @@ export default function App() {
           <TabButton
             icon={<SettingsIcon size={21} />}
             label="Settings"
-            active={view === 'settings' || view === 'levelTest'}
+            active={view === 'settings' || view === 'levelTest' || view === 'admin'}
             onClick={() => setView('settings')}
           />
         </div>
