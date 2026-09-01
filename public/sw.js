@@ -1,5 +1,5 @@
 /*
- * ReadMate service worker.
+ * Read & Build service worker.
  *
  * Strategy:
  *  - Navigations: network-first, falling back to the cached app shell so the

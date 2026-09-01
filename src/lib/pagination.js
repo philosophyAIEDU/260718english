@@ -52,7 +52,7 @@ export function paginateParagraphs(paragraphs, targetWords = TARGET_WORDS_PER_PA
   return pages;
 }
 
-/** Reading challenges on ReadMate run in 30-day (one-month) cycles. */
+/** Reading challenges on Read & Build run in 30-day (one-month) cycles. */
 export const CHALLENGE_DAYS = 30;
 
 /** Pages/day needed to finish a book of `totalPages` within one 30-day cycle. */

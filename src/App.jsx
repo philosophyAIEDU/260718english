@@ -123,7 +123,7 @@ export default function App() {
       <div className="app-brand">
         <BrandMark size={34} />
         <div>
-          <h1>ReadMate</h1>
+          <h1>Read &amp; Build</h1>
           <span className="tagline">Read English, in English</span>
         </div>
       </div>
@@ -145,7 +145,7 @@ export default function App() {
           <div className="empty-icon-ring">
             <BrandMark size={40} />
           </div>
-          <h3>ReadMate</h3>
+          <h3>Read &amp; Build</h3>
           <p>Opening your reading desk…</p>
         </div>
       </div>

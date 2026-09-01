@@ -1,5 +1,5 @@
 /*
- * Word-deck sharing — export the Word Book as a ReadMate-native JSON file
+ * Word-deck sharing — export the Word Book as a Read & Build-native JSON file
  * and import one someone else shared, so a reading-challenge group can pass
  * around a common vocabulary deck (e.g. "this week's 50 words") without any
  * server. Personal review progress is intentionally left out of exports so
@@ -36,7 +36,7 @@ export class DeckImportError extends Error {}
 
 /**
  * Parse and validate a deck JSON string. Throws DeckImportError with a
- * user-facing message if the file doesn't look like a ReadMate deck.
+ * user-facing message if the file doesn't look like a Read & Build deck.
  */
 export function parseDeckImport(jsonText) {
   let data;
@@ -47,7 +47,7 @@ export function parseDeckImport(jsonText) {
   }
 
   if (!data || data.format !== DECK_FORMAT || !Array.isArray(data.words)) {
-    throw new DeckImportError('This file is not a ReadMate word deck.');
+    throw new DeckImportError('This file is not a Read & Build word deck.');
   }
 
   const words = data.words

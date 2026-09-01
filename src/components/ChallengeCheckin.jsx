@@ -23,7 +23,7 @@ import {
  * dashboard can track everyone's attendance for the kickout rule.
  *
  * Renders nothing when CHALLENGE_CONFIG.firebase.projectId is empty — a
- * ReadMate deployment that isn't running this specific cohort challenge
+ * Read & Build deployment that isn't running this specific cohort challenge
  * (or hasn't been configured yet) is completely unaffected.
  */
 export default function ChallengeCheckin() {

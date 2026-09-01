@@ -120,7 +120,7 @@ export default function HomeScreen({
         <button className="guide-header" onClick={toggleGuide} aria-expanded={guideOpen}>
           <span className="guide-header-left">
             <HelpCircleIcon size={18} />
-            <strong>ReadMate 이용 방법</strong>
+            <strong>Read &amp; Build 이용 방법</strong>
           </span>
           <span className="accordion-chevron">
             <ChevronDownIcon size={18} />

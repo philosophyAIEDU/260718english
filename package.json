@@ -2,7 +2,7 @@
   "name": "readmate",
   "private": true,
   "version": "1.0.0",
-  "description": "ReadMate — snap a page of your English book, get an all-English study guide powered by Gemini.",
+  "description": "Read & Build — snap a page of your English book, get an all-English study guide powered by Gemini.",
   "type": "module",
   "scripts": {
     "dev": "vite",
