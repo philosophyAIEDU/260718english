@@ -16,7 +16,7 @@ export default class ErrorBoundary extends React.Component {
   }
 
   componentDidCatch(error, info) {
-    console.error('ReadMate crashed:', error, info);
+    console.error('Read & Build crashed:', error, info);
   }
 
   render() {
@@ -42,7 +42,7 @@ export default class ErrorBoundary extends React.Component {
           </div>
           <h2>Something went wrong</h2>
           <p className="muted">
-            Sorry — ReadMate hit an unexpected error. Your saved vocabulary and
+            Sorry — Read &amp; Build hit an unexpected error. Your saved vocabulary and
             review progress are safe on this device.
           </p>
           <p className="muted small">{String(this.state.error?.message || this.state.error)}</p>

@@ -10,6 +10,8 @@ import ReviewScreen from './components/ReviewScreen.jsx';
 import ProgressScreen from './components/ProgressScreen.jsx';
 import LevelTestScreen from './components/LevelTestScreen.jsx';
 import AdminScreen from './components/AdminScreen.jsx';
+import IntroScreen from './components/IntroScreen.jsx';
+import ClassScreen from './components/ClassScreen.jsx';
 import {
   BrandMark,
   HomeIcon,
@@ -49,18 +51,23 @@ export default function App() {
   const [dueCount, setDueCount] = useState(0);
   const [streak, setStreak] = useState(0);
   const [readingLevel, setReadingLevel] = useState(null);
+  // Starts true so the intro never flashes before we know whether it was
+  // already dismissed on this device.
+  const [introSeen, setIntroSeen] = useState(true);
 
   // Boot: load persisted settings.
   useEffect(() => {
     (async () => {
       try {
-        const [storedKey, storedTheme, storedLevel] = await Promise.all([
+        const [storedKey, storedTheme, storedLevel, seenIntro] = await Promise.all([
           getSetting('geminiApiKey'),
           getSetting('theme'),
           getSetting('readingLevel'),
+          getSetting('introSeen'),
         ]);
         if (storedKey) setApiKey(storedKey);
         if (storedLevel) setReadingLevel(storedLevel);
+        setIntroSeen(Boolean(seenIntro));
         const prefersDark =
           window.matchMedia?.('(prefers-color-scheme: dark)')?.matches;
         setTheme(storedTheme || (prefersDark ? 'dark' : 'light'));
@@ -123,8 +130,8 @@ export default function App() {
       <div className="app-brand">
         <BrandMark size={34} />
         <div>
-          <h1>ReadMate</h1>
-          <span className="tagline">Read English, in English</span>
+          <h1>Read &amp; Build</h1>
+          <span className="tagline">Read English · Build Your App</span>
         </div>
       </div>
       <button
@@ -145,14 +152,32 @@ export default function App() {
           <div className="empty-icon-ring">
             <BrandMark size={40} />
           </div>
-          <h3>ReadMate</h3>
+          <h3>Read &amp; Build</h3>
           <p>Opening your reading desk…</p>
         </div>
       </div>
     );
   }
 
-  // First run: no API key yet → the key screen is the whole app.
+  // Very first run: the challenge introduces itself before asking for anything.
+  if (!introSeen) {
+    return (
+      <div className="app-shell">
+        {header}
+        <main>
+          <IntroScreen
+            startLabel={apiKey ? '홈으로 가기' : '시작하기'}
+            onStart={() => {
+              setIntroSeen(true);
+              setSetting('introSeen', true).catch(() => {});
+            }}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  // Still no API key → the key screen is the whole app.
   if (!apiKey) {
     return (
       <div className="app-shell">
@@ -179,8 +204,14 @@ export default function App() {
               onReview={() => setView('review')}
               onProgress={() => setView('progress')}
               onCheckinComplete={refreshChallengeStats}
+              onOpenIntro={() => setView('intro')}
+              onOpenClass={() => setView('class')}
             />
           )}
+
+          {view === 'intro' && <IntroScreen onBack={() => setView('home')} />}
+
+          {view === 'class' && <ClassScreen onBack={() => setView('home')} />}
 
           {view === 'scan' && (
             <UploadScreen apiKey={apiKey} readingLevel={readingLevel} onResult={handleScanResult} />
@@ -282,7 +313,7 @@ export default function App() {
           <TabButton
             icon={<HomeIcon size={21} />}
             label="Home"
-            active={['home', 'scan', 'library', 'reader', 'result'].includes(view)}
+            active={['home', 'scan', 'library', 'reader', 'result', 'intro', 'class'].includes(view)}
             onClick={() => setView('home')}
           />
           <TabButton

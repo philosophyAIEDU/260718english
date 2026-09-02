@@ -20,9 +20,30 @@
 import { CHALLENGE_CONFIG, isFirebaseConfigured } from './challengeConfig.js';
 import { normalizeNick, nowStamp } from './challengeUtils.js';
 
+/*
+ * A Firestore call on a phone with no signal (or behind a network that
+ * blocks googleapis) never rejects — it just waits. Without a deadline the
+ * check-in card would sit in its loading skeleton forever, so every call
+ * that a screen waits on races this timeout and surfaces a retryable error
+ * instead.
+ */
+const CALL_TIMEOUT_MS = 12000;
+
+function withTimeout(promise) {
+  let timer;
+  return Promise.race([
+    promise.finally(() => clearTimeout(timer)),
+    new Promise((_, reject) => {
+      timer = setTimeout(
+        () => reject(new Error('서버 응답이 없습니다. 인터넷 연결을 확인해주세요.')),
+        CALL_TIMEOUT_MS
+      );
+    }),
+  ]);
+}
+
 let appPromise = null;
 let dbPromise = null;
-let authPromise = null;
 let fsMod = null;
 let authMod = null;
 let auth = null;
@@ -40,7 +61,13 @@ async function init() {
       import('firebase/firestore'),
       import('firebase/auth'),
     ]);
-    fsMod = firestore;
+    // Give every network-touching Firestore call the deadline from
+    // withTimeout, so a single wrapper covers all the queries below.
+    fsMod = { ...firestore };
+    for (const name of ['getDocs', 'getDoc', 'addDoc', 'setDoc', 'updateDoc', 'deleteDoc']) {
+      const original = firestore[name];
+      fsMod[name] = (...args) => withTimeout(original(...args));
+    }
     authMod = authModule;
     const app = initializeApp(CHALLENGE_CONFIG.firebase);
     appPromise = app;
@@ -57,6 +84,11 @@ async function init() {
     });
     return fsMod.getFirestore(app);
   })();
+  // Don't cache a failed setup — otherwise every later retry replays the
+  // same rejection and the "다시 시도" button could never recover.
+  dbPromise.catch(() => {
+    dbPromise = null;
+  });
   return dbPromise;
 }
 

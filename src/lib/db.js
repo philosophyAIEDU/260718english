@@ -1,7 +1,7 @@
 /*
  * IndexedDB wrapper built on the `idb` library.
  *
- * Everything ReadMate persists lives here, in the user's browser only:
+ * Everything Read & Build persists lives here, in the user's browser only:
  *  - `settings`     : key/value store (Gemini API key, theme preference).
  *  - `vocab`        : starred vocabulary entries with spaced-repetition state.
  *  - `activity`     : one record per completed analysis (photo or library

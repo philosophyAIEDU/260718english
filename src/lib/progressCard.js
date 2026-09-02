@@ -78,7 +78,7 @@ export async function renderProgressCard(data) {
   ctx.fillStyle = c.text;
   ctx.font = '700 46px Georgia, serif';
   ctx.textBaseline = 'middle';
-  ctx.fillText('ReadMate', pad + 96, 126);
+  ctx.fillText('Read & Build', pad + 96, 126);
   ctx.fillStyle = c.soft;
   ctx.font = '500 26px -apple-system, sans-serif';
   ctx.fillText('ENGLISH READING CHALLENGE', pad + 96, 168);
@@ -220,7 +220,7 @@ export async function shareOrDownloadCard(blob, filename) {
     try {
       await navigator.share({
         files: [file],
-        title: 'My ReadMate progress',
+        title: 'My Read & Build progress',
         text: 'My English reading challenge progress 📖',
       });
       return 'shared';

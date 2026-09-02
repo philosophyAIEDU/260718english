@@ -12,7 +12,7 @@ const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODE
 const MAX_RETRIES = 2; // total attempts = 1 + MAX_RETRIES
 const BASE_DELAY_MS = 1200;
 
-const SYSTEM_PROMPT = `You are ReadMate, an English reading companion for a learner who studies English books through English only.
+const SYSTEM_PROMPT = `You are Read & Build, an English reading companion for a learner who studies English books through English only.
 
 You must respond ONLY in English. Do not use any Korean words anywhere. For each vocabulary word, provide both a Collins-style explanatory definition and a Longman-style short synonym list.
 

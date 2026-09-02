@@ -73,7 +73,7 @@ export default function ApiKeyScreen({
           <KeyIcon size={15} /> Gemini API Key
         </h2>
         <p className="muted small" style={{ marginTop: 0 }}>
-          ReadMate uses your own Google Gemini API key to read your book pages.
+          Read &amp; Build uses your own Google Gemini API key to read your book pages.
           Get a free key at{' '}
           <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer">
             aistudio.google.com/apikey
@@ -187,7 +187,7 @@ export default function ApiKeyScreen({
 
       {onTakeLevelTest && (
         <p className="app-credit">
-          ReadMate — 필로소피 AI 교육의 정신을 담아 만든 프로젝트입니다.
+          Read &amp; Build — 필로소피 AI 교육의 정신을 담아 만든 프로젝트입니다.
         </p>
       )}
     </section>

@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------------- */
-/* ReadMate global styles                                                  */
+/* Read & Build global styles                                              */
 /* A quiet, editorial reading atmosphere: paper tones, ink text, a single  */
 /* warm accent, serif body with a sans UI voice for labels and controls.   */
 /* ---------------------------------------------------------------------- */
@@ -26,19 +26,25 @@
  * philosophy-ai-education-materials-creator/SKILL.md for the source values.
  */
 :root[data-theme='light'] {
-  --bg: #fff7e3;
+  --bg: #faf6ed;
   --bg-elevated: #ffffff;
   --bg-card: #ffffff;
-  --bg-inset: #fdf1d4;
-  --text: #35270d;
-  --text-soft: #6b5334;
-  --text-faint: #9c8259;
-  --border: #f0e2bd;
-  --border-strong: #e6d29a;
-  --accent: #a5720a;
-  --accent-hover: #895e07;
-  --accent-soft: #fdeec4;
+  --bg-inset: #f6efe1;
+  --text: #241b0e;
+  --text-soft: #63523a;
+  --text-faint: #97836a;
+  --border: #ece1cd;
+  --border-strong: #ddcca8;
+  --accent: #99680b;
+  --accent-hover: #7e5507;
+  --accent-soft: #fcefcd;
   --accent-contrast: #ffffff;
+  --hero-from: #2b2012;
+  --hero-to: #6b4a11;
+  --hero-text: #fdf7e8;
+  --hero-muted: #d9c7a4;
+  --hero-accent: #f0be4d;
+  --hero-line: rgba(253, 247, 232, 0.18);
   --collins: #1f8a63;
   --collins-bg: #e4f6ee;
   --longman: #2f6bb0;
@@ -62,19 +68,25 @@
 }
 
 :root[data-theme='dark'] {
-  --bg: #1d1608;
-  --bg-elevated: #241b0c;
-  --bg-card: #261c0d;
-  --bg-inset: #2f230f;
-  --text: #f7ecd2;
-  --text-soft: #cdb68e;
-  --text-faint: #96805c;
-  --border: #3d2f14;
-  --border-strong: #503f1a;
-  --accent: #d9a227;
-  --accent-hover: #e6b246;
-  --accent-soft: #3d2f10;
-  --accent-contrast: #1d1608;
+  --bg: #191309;
+  --bg-elevated: #221a0d;
+  --bg-card: #241b0e;
+  --bg-inset: #2e2312;
+  --text: #f8eed8;
+  --text-soft: #cdb891;
+  --text-faint: #948060;
+  --border: #3a2d16;
+  --border-strong: #4e3d1d;
+  --accent: #dda92f;
+  --accent-hover: #ecbb4c;
+  --accent-soft: #3a2c11;
+  --accent-contrast: #191309;
+  --hero-from: #241a0d;
+  --hero-to: #543c11;
+  --hero-text: #fbf3e2;
+  --hero-muted: #c3ad86;
+  --hero-accent: #edbb4b;
+  --hero-line: rgba(251, 243, 226, 0.14);
   --collins: #74c7a3;
   --collins-bg: #22332b;
   --longman: #8db4e4;
@@ -2322,6 +2334,553 @@ main {
 .btn-sm {
   padding: 6px 12px;
   font-size: 0.78rem;
+}
+
+/* ------------------------- challenge program UI -------------------------- */
+
+/*
+ * The hero band that opens Home and the intro screen. It's the one place
+ * with its own dark palette in both themes, so the challenge identity reads
+ * as a masthead rather than just another card.
+ */
+.hero {
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px;
+  padding: 26px 24px 24px;
+  margin-bottom: 18px;
+  background: linear-gradient(145deg, var(--hero-from) 0%, var(--hero-to) 100%);
+  color: var(--hero-text);
+  box-shadow: var(--shadow-lg);
+}
+
+/* A soft light source in the top-right so the flat gradient gains depth. */
+.hero::after {
+  content: '';
+  position: absolute;
+  top: -70px;
+  right: -60px;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(240, 190, 77, 0.32) 0%, rgba(240, 190, 77, 0) 70%);
+  pointer-events: none;
+}
+
+.hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--hero-accent);
+  margin: 0 0 10px;
+}
+
+.hero-title {
+  font-size: 1.62rem;
+  font-weight: 700;
+  line-height: 1.28;
+  letter-spacing: -0.015em;
+  margin: 0 0 8px;
+}
+
+.hero-lead {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--hero-muted);
+  margin: 0;
+}
+
+.hero-day {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin: 18px 0 4px;
+}
+
+.hero-day strong {
+  font-size: 2.6rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.hero-day span {
+  font-family: var(--font-sans);
+  font-size: 0.86rem;
+  color: var(--hero-muted);
+}
+
+.hero-progress {
+  height: 7px;
+  border-radius: 999px;
+  background: var(--hero-line);
+  overflow: hidden;
+  margin-top: 12px;
+}
+
+.hero-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--hero-accent), #f7d98c);
+  transition: width 0.6s var(--ease);
+}
+
+.hero-stats {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--hero-line);
+}
+
+.hero-stat {
+  flex: 1;
+  min-width: 0;
+}
+
+.hero-stat strong {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.hero-stat span {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--hero-muted);
+  margin-top: 3px;
+}
+
+.hero-stat.is-warn strong { color: var(--hero-accent); }
+.hero-stat.is-bad strong { color: #f3a08c; }
+
+/* Section header: small eyebrow, real heading, optional one-line summary. */
+.section-head {
+  margin: 30px 0 14px;
+}
+
+.section-head:first-child {
+  margin-top: 0;
+}
+
+.section-head .eyebrow {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.section-head h2 {
+  font-size: 1.24rem;
+  font-weight: 700;
+  letter-spacing: -0.012em;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.section-head p {
+  font-family: var(--font-sans);
+  font-size: 0.87rem;
+  line-height: 1.6;
+  color: var(--text-soft);
+  margin: 7px 0 0;
+}
+
+/* The four pillars of the challenge. */
+.pillar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(212px, 1fr));
+  gap: 12px;
+}
+
+.pillar {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.pillar-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.pillar strong {
+  display: block;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  margin-bottom: 5px;
+}
+
+.pillar p {
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--text-soft);
+  margin: 0;
+}
+
+/* Quote block for the organizer's note on the intro screen. */
+.manifesto {
+  border-left: 3px solid var(--accent);
+  background: var(--bg-inset);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  padding: 18px 20px;
+  margin: 0 0 18px;
+  font-size: 1.02rem;
+  line-height: 1.75;
+  color: var(--text-soft);
+}
+
+/* Four-week curriculum, drawn as a vertical timeline. */
+.timeline {
+  position: relative;
+  padding-left: 30px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 8px;
+  bottom: 8px;
+  width: 2px;
+  background: var(--border-strong);
+  border-radius: 1px;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 20px;
+}
+
+.timeline-item:last-child {
+  padding-bottom: 0;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -30px;
+  top: 3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--border-strong);
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.timeline-item.is-current .timeline-dot {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-contrast);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+
+.timeline-item.is-done .timeline-dot {
+  background: var(--bg-inset);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.timeline-week {
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.timeline-item.is-current .timeline-week {
+  color: var(--accent);
+}
+
+.timeline-item h3 {
+  font-size: 1.04rem;
+  font-weight: 700;
+  letter-spacing: -0.008em;
+  margin: 3px 0 5px;
+}
+
+.timeline-item p {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-soft);
+  margin: 0 0 9px;
+}
+
+.topic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.topic-chip {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-soft);
+  background: var(--bg-inset);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px 11px;
+}
+
+.timeline-item.is-current .topic-chip {
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
+  color: var(--accent);
+}
+
+/* Challenge rules. */
+.rule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rule-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.rule-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.rule-icon {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: var(--bg-inset);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rule-item.is-warn .rule-icon { background: var(--gold-bg); color: var(--gold); }
+
+.rule-body strong {
+  display: block;
+  font-size: 0.97rem;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+
+.rule-body p {
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  line-height: 1.6;
+  color: var(--text-soft);
+  margin: 0;
+}
+
+/* Deposit + charity callout. */
+.deposit-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-lg);
+  padding: 22px;
+  margin-bottom: 18px;
+  box-shadow: var(--shadow-sm);
+}
+
+.deposit-amount {
+  display: flex;
+  align-items: baseline;
+  gap: 9px;
+  margin-bottom: 4px;
+}
+
+.deposit-amount strong {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.deposit-amount span {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.deposit-notes {
+  list-style: none;
+  padding: 0;
+  margin: 14px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.deposit-notes li {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-soft);
+}
+
+.deposit-notes svg {
+  flex: none;
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+/* "This week's class" banner on Home. */
+.class-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  text-align: left;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 15px 16px;
+  margin-bottom: 14px;
+  color: inherit;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.15s var(--ease), transform 0.1s var(--ease);
+}
+
+.class-banner:hover { background: var(--bg-inset); }
+.class-banner:active { transform: scale(0.995); }
+
+.class-banner-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.class-banner-week {
+  display: block;
+  font-family: var(--font-sans);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.class-banner-title {
+  display: block;
+  font-size: 0.98rem;
+  font-weight: 700;
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
+/* The "already certified today" state of the check-in card. */
+.checkin-done {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  background: var(--collins-bg);
+  border-radius: var(--radius);
+  padding: 15px 16px;
+  margin-top: 12px;
+}
+
+.checkin-done-mark {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--collins);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.checkin-done strong {
+  display: block;
+  font-size: 1rem;
+  color: var(--collins);
+  margin-bottom: 1px;
+}
+
+.checkin-done .muted {
+  display: block;
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+/* Quiet inline links to the rules / curriculum at the foot of Home. */
+.quiet-links {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.quiet-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-soft);
+  font-family: var(--font-sans);
+  font-size: 0.83rem;
+  font-weight: 600;
+  transition: background 0.15s var(--ease), color 0.15s var(--ease);
+}
+
+.quiet-link:hover {
+  background: var(--bg-inset);
+  color: var(--text);
 }
 
 /* ------------------------------- print ---------------------------------- */
