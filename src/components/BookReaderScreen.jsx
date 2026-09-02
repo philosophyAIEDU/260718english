@@ -45,12 +45,23 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   const [progress, setProgress] = useState(null);
   const [fontStep, setFontStep] = useState(0);
   const [audioSrc, setAudioSrc] = useState(null);
+  const [modernMode, setModernMode] = useState(false);
 
   useEffect(() => {
     getSetting('readerFontStep').then((step) => {
       if (typeof step === 'number' && FONT_SCALES[step]) setFontStep(step);
     });
+    // Off by default: modern text only exists once the organizer has run
+    // scripts/modernize-books.mjs, and a stale "on" from a book that had it
+    // shouldn't silently apply the moment a book without it is opened.
+    getSetting('readerModernMode').then((v) => setModernMode(Boolean(v)));
   }, []);
+
+  const toggleModernMode = () => {
+    const next = !modernMode;
+    setModernMode(next);
+    setSetting('readerModernMode', next).catch(() => {});
+  };
 
   const changeFontStep = (delta) => {
     const next = Math.max(0, Math.min(FONT_SCALES.length - 1, fontStep + delta));
@@ -86,12 +97,24 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
     };
   }, [bookId]);
 
+  // Every chapter always has its original `paragraphs`; `modernParagraphs`
+  // only exists once scripts/modernize-books.mjs has been run for that
+  // book. Falling back per-chapter (rather than all-or-nothing for the
+  // book) means a partially-modernized book still reads fine — modern
+  // where it's ready, original everywhere else.
+  const modernAvailable = useMemo(
+    () => Boolean(book?.chapters?.some((c) => c.modernParagraphs?.length)),
+    [book]
+  );
+
   const flatPages = useMemo(() => {
     if (!book) return [];
     const targetWords = targetWordsForLevel(book.level);
     const pages = [];
     book.chapters.forEach((chapter, chapterIndex) => {
-      const chapterPages = paginateParagraphs(chapter.paragraphs, targetWords);
+      const source =
+        modernMode && chapter.modernParagraphs?.length ? chapter.modernParagraphs : chapter.paragraphs;
+      const chapterPages = paginateParagraphs(source, targetWords);
       chapterPages.forEach((page, pageIndexInChapter) => {
         pages.push({
           chapterIndex,
@@ -100,11 +123,12 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
           pageCountInChapter: chapterPages.length,
           paragraphs: page.paragraphs,
           wordCount: page.wordCount,
+          isModern: source === chapter.modernParagraphs,
         });
       });
     });
     return pages;
-  }, [book]);
+  }, [book, modernMode]);
 
   // Resume from saved progress once pages are known.
   useEffect(() => {
@@ -306,6 +330,34 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
         </div>
       )}
 
+      {modernAvailable && (
+        <div className="mode-toggle" role="group" aria-label="원문 또는 현대식 영어로 읽기">
+          <button
+            type="button"
+            className={`mode-toggle-btn ${!modernMode ? 'active' : ''}`}
+            onClick={() => modernMode && toggleModernMode()}
+          >
+            📜 원문 그대로
+          </button>
+          <button
+            type="button"
+            className={`mode-toggle-btn ${modernMode ? 'active' : ''}`}
+            onClick={() => !modernMode && toggleModernMode()}
+          >
+            ✨ 현대식 영어
+          </button>
+        </div>
+      )}
+      {modernMode && !current.isModern && (
+        <div className="notice">
+          <SparklesIcon size={16} />
+          <span>
+            이 챕터는 아직 현대식 영어 버전이 없어서 원문으로 보여드려요. 다른
+            챕터에는 있을 수 있어요.
+          </span>
+        </div>
+      )}
+
       {audioSrc && (
         <div className="audio-player-card">
           <SpeakerIcon size={17} />
@@ -359,6 +411,12 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
         Page {current.pageIndexInChapter + 1} of {current.pageCountInChapter} in this chapter
         {' · '}
         Day {dayForPageIndex(flatIndex, flatPages.length)} of {CHALLENGE_DAYS}
+        {current.isModern && (
+          <>
+            {' · '}
+            <span title="AI가 원작을 현대식 영어로 다시 쓴 버전입니다">✨ AI 현대식 영어</span>
+          </>
+        )}
       </p>
 
       <div className="reader-nav">
