@@ -218,6 +218,10 @@ async function main() {
   for (const file of targets) {
     const filePath = path.join(BOOKS_DIR, file);
     const book = JSON.parse(await readFile(filePath, 'utf8'));
+    if (book.bible) {
+      console.log(`\n📖 ${book.title} — skipping: World English Bible text is already modern English and should not be AI-paraphrased.`);
+      continue;
+    }
     console.log(`\n📖 ${book.title} (${book.level}) — ${book.chapters.length} chapters`);
 
     for (const [chapterIndex, chapter] of book.chapters.entries()) {

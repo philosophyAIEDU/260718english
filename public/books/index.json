@@ -142,5 +142,83 @@
     "chapterCount": 24,
     "wordCount": 69355,
     "totalPages": 312
+  },
+  {
+    "id": "genesis",
+    "title": "Genesis",
+    "author": "World English Bible",
+    "year": 2000,
+    "level": "Intermediate",
+    "bible": true,
+    "description": "The first book of the Bible: the creation of the world, Adam and Eve, Noah's flood, and the patriarchs Abraham, Isaac, Jacob, and Joseph — traditionally attributed to Moses. Sweeping origin stories told in straightforward narrative prose.",
+    "source": "World English Bible (WEB), public domain — worldenglish.bible",
+    "chapterCount": 50,
+    "wordCount": 37320,
+    "totalPages": 203
+  },
+  {
+    "id": "psalms",
+    "title": "Psalms",
+    "author": "World English Bible",
+    "year": 2000,
+    "level": "Intermediate",
+    "bible": true,
+    "description": "150 songs and prayers of praise, lament, thanksgiving, and reflection, traditionally attributed chiefly to King David. Short, vivid, poetic chapters that read well one at a time.",
+    "source": "World English Bible (WEB), public domain — worldenglish.bible",
+    "chapterCount": 150,
+    "wordCount": 44297,
+    "totalPages": 273
+  },
+  {
+    "id": "proverbs",
+    "title": "Proverbs",
+    "author": "World English Bible",
+    "year": 2000,
+    "level": "Beginner",
+    "bible": true,
+    "description": "Short, memorable sayings about wisdom, work, friendship, and character, traditionally attributed to Solomon. Each verse is a self-contained thought — easy to read a little at a time.",
+    "source": "World English Bible (WEB), public domain — worldenglish.bible",
+    "chapterCount": 31,
+    "wordCount": 15450,
+    "totalPages": 124
+  },
+  {
+    "id": "matthew",
+    "title": "Matthew",
+    "author": "World English Bible",
+    "year": 2000,
+    "level": "Intermediate",
+    "bible": true,
+    "description": "The first Gospel: the birth, teaching, miracles, death, and resurrection of Jesus, with an eye to how his life fulfilled Hebrew prophecy. Clear, steady narrative prose.",
+    "source": "World English Bible (WEB), public domain — worldenglish.bible",
+    "chapterCount": 28,
+    "wordCount": 23900,
+    "totalPages": 129
+  },
+  {
+    "id": "john",
+    "title": "John",
+    "author": "World English Bible",
+    "year": 2000,
+    "level": "Beginner",
+    "bible": true,
+    "description": "The most personal of the four Gospels, telling the story of Jesus through vivid scenes and extended first-person teaching. Simple vocabulary and short sentences make it a popular first book to read.",
+    "source": "World English Bible (WEB), public domain — worldenglish.bible",
+    "chapterCount": 21,
+    "wordCount": 19570,
+    "totalPages": 152
+  },
+  {
+    "id": "romans",
+    "title": "Romans",
+    "author": "World English Bible",
+    "year": 2000,
+    "level": "Advanced",
+    "bible": true,
+    "description": "Paul's letter to the church in Rome, laying out core Christian teaching on sin, faith, and grace in dense, tightly-reasoned argument — a real step up in difficulty from the Gospels.",
+    "source": "World English Bible (WEB), public domain — worldenglish.bible",
+    "chapterCount": 16,
+    "wordCount": 9866,
+    "totalPages": 44
   }
 ]

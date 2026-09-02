@@ -246,7 +246,7 @@ export default function HomeScreen({
             <LibraryIcon size={26} />
           </span>
           <strong>라이브러리 읽기</strong>
-          <span className="small muted">무료 영어 원서 12권 · 듣기 지원</span>
+          <span className="small muted">무료 영어 원서 12권 · 영어 성경 6권 · 듣기 지원</span>
         </button>
         <button className="entry-card" onClick={onScan}>
           <span className="entry-card-icon">
