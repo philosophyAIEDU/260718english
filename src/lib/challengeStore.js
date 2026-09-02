@@ -254,7 +254,7 @@ export async function listSubmissions(filter) {
  */
 const submissionId = (participantId, date) => `${participantId}_${date}`;
 
-async function getSubmission(participantId, date) {
+export async function getSubmission(participantId, date) {
   const db = await init();
   const snap = await fsMod.getDoc(
     fsMod.doc(db, 'submissions', submissionId(participantId, date))
