@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { CHALLENGE_CONFIG, isFirebaseConfigured } from '../lib/challengeConfig.js';
 import {
-  onAuthStateChanged,
+  onAuthReady,
   signInWithGoogle,
-  signOutAdmin,
+  signOut,
   isAdminEmail,
   listParticipants,
-  addParticipants,
   updateParticipant,
   removeParticipant,
   listSubmissions,
@@ -23,11 +22,14 @@ import {
 
 /**
  * Organizer dashboard: who missed how many days, who is at risk of the
- * kickout rule (CHALLENGE_CONFIG.kickoutThreshold), and roster management
- * (bulk-add nicknames, exempt a date, kick out / reinstate). Gated by
- * Firebase Google sign-in against CHALLENGE_CONFIG.adminEmails — the
- * client-side check keeps the tab hidden from non-organizers, but the
- * real protection has to live in Firestore security rules (see README).
+ * kickout rule (CHALLENGE_CONFIG.kickoutThreshold), and what to do about
+ * it (exempt a date, kick out, reinstate, remove). Participants add
+ * themselves by signing in and picking a nickname, so there's no roster to
+ * enter here.
+ *
+ * Gated by Firebase Google sign-in against CHALLENGE_CONFIG.adminEmails —
+ * the client-side check keeps the dashboard hidden from participants, but
+ * the real protection lives in Firestore security rules (see README).
  */
 export default function AdminScreen({ onBack }) {
   if (!isFirebaseConfigured()) {
@@ -57,10 +59,8 @@ function AdminScreenInner({ onBack }) {
   const [participants, setParticipants] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
-  const [bulkText, setBulkText] = useState('');
-  const [bulkMessage, setBulkMessage] = useState('');
 
-  useEffect(() => onAuthStateChanged(setUser), []);
+  useEffect(() => onAuthReady(setUser), []);
 
   const admin = user && isAdminEmail(user.email);
 
@@ -132,7 +132,7 @@ function AdminScreenInner({ onBack }) {
             {signingIn ? '로그인 중…' : 'Google로 로그인'}
           </button>
           {user && (
-            <button className="btn btn-block" style={{ marginTop: 8 }} onClick={() => signOutAdmin()}>
+            <button className="btn btn-block" style={{ marginTop: 8 }} onClick={() => signOut()}>
               로그아웃
             </button>
           )}
@@ -144,21 +144,6 @@ function AdminScreenInner({ onBack }) {
   const stats = buildStats(participants, submissions, today());
   const sortedByMissed = [...stats].sort((a, b) => b.missed - a.missed);
   const dates = challengeDates();
-
-  const handleBulkAdd = async () => {
-    if (!bulkText.trim()) return;
-    setBulkMessage('');
-    try {
-      const { added, skipped } = await addParticipants(bulkText);
-      setBulkText('');
-      setBulkMessage(
-        `${added.length}명 추가${skipped.length ? ` · 이미 있던 ${skipped.length}명은 건너뜀` : ''}`
-      );
-      loadData();
-    } catch {
-      setBulkMessage('추가에 실패했어요. 다시 시도해주세요.');
-    }
-  };
 
   const toggleExemptToday = async (stat) => {
     const t = today();
@@ -199,7 +184,7 @@ function AdminScreenInner({ onBack }) {
       </button>
       <div className="screen-heading">
         <h2>운영자 대시보드</h2>
-        <button className="link-button" onClick={() => signOutAdmin()}>
+        <button className="link-button" onClick={() => signOut()}>
           로그아웃 ({user.email})
         </button>
       </div>
@@ -261,24 +246,12 @@ function AdminScreenInner({ onBack }) {
 
       {!loadingData && tab === 'roster' && (
         <>
-          <div className="card">
-            <h2 className="section-title">
-              <UsersIcon size={15} /> 명단 일괄 등록
-            </h2>
-            <p className="muted small" style={{ marginTop: 0 }}>
-              신청 명단의 이름을 줄바꿈 또는 쉼표로 구분해서 붙여넣으세요.
-            </p>
-            <textarea
-              className="text-input"
-              rows={4}
-              value={bulkText}
-              onChange={(e) => setBulkText(e.target.value)}
-              placeholder={'홍길동\n김철수\n이영희'}
-            />
-            <button className="btn btn-primary btn-block" style={{ marginTop: 8 }} onClick={handleBulkAdd}>
-              추가하기
-            </button>
-            {bulkMessage && <p className="small share-message">{bulkMessage}</p>}
+          <div className="notice">
+            <UsersIcon size={18} />
+            <span>
+              참가자는 앱 홈 화면에서 <strong>구글 로그인 후 닉네임</strong>을 정하면 스스로
+              등록됩니다. 여기서는 등록된 분들의 면제일·킥아웃만 관리하시면 됩니다.
+            </span>
           </div>
 
           <div className="card">
@@ -295,6 +268,7 @@ function AdminScreenInner({ onBack }) {
                       <span className={`challenge-tag tone-${tag.tone}`}>{tag.label}</span>
                       <span className="muted small">
                         인증 {s.verified} · 미인증 {s.missed} · 연속 {s.streak}일
+                        {p.email ? ` · ${p.email}` : ''}
                       </span>
                     </div>
                     <div className="roster-row-actions">

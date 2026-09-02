@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
-import { getSetting, setSetting, logActivity, getAllActivity } from '../lib/db.js';
+import { logActivity, getAllActivity } from '../lib/db.js';
 import { isActiveToday } from '../lib/streaks.js';
 import { isFirebaseConfigured, CHALLENGE_CONFIG } from '../lib/challengeConfig.js';
 import {
-  listParticipants,
+  onAuthReady,
+  signInWithGoogle,
+  signOut,
+  getMyParticipant,
+  registerParticipant,
+  updateMyNickname,
   listSubmissions,
   saveSubmission,
 } from '../lib/challengeStore.js';
@@ -14,17 +19,20 @@ import {
   CheckIcon,
   AlertIcon,
   UsersIcon,
+  GoogleIcon,
 } from './Icons.jsx';
 
 /**
- * The official [Read & Build] challenge check-in: picks (once) which
- * pre-registered participant this device belongs to, then submits a daily
- * "읽었어요 / 들었어요" record to Firestore so the organizer's admin
- * dashboard can track everyone's attendance for the kickout rule.
+ * The daily check-in, and the gate in front of it.
  *
- * Renders nothing when CHALLENGE_CONFIG.firebase.projectId is empty — a
- * Read & Build deployment that isn't running this specific cohort challenge
- * (or hasn't been configured yet) is completely unaffected.
+ * A participant signs in with Google once and picks a nickname; that
+ * creates their entry under their account, so the organizer never
+ * maintains a roster and nobody can certify as someone else. After that
+ * this card is just "읽었어요 / 들었어요 → 오늘 인증하기", plus how many
+ * days they've missed against the kickout threshold.
+ *
+ * Renders nothing when CHALLENGE_CONFIG.firebase.projectId is empty, so a
+ * deployment that isn't running this cohort is unaffected.
  */
 export default function ChallengeCheckin() {
   if (!isFirebaseConfigured()) return null;
@@ -32,88 +40,119 @@ export default function ChallengeCheckin() {
 }
 
 function ChallengeCheckinInner() {
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(undefined); // undefined = still checking
+  const [me, setMe] = useState(undefined); // undefined = not loaded, null = not joined
   const [error, setError] = useState('');
-  const [participants, setParticipants] = useState([]);
-  const [myId, setMyId] = useState(null);
-  const [pickerValue, setPickerValue] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [nickname, setNickname] = useState('');
   const [mode, setMode] = useState('read');
   const [bookTitle, setBookTitle] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [editingNick, setEditingNick] = useState(false);
   const [stat, setStat] = useState(null);
   const todayISO = today();
 
-  const loadParticipants = () => {
-    setLoading(true);
-    setError('');
-    listParticipants()
-      .then(setParticipants)
-      .catch(() => setError('참가자 명단을 불러오지 못했어요. 인터넷 연결을 확인해주세요.'))
-      .finally(() => setLoading(false));
-  };
+  useEffect(() => onAuthReady(setUser), []);
 
+  // Whenever the account changes, reload who that account is in the challenge.
   useEffect(() => {
-    getSetting('challengeParticipantId').then((id) => {
-      if (id) setMyId(id);
-    });
-    loadParticipants();
-  }, []);
+    if (user === undefined) return;
+    if (!user) {
+      setMe(null);
+      setStat(null);
+      return;
+    }
+    let alive = true;
+    setError('');
+    getMyParticipant()
+      .then((participant) => {
+        if (!alive) return;
+        setMe(participant);
+        if (participant) refreshStat(participant);
+      })
+      .catch(() => alive && setError('내 정보를 불러오지 못했어요. 인터넷 연결을 확인해주세요.'));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
-  const refreshMyStat = (id, allParticipants) => {
-    const me = allParticipants.find((p) => p.id === id);
-    if (!me) return;
-    listSubmissions({ participantId: id })
-      .then((subs) => setStat(buildStats([me], subs, todayISO)[0]))
+  const refreshStat = (participant) => {
+    listSubmissions({ participantId: participant.id })
+      .then((subs) => setStat(buildStats([participant], subs, todayISO)[0]))
       .catch(() => {});
   };
 
-  useEffect(() => {
-    if (myId && participants.length) refreshMyStat(myId, participants);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [myId, participants]);
-
-  const chooseParticipant = async () => {
-    if (!pickerValue) return;
-    await setSetting('challengeParticipantId', pickerValue);
-    const p = participants.find((x) => x.id === pickerValue);
-    await setSetting('challengeNickname', p?.nickname || '');
-    setMyId(pickerValue);
-  };
-
-  const changeParticipant = async () => {
-    setMyId(null);
-    setStat(null);
-    setPickerValue('');
-  };
-
-  const submit = async () => {
-    if (!myId || submitting) return;
-    setSubmitting(true);
+  const run = async (action, onDone) => {
+    if (busy) return;
+    setBusy(true);
+    setError('');
     setMessage('');
     try {
-      const me = participants.find((p) => p.id === myId);
-      await saveSubmission({
-        participantId: myId,
-        nickname: me?.nickname || '',
-        date: todayISO,
-        mode,
-        bookTitle: bookTitle.trim(),
-      });
-      const before = await getAllActivity();
-      if (!isActiveToday(before.map((a) => a.date))) {
-        await logActivity({ source: mode === 'listen' ? 'listen' : 'checkin' });
-      }
-      refreshMyStat(myId, participants);
-      setMessage(mode === 'listen' ? '오늘의 듣기 인증 완료! 🎧' : '오늘의 읽기 인증 완료! 📖');
-    } catch {
-      setMessage('인증 저장에 실패했어요. 다시 시도해주세요.');
+      await action();
+      onDone?.();
+    } catch (err) {
+      setError(err?.message || '문제가 생겼어요. 다시 시도해주세요.');
     } finally {
-      setSubmitting(false);
+      setBusy(false);
     }
   };
 
-  if (loading) {
+  const handleSignIn = () =>
+    run(async () => {
+      await signInWithGoogle();
+    });
+
+  const handleJoin = () =>
+    run(
+      async () => {
+        const participant = await registerParticipant(nickname);
+        setMe(participant);
+        refreshStat(participant);
+      },
+      () => setMessage('환영합니다! 이제 매일 인증하시면 됩니다.')
+    );
+
+  const handleRename = () =>
+    run(
+      async () => {
+        const nick = await updateMyNickname(nickname);
+        setMe((prev) => ({ ...prev, nickname: nick }));
+      },
+      () => {
+        setEditingNick(false);
+        setMessage('닉네임을 변경했어요.');
+      }
+    );
+
+  const handleSubmit = () =>
+    run(
+      async () => {
+        await saveSubmission({
+          participantId: me.id,
+          nickname: me.nickname,
+          date: todayISO,
+          mode,
+          bookTitle: bookTitle.trim(),
+        });
+        const before = await getAllActivity();
+        if (!isActiveToday(before.map((a) => a.date))) {
+          await logActivity({ source: mode === 'listen' ? 'listen' : 'checkin' });
+        }
+        refreshStat(me);
+      },
+      () => setMessage(mode === 'listen' ? '오늘의 듣기 인증 완료! 🎧' : '오늘의 읽기 인증 완료! 📖')
+    );
+
+  const errorBox = error && (
+    <div className="error-box">
+      <AlertIcon size={17} />
+      <span>{error}</span>
+    </div>
+  );
+
+  /* ---------------------------- still checking ---------------------------- */
+  if (user === undefined || (user && me === undefined)) {
     return (
       <div className="card challenge-card">
         <h2 className="section-title">
@@ -125,76 +164,128 @@ function ChallengeCheckinInner() {
     );
   }
 
-  if (error) {
+  /* ------------------------------ signed out ------------------------------ */
+  if (!user) {
     return (
       <div className="card challenge-card">
-        <div className="error-box">
-          <AlertIcon size={17} />
-          <span>{error}</span>
-        </div>
-        <button className="btn" onClick={loadParticipants}>
-          다시 시도
+        <h2 className="section-title">
+          <UsersIcon size={15} /> 챌린지 참여하기
+        </h2>
+        <p className="muted small" style={{ marginTop: 0 }}>
+          구글 계정으로 로그인하고 닉네임만 정하면 바로 참여할 수 있어요. 매일
+          읽거나 들은 것을 인증하면 운영진이 자동으로 확인합니다.
+        </p>
+        {errorBox}
+        <button className="btn btn-primary btn-block" onClick={handleSignIn} disabled={busy}>
+          <GoogleIcon size={17} /> {busy ? '연결 중…' : 'Google로 시작하기'}
         </button>
       </div>
     );
   }
 
-  if (!myId) {
+  /* --------------------- signed in, hasn't joined yet --------------------- */
+  if (!me) {
     return (
       <div className="card challenge-card">
         <h2 className="section-title">
-          <UsersIcon size={15} /> 챌린지 인증 시작하기
+          <UsersIcon size={15} /> 닉네임 정하기
         </h2>
         <p className="muted small" style={{ marginTop: 0 }}>
-          운영진이 등록한 명단에서 내 이름을 골라주세요. 이 기기에서 앞으로
-          매일 인증할 때 자동으로 이 이름으로 저장됩니다.
+          챌린지에서 사용할 닉네임을 정해주세요. 인증 현황에 이 이름으로
+          표시됩니다.
         </p>
-        {participants.length === 0 ? (
-          <p className="muted small">
-            아직 등록된 참가자가 없어요. 운영진에게 명단 등록을 요청해주세요.
-          </p>
-        ) : (
-          <>
-            <select
-              className="text-input"
-              value={pickerValue}
-              onChange={(e) => setPickerValue(e.target.value)}
-            >
-              <option value="">이름 선택…</option>
-              {participants.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nickname}
-                </option>
-              ))}
-            </select>
-            <button
-              className="btn btn-primary btn-block"
-              style={{ marginTop: 10 }}
-              onClick={chooseParticipant}
-              disabled={!pickerValue}
-            >
-              이 이름으로 시작하기
-            </button>
-          </>
-        )}
+        {errorBox}
+        <input
+          className="text-input"
+          value={nickname}
+          onChange={(e) => setNickname(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
+          placeholder="닉네임 (20자 이내)"
+          maxLength={20}
+          autoFocus
+        />
+        <button
+          className="btn btn-primary btn-block"
+          style={{ marginTop: 10 }}
+          onClick={handleJoin}
+          disabled={busy || !nickname.trim()}
+        >
+          {busy ? '등록 중…' : '이 닉네임으로 참여하기'}
+        </button>
+        <p className="muted small challenge-whoami">
+          {user.email} ·{' '}
+          <button className="link-button" onClick={() => signOut()}>
+            다른 계정으로 로그인
+          </button>
+        </p>
       </div>
     );
   }
 
+  /* ------------------------------ kicked out ------------------------------ */
+  if (me.status === 'out') {
+    return (
+      <div className="card challenge-card">
+        <h2 className="section-title">
+          <UsersIcon size={15} /> 챌린지 참여 종료
+        </h2>
+        <p className="notice notice-danger">
+          <AlertIcon size={16} />
+          <span>
+            {me.kickReason === 'kickout'
+              ? `누적 미인증 ${CHALLENGE_CONFIG.kickoutThreshold}회로 킥아웃되어 더 이상 인증을 제출할 수 없습니다.`
+              : '이번 챌린지 참여가 종료되어 더 이상 인증을 제출할 수 없습니다.'}{' '}
+            문의사항은 운영진에게 연락해주세요.
+          </span>
+        </p>
+      </div>
+    );
+  }
+
+  /* ------------------------------ certifying ------------------------------ */
   const tag = stat ? riskTag(stat) : null;
-  const alreadyToday = stat?.submittedToday;
 
   return (
     <div className="card challenge-card">
       <h2 className="section-title">
         <UsersIcon size={15} /> 오늘의 인증
       </h2>
-      <p className="muted small challenge-whoami">
-        <strong>{participants.find((p) => p.id === myId)?.nickname}</strong>님으로 인증 중 ·{' '}
-        <button className="link-button" onClick={changeParticipant}>
-          다른 사람인가요?
-        </button>
-      </p>
+      {editingNick ? (
+        <div className="nickname-edit">
+          <input
+            className="text-input"
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleRename()}
+            placeholder="새 닉네임 (20자 이내)"
+            maxLength={20}
+            autoFocus
+          />
+          <button className="btn btn-sm btn-primary" onClick={handleRename} disabled={busy}>
+            저장
+          </button>
+          <button className="btn btn-sm" onClick={() => setEditingNick(false)}>
+            취소
+          </button>
+        </div>
+      ) : (
+        <p className="muted small challenge-whoami">
+          <strong>{me.nickname}</strong>님으로 인증 중 ·{' '}
+          <button
+            className="link-button"
+            onClick={() => {
+              setNickname(me.nickname);
+              setEditingNick(true);
+            }}
+          >
+            닉네임 변경
+          </button>{' '}
+          ·{' '}
+          <button className="link-button" onClick={() => signOut()}>
+            로그아웃
+          </button>
+        </p>
+      )}
 
       {stat && (
         <div className={`challenge-stat-row tone-${tag.tone}`}>
@@ -220,7 +311,9 @@ function ChallengeCheckinInner() {
         </p>
       )}
 
-      {alreadyToday ? (
+      {errorBox}
+
+      {stat?.submittedToday ? (
         <div className="checkin-done">
           <span className="checkin-done-mark">
             <CheckIcon size={20} />
@@ -258,17 +351,17 @@ function ChallengeCheckinInner() {
           <button
             className="btn btn-primary btn-block"
             style={{ marginTop: 10 }}
-            onClick={submit}
-            disabled={submitting}
+            onClick={handleSubmit}
+            disabled={busy}
           >
-            {submitting ? '저장 중…' : '오늘 인증하기'}
+            {busy ? '저장 중…' : '오늘 인증하기'}
           </button>
         </>
       )}
 
       {message && (
         <p className="small share-message">
-          {message.startsWith('인증 저장에') ? <AlertIcon size={14} /> : <CheckIcon size={14} />} {message}
+          <CheckIcon size={14} /> {message}
         </p>
       )}
     </div>
