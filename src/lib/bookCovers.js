@@ -19,6 +19,12 @@ const COVERS = {
   'great-gatsby': { emoji: '🥂', from: '#f4cf5c', to: '#caa023' },
   'pride-and-prejudice': { emoji: '💌', from: '#f5a6ba', to: '#d76d8b' },
   'frankenstein': { emoji: '⚡', from: '#83a596', to: '#4d6f60' },
+  'genesis': { emoji: '🌍', from: '#e2a765', to: '#b97a2e' },
+  'psalms': { emoji: '🎵', from: '#8ec6d9', to: '#4a93ab' },
+  'proverbs': { emoji: '🦉', from: '#c9a15c', to: '#8f6b2e' },
+  'matthew': { emoji: '✝️', from: '#d99a6c', to: '#a8623a' },
+  'john': { emoji: '🕊️', from: '#bcd9f0', to: '#7fa8d6' },
+  'romans': { emoji: '🏛️', from: '#c9beac', to: '#8f8270' },
 };
 
 // Fallback for any book without an explicit cover (e.g. a future addition).

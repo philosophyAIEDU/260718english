@@ -11,7 +11,8 @@
  * Run manually when adding books:  node scripts/build-books.mjs
  * The generated JSON is committed, so users never need to run this.
  */
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { paginateParagraphs, targetWordsForLevel } from '../src/lib/pagination.js';
@@ -169,6 +170,93 @@ const BOOKS = [
     source: 'Project Gutenberg #84 (public domain)',
     kind: 'chapter-arabic-bare',
     url: 'https://raw.githubusercontent.com/GITenberg/Frankenstein_84/master/84.txt',
+  },
+
+  // --- The Bible (World English Bible) ------------------------------
+  // A handful of the most commonly-read books, not the full 66-book
+  // Bible, so the Library stays a reasonable size. Text comes verse-by-
+  // verse from midvash/bible-data, a structured mirror of the WEB — see
+  // fetchBibleChapters() below. `bible: true` marks these for the reader
+  // (no "📜 원문 / ✨ 현대식 영어" toggle — the WEB is already modern
+  // English) and tells scripts/modernize-books.mjs to skip them, since
+  // AI-paraphrasing scripture would risk changing its meaning.
+  {
+    id: 'genesis',
+    title: 'Genesis',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Intermediate',
+    bible: true,
+    description:
+      "The first book of the Bible: the creation of the world, Adam and Eve, Noah's flood, and the patriarchs Abraham, Isaac, Jacob, and Joseph — traditionally attributed to Moses. Sweeping origin stories told in straightforward narrative prose.",
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Gen',
+  },
+  {
+    id: 'psalms',
+    title: 'Psalms',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Intermediate',
+    bible: true,
+    description:
+      '150 songs and prayers of praise, lament, thanksgiving, and reflection, traditionally attributed chiefly to King David. Short, vivid, poetic chapters that read well one at a time.',
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Ps',
+  },
+  {
+    id: 'proverbs',
+    title: 'Proverbs',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Beginner',
+    bible: true,
+    description:
+      'Short, memorable sayings about wisdom, work, friendship, and character, traditionally attributed to Solomon. Each verse is a self-contained thought — easy to read a little at a time.',
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Prov',
+  },
+  {
+    id: 'matthew',
+    title: 'Matthew',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Intermediate',
+    bible: true,
+    description:
+      "The first Gospel: the birth, teaching, miracles, death, and resurrection of Jesus, with an eye to how his life fulfilled Hebrew prophecy. Clear, steady narrative prose.",
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Matt',
+  },
+  {
+    id: 'john',
+    title: 'John',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Beginner',
+    bible: true,
+    description:
+      'The most personal of the four Gospels, telling the story of Jesus through vivid scenes and extended first-person teaching. Simple vocabulary and short sentences make it a popular first book to read.',
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'John',
+  },
+  {
+    id: 'romans',
+    title: 'Romans',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Advanced',
+    bible: true,
+    description:
+      "Paul's letter to the church in Rome, laying out core Christian teaching on sin, faith, and grace in dense, tightly-reasoned argument — a real step up in difficulty from the Gospels.",
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Rom',
   },
 ];
 
@@ -442,6 +530,26 @@ function parseXhtmlParagraphs(xhtml) {
   return paragraphs;
 }
 
+/**
+ * Fetch one Bible book (World English Bible, public domain) as
+ * chapter/verse JSON from midvash/bible-data — a structured mirror keyed
+ * by OSIS book code — and reshape it to the app's { title, paragraphs }
+ * chapter format. Each verse becomes its own paragraph, prefixed with its
+ * verse number (e.g. "16 For God so loved the world…"), the way most
+ * Bible readers print verse text — this also keeps citations legible
+ * since paragraphs get regrouped into pages by word count.
+ */
+async function fetchBibleChapters(osis) {
+  const url = `https://raw.githubusercontent.com/midvash/bible-data/main/versions/en/web/books/${osis}.json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} for ${url}`);
+  const data = await res.json();
+  return data.chapters.map((c) => ({
+    title: `Chapter ${c.chapter}`,
+    paragraphs: c.verses.map((v) => `${v.number} ${v.text}`),
+  }));
+}
+
 const countWords = (chapters) =>
   chapters.reduce(
     (sum, c) => sum + c.paragraphs.reduce((s, p) => s + p.split(/\s+/).length, 0),
@@ -459,48 +567,72 @@ const PLAIN_TEXT_PARSERS = {
   'chapter-caps-bare': parseChapterCapsBare,
 };
 
+/**
+ * --only=id1,id2 limits which books are actually re-fetched from the
+ * network (handy when adding a few new books without re-downloading the
+ * whole library). Every book in BOOKS still gets a manifest entry: for
+ * ids outside --only, the already-committed public/books/<id>.json is
+ * read back off disk instead of being re-fetched.
+ */
+function parseOnly(argv) {
+  const arg = argv.find((a) => a.startsWith('--only='));
+  return arg ? new Set(arg.slice('--only='.length).split(',').filter(Boolean)) : null;
+}
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
+  const only = parseOnly(process.argv.slice(2));
   const manifest = [];
 
   for (const book of BOOKS) {
-    let chapters;
-    if (book.kind === 'standardebooks-xhtml') {
-      chapters = [];
-      for (let i = 1; i <= book.chapterCount; i += 1) {
-        const xhtml = await fetchText(book.urlTemplate.replace('%d', i));
-        chapters.push({ title: `Chapter ${i}`, paragraphs: parseXhtmlParagraphs(xhtml) });
+    const filePath = path.join(OUT_DIR, `${book.id}.json`);
+    const shouldFetch = !only || only.has(book.id);
+
+    if (!shouldFetch) {
+      if (!existsSync(filePath)) {
+        throw new Error(`--only omits "${book.id}" but public/books/${book.id}.json doesn't exist yet — fetch it at least once.`);
       }
     } else {
-      const text = await fetchText(book.url);
-      const parse = PLAIN_TEXT_PARSERS[book.kind];
-      if (!parse) throw new Error(`Unknown book kind: ${book.kind}`);
-      chapters = parse(text);
+      let chapters;
+      if (book.kind === 'standardebooks-xhtml') {
+        chapters = [];
+        for (let i = 1; i <= book.chapterCount; i += 1) {
+          const xhtml = await fetchText(book.urlTemplate.replace('%d', i));
+          chapters.push({ title: `Chapter ${i}`, paragraphs: parseXhtmlParagraphs(xhtml) });
+        }
+      } else if (book.kind === 'bible-web') {
+        chapters = await fetchBibleChapters(book.osis);
+      } else {
+        const text = await fetchText(book.url);
+        const parse = PLAIN_TEXT_PARSERS[book.kind];
+        if (!parse) throw new Error(`Unknown book kind: ${book.kind}`);
+        chapters = parse(text);
+      }
+
+      const { kind, url, urlTemplate, chapterCount, osis, ...meta } = book;
+      await writeFile(filePath, JSON.stringify({ ...meta, chapters }));
     }
 
-    const { kind, url, urlTemplate, chapterCount, ...meta } = book;
-    const record = { ...meta, chapters };
-    await writeFile(
-      path.join(OUT_DIR, `${book.id}.json`),
-      JSON.stringify(record)
-    );
+    const record = JSON.parse(await readFile(filePath, 'utf8'));
     // Total page count (same level-aware pagination the in-app reader
     // uses), so the Library list can show a 14-day reading plan without
     // fetching the full book JSON.
-    const targetWords = targetWordsForLevel(book.level);
-    const totalPages = chapters.reduce(
+    const targetWords = targetWordsForLevel(record.level);
+    const totalPages = record.chapters.reduce(
       (sum, c) => sum + paginateParagraphs(c.paragraphs, targetWords).length,
       0
     );
+    const wordCount = countWords(record.chapters);
+    const { chapters, ...meta } = record;
 
     manifest.push({
       ...meta,
       chapterCount: chapters.length,
-      wordCount: countWords(chapters),
+      wordCount,
       totalPages,
     });
     console.log(
-      `${book.id}: ${chapters.length} chapters, ${countWords(chapters).toLocaleString()} words, ${totalPages} pages`
+      `${book.id}${shouldFetch ? '' : ' (cached)'}: ${chapters.length} chapters, ${wordCount.toLocaleString()} words, ${totalPages} pages`
     );
   }
 
