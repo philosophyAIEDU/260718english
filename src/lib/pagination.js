@@ -3,6 +3,7 @@
  * reader feels like turning real pages (and so each "Analyze this page"
  * call stays a reasonable, page-sized amount of text for Gemini).
  */
+import { challengeDates } from './challengeUtils.js';
 
 const TARGET_WORDS_PER_PAGE = 280;
 
@@ -52,15 +53,19 @@ export function paginateParagraphs(paragraphs, targetWords = TARGET_WORDS_PER_PA
   return pages;
 }
 
-/** Reading challenges on Read & Build run in 30-day (one-month) cycles. */
-export const CHALLENGE_DAYS = 30;
+/*
+ * How many days a learner has to finish a book — the length of the actual
+ * challenge window from challengeConfig, so the Library's "N일 완독" pacing
+ * and the reader's "Day X of N" can never drift from the real dates.
+ */
+export const CHALLENGE_DAYS = challengeDates().length;
 
-/** Pages/day needed to finish a book of `totalPages` within one 30-day cycle. */
+/** Pages/day needed to finish a book of `totalPages` within one cycle. */
 export function pagesPerDay(totalPages, days = CHALLENGE_DAYS) {
   return Math.max(1, Math.ceil(totalPages / days));
 }
 
-/** Which challenge day (1–30) a given page index falls on. */
+/** Which challenge day (1–CHALLENGE_DAYS) a given page index falls on. */
 export function dayForPageIndex(pageIndex, totalPages, days = CHALLENGE_DAYS) {
   const perDay = pagesPerDay(totalPages, days);
   return Math.min(days, Math.floor(pageIndex / perDay) + 1);

@@ -6,8 +6,13 @@ Google Gemini AI가 그 페이지를 읽고 **100% 영어로 된 학습 가이�
 반복 복습**으로 다시 만나게 되고, 연속 학습일(스트릭)·뱃지·진행상황 공유 기능으로 여러 명이
 함께하는 **영어 원문 읽기 챌린지**를 운영할 수 있습니다.
 
-**[Read & Build] 챌린지**는 한 달(주 7일 인증)간 원서를 읽거나 들으면서, AI로 나만의 학습앱도
+**[Read & Build] 챌린지**는 4주(주 7일 인증)간 원서를 읽거나 들으면서, AI로 나만의 학습앱도
 함께 빌드해보는 프로그램입니다. 이 저장소는 그 챌린지를 위해 두 가지를 더 갖추고 있습니다:
+
+- 챌린지 기간 : **2026년 9월 10일(목) ~ 10월 7일(수), 4주 (28일)**
+- 인증 : 주 7일, 매일 24시(KST) 마감 · 읽기 또는 듣기 중 택1
+- 킥아웃 : 누적 미인증 6회부터 (4회부터 앱에 경고 표시)
+- 앱 빌드 수업 : 주 1회 · 총 4회 (앱 기획 → 데이터베이스 → AI API → 배포)
 
 - **Firebase 기반 다자 인증** — 참가자가 이름을 골라 매일 "읽었어요/들었어요"를 인증하면
   Firestore에 기록되고, 운영자는 관리자 화면에서 전체 참가자의 인증 현황과 누적 미인증
@@ -76,8 +81,8 @@ npm run build
 - **📷 Scan a Page** — 내가 읽는 책 한 페이지를 사진으로 찍어 AI 학습 가이드를 받습니다.
 - **📖 Read the Library** — 계정·비용 없이 바로 읽을 수 있는 무료 고전 영어 원서 12종이
   들어있습니다 (아래 목록 참고). Beginner(초록) · Intermediate(골드) · Advanced(자주)
-  레벨별로 색상 구분되어 묶여 있고, 각 책마다 **30일(한 달) 챌린지 기준 하루 페이지 수**가
-  표시됩니다. 리더 화면에서도 지금이 30일 중 며칠째인지 확인할 수 있어요. 페이지를
+  레벨별로 색상 구분되어 묶여 있고, 각 책마다 **챌린지 기간(28일) 기준 하루 페이지 수**가
+  표시됩니다. 리더 화면에서도 지금이 28일 중 며칠째인지 확인할 수 있어요. 페이지를
   넘기며 읽다가 "Analyze this page"를 누르면 사진 없이 바로 학습 가이드가 만들어집니다.
 - **🎧 듣기 인증** — 원문 읽기가 부담스러우면 들어도 됩니다. 책에 낭독 mp3를 붙여두면
   (아래 [듣기 파일 추가하기](#-듣기-파일-추가하기) 참고) 리더 화면에 재생 플레이어가 나타나고,
@@ -111,27 +116,27 @@ npm run build
 - **컬러풀한 책 표지** — 라이브러리의 12권이 각자 다른 색·이모지 표지를 가져서, 실제
   책방처럼 마음에 드는 책을 눈으로 골라볼 수 있어요. 처음이라면 "처음이신가요?" 배너에서
   추천하는 가장 쉬운 책부터 시작하면 됩니다.
-- **한눈에 보는 난이도·시간** — 각 책 카드에 "하루 ~N분", "30일 완독", 난이도 점(●○○)이
+- **한눈에 보는 난이도·시간** — 각 책 카드에 "하루 ~N분", "28일 완독", 난이도 점(●○○)이
   표시되어 부담 없이 고를 수 있습니다.
 
 ### 📚 내장 무료 원서 목록 (모두 저작권 만료, 공개 도메인)
 
-| 레벨 | 책 | 저자 | 챕터 | 30일 기준 하루 페이지 |
+| 레벨 | 책 | 저자 | 챕터 | 28일 기준 하루 페이지 |
 |---|---|---|---|---|
-| 🟢 Beginner | The Wonderful Wizard of Oz | L. Frank Baum | 24 | ~11 |
+| 🟢 Beginner | The Wonderful Wizard of Oz | L. Frank Baum | 24 | ~12 |
 | 🟢 Beginner | Alice's Adventures in Wonderland | Lewis Carroll | 12 | ~8 |
-| 🟢 Beginner | The Secret Garden | Frances Hodgson Burnett | 27 | ~22 |
-| 🟢 Beginner | Anne of Green Gables | L. M. Montgomery | 38 | ~27 |
-| 🟡 Intermediate | The Adventures of Sherlock Holmes | Arthur Conan Doyle | 12 | ~19 |
-| 🟡 Intermediate | The Call of the Wild | Jack London | 7 | ~7 |
+| 🟢 Beginner | The Secret Garden | Frances Hodgson Burnett | 27 | ~23 |
+| 🟢 Beginner | Anne of Green Gables | L. M. Montgomery | 38 | ~29 |
+| 🟡 Intermediate | The Adventures of Sherlock Holmes | Arthur Conan Doyle | 12 | ~21 |
+| 🟡 Intermediate | The Call of the Wild | Jack London | 7 | ~8 |
 | 🟡 Intermediate | A Christmas Carol | Charles Dickens | 5 | ~6 |
-| 🟡 Intermediate | Treasure Island | Robert Louis Stevenson | 34 | ~13 |
+| 🟡 Intermediate | Treasure Island | Robert Louis Stevenson | 34 | ~14 |
 | 🟡 Intermediate | The Strange Case of Dr. Jekyll and Mr. Hyde | Robert Louis Stevenson | 10 | ~5 |
-| 🟣 Advanced | The Great Gatsby | F. Scott Fitzgerald | 9 | ~7 |
-| 🟣 Advanced | Pride and Prejudice | Jane Austen | 61 | ~18 |
-| 🟣 Advanced | Frankenstein | Mary Shelley | 24 | ~11 |
+| 🟣 Advanced | The Great Gatsby | F. Scott Fitzgerald | 9 | ~8 |
+| 🟣 Advanced | Pride and Prejudice | Jane Austen | 61 | ~19 |
+| 🟣 Advanced | Frankenstein | Mary Shelley | 24 | ~12 |
 
-"30일 기준 하루 페이지"는 그 책을 30일(한 달) 챌린지 안에 완독하려면 하루에 몇 "페이지"
+"28일 기준 하루 페이지"는 그 책을 28일(4주) 챌린지 안에 완독하려면 하루에 몇 "페이지"
 (레벨별 150~280단어 단위)를 읽어야 하는지 보여줍니다. 챌린지 그룹의 속도에 맞는
 책을 고를 때 참고하세요.
 
@@ -170,7 +175,7 @@ mp3를 그대로 이 경로에 넣어 커밋하면 배포된 사이트에서도 
    복사합니다.
 5. `src/lib/challengeConfig.js`를 열어:
    - `firebase` 객체에 4번에서 복사한 값을 붙여넣고,
-   - `startDate` / `endDate`를 실제 챌린지 기간(한 달)으로,
+   - `startDate` / `endDate`를 실제 챌린지 기간으로,
    - `adminEmails`에 운영진 구글 계정을 추가합니다.
 6. **Firestore 보안 규칙**을 설정합니다 (콘솔의 Firestore → 규칙 탭). 예시:
 
@@ -287,9 +292,9 @@ public/
   스트릭은 자정이 지나기 전까지 유지됩니다.
 - **레벨 테스트 결과는 어디에 쓰이나요?** → 학습 가이드의 어휘 난이도(Gemini 프롬프트)와
   라이브러리의 "Recommended for you" 표시에 반영됩니다. 설정 탭에서 언제든 다시 볼 수 있습니다.
-- **30일 완독 플랜은 강제인가요?** → 아니요, 참고용 안내입니다. "30-Day Plan · ~N pages/day"는
-  그 책을 30일 안에 끝내려면 하루 몇 페이지씩 읽어야 하는지 계산해서 보여줄 뿐이고, 리더
-  화면의 "Day X of 30"도 지금 읽은 양 기준으로 계산되는 참고 지표입니다. 실제 진도는
+- **28일 완독 플랜은 강제인가요?** → 아니요, 참고용 안내입니다. 그 책을 챌린지 기간(28일) 안에
+  끝내려면 하루 몇 페이지씩 읽어야 하는지 계산해서 보여줄 뿐이고, 리더
+  화면의 "Day X of 28"도 지금 읽은 양 기준으로 계산되는 참고 지표입니다. 실제 진도는
   자유롭게 조절하면 됩니다.
 - **챌린지 인증과 개인 스트릭은 다른 건가요?** → 네. 홈 화면 상단의 "[Read & Build] 챌린지 인증"
   카드(Firebase 설정 시에만 보임)는 운영자가 킥아웃 판정에 쓰는 **공식 인증**이고, 그 아래
