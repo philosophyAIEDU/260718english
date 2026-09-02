@@ -2726,62 +2726,6 @@ main {
   margin: 0;
 }
 
-/* Deposit + charity callout. */
-.deposit-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  padding: 22px;
-  margin-bottom: 18px;
-  box-shadow: var(--shadow-sm);
-}
-
-.deposit-amount {
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  margin-bottom: 4px;
-}
-
-.deposit-amount strong {
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--accent);
-  line-height: 1;
-}
-
-.deposit-amount span {
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  color: var(--text-soft);
-}
-
-.deposit-notes {
-  list-style: none;
-  padding: 0;
-  margin: 14px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.deposit-notes li {
-  display: flex;
-  gap: 9px;
-  align-items: flex-start;
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: var(--text-soft);
-}
-
-.deposit-notes svg {
-  flex: none;
-  margin-top: 2px;
-  color: var(--accent);
-}
-
 /* "This week's class" banner on Home. */
 .class-banner {
   display: flex;
