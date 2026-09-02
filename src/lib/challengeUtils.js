@@ -80,6 +80,12 @@ export function shortLabel(iso) {
   return `${Number(m)}/${Number(d)}(${weekdayKo(iso)})`;
 }
 
+/** '2026년 9월 10일(목)' style label, for prose (e.g. the admin notice draft). */
+export function longLabel(iso) {
+  const [y, m, d] = iso.split('-');
+  return `${y}년 ${Number(m)}월 ${Number(d)}일(${weekdayKo(iso)})`;
+}
+
 /** Every date in the challenge window, inclusive. */
 export function challengeDates() {
   return dateRange(CHALLENGE_CONFIG.startDate, CHALLENGE_CONFIG.endDate);

@@ -2336,6 +2336,14 @@ main {
   font-size: 0.78rem;
 }
 
+.notice-textarea {
+  min-height: 190px;
+  line-height: 1.65;
+  resize: vertical;
+  white-space: pre-wrap;
+  font-family: var(--font-sans);
+}
+
 /* ------------------------- challenge program UI -------------------------- */
 
 /*

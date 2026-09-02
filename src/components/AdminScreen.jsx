@@ -11,21 +11,29 @@ import {
   listSubmissions,
 } from '../lib/challengeStore.js';
 import { challengeDates, buildStats, riskTag, shortLabel, today } from '../lib/challengeUtils.js';
+import { buildDailyNotice } from '../lib/noticeTemplate.js';
+import { copyText } from '../lib/clipboard.js';
 import {
   ArrowLeftIcon,
   ShieldIcon,
   AlertIcon,
   UsersIcon,
   CalendarIcon,
+  MessageIcon,
+  CopyIcon,
+  RotateIcon,
   TrashIcon,
 } from './Icons.jsx';
 
 /**
- * Organizer dashboard: who missed how many days, who is at risk of the
- * kickout rule (CHALLENGE_CONFIG.kickoutThreshold), and what to do about
- * it (exempt a date, kick out, reinstate, remove). Participants add
- * themselves by signing in and picking a nickname, so there's no roster to
- * enter here.
+ * Organizer dashboard — its own section, separate in look and in access
+ * from the participant-facing screens: a dark stat-header like the intro
+ * hero (but tagged "운영진 전용" instead of the challenge branding), then
+ * three tabs:
+ *
+ *   일일현황  — attendance matrix, sorted by who's missed the most
+ *   명단 관리 — exempt a date, kick out / reinstate, remove
+ *   공지 문구 — today's KakaoTalk message, generated and ready to copy
  *
  * Gated by Firebase Google sign-in against CHALLENGE_CONFIG.adminEmails —
  * the client-side check keeps the dashboard hidden from participants, but
@@ -59,6 +67,8 @@ function AdminScreenInner({ onBack }) {
   const [participants, setParticipants] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [loadingData, setLoadingData] = useState(false);
+  const [noticeText, setNoticeText] = useState(() => buildDailyNotice());
+  const [copyMessage, setCopyMessage] = useState('');
 
   useEffect(() => onAuthReady(setUser), []);
 
@@ -89,6 +99,12 @@ function AdminScreenInner({ onBack }) {
     } finally {
       setSigningIn(false);
     }
+  };
+
+  const handleCopyNotice = async () => {
+    setCopyMessage('');
+    const ok = await copyText(noticeText);
+    setCopyMessage(ok ? '복사했어요! 단톡방에 붙여넣으세요.' : '복사에 실패했어요. 직접 선택해서 복사해주세요.');
   };
 
   if (user === undefined) {
@@ -144,6 +160,9 @@ function AdminScreenInner({ onBack }) {
   const stats = buildStats(participants, submissions, today());
   const sortedByMissed = [...stats].sort((a, b) => b.missed - a.missed);
   const dates = challengeDates();
+  const certifiedToday = stats.filter((s) => s.submittedToday).length;
+  const atRiskCount = stats.filter((s) => s.atRisk && !s.kickoutEligible).length;
+  const kickoutCount = stats.filter((s) => s.kickoutEligible).length;
 
   const toggleExemptToday = async (stat) => {
     const t = today();
@@ -182,12 +201,38 @@ function AdminScreenInner({ onBack }) {
       <button className="back-link" onClick={onBack}>
         <ArrowLeftIcon size={16} /> Back
       </button>
-      <div className="screen-heading">
-        <h2>운영자 대시보드</h2>
-        <button className="link-button" onClick={() => signOut()}>
-          로그아웃 ({user.email})
-        </button>
+
+      <div className="hero">
+        <p className="hero-eyebrow">
+          <ShieldIcon size={13} /> 운영진 전용
+        </p>
+        <h1 className="hero-title" style={{ fontSize: '1.3rem' }}>
+          {CHALLENGE_CONFIG.title} 대시보드
+        </h1>
+        <p className="hero-lead">{user.email}로 로그인됨</p>
+        <div className="hero-stats">
+          <div className="hero-stat">
+            <strong>{participants.length}</strong>
+            <span>참가자</span>
+          </div>
+          <div className="hero-stat">
+            <strong>{certifiedToday}</strong>
+            <span>오늘 인증</span>
+          </div>
+          <div className="hero-stat is-warn">
+            <strong>{atRiskCount}</strong>
+            <span>위험군</span>
+          </div>
+          <div className="hero-stat is-bad">
+            <strong>{kickoutCount}</strong>
+            <span>킥아웃 대상</span>
+          </div>
+        </div>
       </div>
+
+      <button className="link-button" style={{ marginBottom: 14 }} onClick={() => signOut()}>
+        로그아웃
+      </button>
 
       <div className="admin-tabs">
         <button className={`admin-tab ${tab === 'matrix' ? 'active' : ''}`} onClick={() => setTab('matrix')}>
@@ -195,6 +240,9 @@ function AdminScreenInner({ onBack }) {
         </button>
         <button className={`admin-tab ${tab === 'roster' ? 'active' : ''}`} onClick={() => setTab('roster')}>
           <UsersIcon size={15} /> 명단 관리
+        </button>
+        <button className={`admin-tab ${tab === 'notice' ? 'active' : ''}`} onClick={() => setTab('notice')}>
+          <MessageIcon size={15} /> 공지 문구
         </button>
       </div>
 
@@ -297,6 +345,46 @@ function AdminScreenInner({ onBack }) {
             </div>
           </div>
         </>
+      )}
+
+      {!loadingData && tab === 'notice' && (
+        <div className="card">
+          <h2 className="section-title">
+            <MessageIcon size={15} /> 오늘의 공지 문구
+          </h2>
+          <p className="muted small" style={{ marginTop: 0 }}>
+            챌린지 단톡방에 그대로 붙여넣을 수 있는 안내 문구예요. 오늘 날짜와 이번 주 수업
+            정보로 자동으로 채워지며, 자유롭게 고쳐서 쓰셔도 됩니다.
+            {!CHALLENGE_CONFIG.appUrl && (
+              <>
+                {' '}
+                <code>challengeConfig.js</code>의 <code>appUrl</code>을 채우면 인증 링크도
+                함께 들어가요.
+              </>
+            )}
+          </p>
+          <textarea
+            className="text-input notice-textarea"
+            rows={10}
+            value={noticeText}
+            onChange={(e) => setNoticeText(e.target.value)}
+          />
+          <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+            <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleCopyNotice}>
+              <CopyIcon size={16} /> 복사하기
+            </button>
+            <button
+              className="btn"
+              onClick={() => {
+                setNoticeText(buildDailyNotice());
+                setCopyMessage('');
+              }}
+            >
+              <RotateIcon size={15} /> 다시 만들기
+            </button>
+          </div>
+          {copyMessage && <p className="small share-message">{copyMessage}</p>}
+        </div>
       )}
     </section>
   );
