@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { getSetting } from '../lib/db.js';
 import { isFirebaseConfigured, CHALLENGE_CONFIG } from '../lib/challengeConfig.js';
-import { listParticipants, listSubmissions } from '../lib/challengeStore.js';
+import { onAuthReady, getMyParticipant, listSubmissions } from '../lib/challengeStore.js';
 import { buildStats, riskTag, shortLabel, today } from '../lib/challengeUtils.js';
 import { CalendarIcon } from './Icons.jsx';
 
@@ -9,9 +8,8 @@ const STATUS_LABEL = { O: '인증', X: '미인증', P: '면제', '-': '진행 �
 
 /**
  * Compact O/X/P attendance calendar for the whole [Read & Build] challenge
- * window, for the participant this device is registered as. Renders
- * nothing until Firebase is configured and a participant has been chosen
- * on the Home screen.
+ * window, for the signed-in participant. Renders nothing until Firebase is
+ * configured and the viewer has joined the challenge on the Home screen.
  */
 export default function ChallengeAttendance() {
   if (!isFirebaseConfigured()) return null;
@@ -20,34 +18,33 @@ export default function ChallengeAttendance() {
 
 function ChallengeAttendanceInner() {
   const [stat, setStat] = useState(null);
-  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let alive = true;
-    getSetting('challengeParticipantId').then(async (id) => {
-      if (!id) {
-        if (alive) setReady(true);
+    const unsubscribe = onAuthReady(async (user) => {
+      if (!user) {
+        if (alive) setStat(null);
         return;
       }
       try {
-        const [participants, subs] = await Promise.all([
-          listParticipants(),
-          listSubmissions({ participantId: id }),
-        ]);
-        const me = participants.find((p) => p.id === id);
-        if (alive && me) setStat(buildStats([me], subs, today())[0]);
+        const me = await getMyParticipant();
+        if (!me) {
+          if (alive) setStat(null);
+          return;
+        }
+        const subs = await listSubmissions({ participantId: me.id });
+        if (alive) setStat(buildStats([me], subs, today())[0]);
       } catch {
         /* Progress screen still works without the challenge card. */
-      } finally {
-        if (alive) setReady(true);
       }
     });
     return () => {
       alive = false;
+      unsubscribe();
     };
   }, []);
 
-  if (!ready || !stat) return null;
+  if (!stat) return null;
 
   const tag = riskTag(stat);
   return (

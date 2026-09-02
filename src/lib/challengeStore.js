@@ -1,14 +1,18 @@
 /*
  * Firestore adapter for the [Read & Build] challenge's cohort tracking —
- * participants, daily submissions, and admin auth. Schema mirrors
- * philosophyAIEDU/260818comingssoni's store-firebase.js 1:1 (see that
- * project's README for the reasoning), trimmed to what this challenge
- * needs (no upvotes/feed/notify-email/notices):
+ * participants, daily submissions, and auth. The attendance/kickout rules
+ * follow philosophyAIEDU/260818comingssoni, but identity works differently
+ * here: participants sign in with Google and pick their own nickname
+ * instead of the organizer pre-registering a roster of names.
  *
- *   participants/{id}  { nickname, email, status, joinDate, outDate,
- *                         exemptDates[], note, kickReason, createdAt }
- *   submissions/{id}   { participantId, nickname, date, mode,   // 'read' | 'listen'
- *                         bookTitle, note, createdAt, updatedAt }
+ * Both collections are keyed by identity rather than an auto-id, so a
+ * security rule can verify ownership from the document path alone and a
+ * participant can hold at most one entry per day:
+ *
+ *   participants/{uid}          { nickname, email, status, joinDate, outDate,
+ *                                  exemptDates[], note, kickReason, createdAt }
+ *   submissions/{uid}_{date}    { participantId, nickname, date, mode,
+ *                                  bookTitle, createdAt, updatedAt }
  *
  * Firebase isn't initialized (and the SDK isn't even imported) until the
  * first call to any exported function, so importing this module has no
@@ -18,7 +22,7 @@
  * letting these calls fail.
  */
 import { CHALLENGE_CONFIG, isFirebaseConfigured } from './challengeConfig.js';
-import { normalizeNick, nowStamp } from './challengeUtils.js';
+import { normalizeNick, nowStamp, today } from './challengeUtils.js';
 
 /*
  * A Firestore call on a phone with no signal (or behind a network that
@@ -94,7 +98,7 @@ async function init() {
 
 /* --------------------------------- auth --------------------------------- */
 
-export function onAuthStateChanged(callback) {
+function onAuthStateChanged(callback) {
   authListeners.push(callback);
   if (dbPromise) callback(currentUser);
   return () => {
@@ -109,13 +113,22 @@ export async function signInWithGoogle() {
   return authMod.signInWithPopup(auth, provider);
 }
 
-export async function signOutAdmin() {
+export async function signOut() {
   await init();
   return authMod.signOut(auth);
 }
 
-export function getCurrentUser() {
-  return currentUser;
+/**
+ * Subscribe to auth state and get told once the first answer is known, even
+ * when that answer is "signed out". Firebase resolves the persisted session
+ * asynchronously, so a bare onAuthStateChanged leaves callers unable to tell
+ * "still checking" from "definitely signed out" on first paint.
+ */
+export function onAuthReady(callback) {
+  const unsubscribe = onAuthStateChanged(callback);
+  // Touch init() so the listener above actually starts receiving state.
+  init().catch(() => callback(null));
+  return unsubscribe;
 }
 
 export function isAdminEmail(email) {
@@ -137,49 +150,74 @@ export async function listParticipants() {
   return snap.docs.map(withId).sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
 }
 
-export async function addParticipant(nickname, patch) {
-  const db = await init();
+/**
+ * Look up a nickname across the roster. Nicknames are how participants
+ * recognise each other on the organizer's dashboard, so they have to be
+ * unique even though the account behind them is the real identity.
+ */
+async function isNicknameTaken(nickname, exceptUid) {
   const nick = normalizeNick(nickname);
-  if (!nick) throw new Error('닉네임을 입력해 주세요.');
-  const dup = await fsMod.getDocs(
+  if (!nick) return false;
+  const snap = await fsMod.getDocs(
     fsMod.query(await col('participants'), fsMod.where('nickname', '==', nick))
   );
-  if (!dup.empty) throw new Error(`이미 등록된 닉네임입니다: ${nick}`);
-  const body = Object.assign(
-    {
-      nickname: nick,
-      email: '',
-      status: 'active',
-      joinDate: CHALLENGE_CONFIG.startDate,
-      outDate: null,
-      exemptDates: [],
-      note: '',
-      createdAt: nowStamp(),
-    },
-    patch || {}
-  );
-  const ref = await fsMod.addDoc(await col('participants'), body);
-  return Object.assign({ id: ref.id }, body);
+  return snap.docs.some((d) => d.id !== exceptUid);
 }
 
-/** Bulk-add nicknames from newline/comma separated text; skips duplicates. */
-export async function addParticipants(rawText) {
-  const names = String(rawText || '')
-    .split(/[\n,]/)
-    .map(normalizeNick)
-    .filter(Boolean);
-  const existing = new Set((await listParticipants()).map((p) => p.nickname));
-  const added = [];
-  const skipped = [];
-  for (const nick of names) {
-    if (existing.has(nick)) {
-      skipped.push(nick);
-      continue;
-    }
-    added.push(await addParticipant(nick));
-    existing.add(nick);
+/** This device's signed-in participant, or null if they haven't joined yet. */
+export async function getMyParticipant() {
+  const db = await init();
+  const user = currentUser;
+  if (!user) return null;
+  const snap = await fsMod.getDoc(fsMod.doc(db, 'participants', user.uid));
+  return snap.exists() ? withId(snap) : null;
+}
+
+/**
+ * Join the challenge under the signed-in Google account. The document id is
+ * the Firebase Auth uid, so a participant owns exactly one entry, their
+ * submissions can be tied back to a verified account, and the organizer
+ * never has to pre-register a roster.
+ */
+export async function registerParticipant(nickname) {
+  const db = await init();
+  const user = currentUser;
+  if (!user) throw new Error('먼저 구글 로그인을 해주세요.');
+  const nick = normalizeNick(nickname);
+  if (!nick) throw new Error('닉네임을 입력해 주세요.');
+  if (nick.length > 20) throw new Error('닉네임은 20자 이내로 지어주세요.');
+  if (await isNicknameTaken(nick, user.uid)) {
+    throw new Error(`이미 사용 중인 닉네임입니다: ${nick}`);
   }
-  return { added, skipped };
+  const body = {
+    nickname: nick,
+    email: user.email || '',
+    status: 'active',
+    // Joining mid-challenge shouldn't backfill misses for the days before
+    // they signed up, so they're only graded from today onward.
+    joinDate: today() > CHALLENGE_CONFIG.startDate ? today() : CHALLENGE_CONFIG.startDate,
+    outDate: null,
+    exemptDates: [],
+    note: '',
+    createdAt: nowStamp(),
+  };
+  await fsMod.setDoc(fsMod.doc(db, 'participants', user.uid), body);
+  return Object.assign({ id: user.uid }, body);
+}
+
+/** Rename yourself. Only the nickname is the participant's to change. */
+export async function updateMyNickname(nickname) {
+  const db = await init();
+  const user = currentUser;
+  if (!user) throw new Error('먼저 구글 로그인을 해주세요.');
+  const nick = normalizeNick(nickname);
+  if (!nick) throw new Error('닉네임을 입력해 주세요.');
+  if (nick.length > 20) throw new Error('닉네임은 20자 이내로 지어주세요.');
+  if (await isNicknameTaken(nick, user.uid)) {
+    throw new Error(`이미 사용 중인 닉네임입니다: ${nick}`);
+  }
+  await fsMod.updateDoc(fsMod.doc(db, 'participants', user.uid), { nickname: nick });
+  return nick;
 }
 
 export async function updateParticipant(id, patch) {
@@ -208,27 +246,36 @@ export async function listSubmissions(filter) {
   return snap.docs.map(withId);
 }
 
-export async function getSubmission(participantId, date) {
-  const rows = await listSubmissions({ participantId, date });
-  return rows[0] || null;
+/*
+ * A participant certifies at most once per day, so the submission id is
+ * derived from who and when rather than auto-generated. That makes a
+ * re-submit a plain overwrite (no duplicate rows, no read-modify-write
+ * race) and lets a security rule verify ownership from the id alone.
+ */
+const submissionId = (participantId, date) => `${participantId}_${date}`;
+
+async function getSubmission(participantId, date) {
+  const db = await init();
+  const snap = await fsMod.getDoc(
+    fsMod.doc(db, 'submissions', submissionId(participantId, date))
+  );
+  return snap.exists() ? withId(snap) : null;
 }
 
-/** Create or overwrite today's submission for a participant (re-submitting edits it). */
+/** Create or overwrite one day's submission (re-submitting edits it). */
 export async function saveSubmission(data) {
   const db = await init();
   const now = nowStamp();
+  const ref = fsMod.doc(db, 'submissions', submissionId(data.participantId, data.date));
   const found = await getSubmission(data.participantId, data.date);
   if (found) {
-    const body = Object.assign({}, data, { updatedAt: now });
-    await fsMod.updateDoc(fsMod.doc(db, 'submissions', found.id), body);
-    return Object.assign({}, found, body);
+    // Keep the original createdAt — lateness is judged by first submission,
+    // so fixing a typo later must not turn an on-time entry into a miss.
+    const body = Object.assign({}, data, { createdAt: found.createdAt, updatedAt: now });
+    await fsMod.setDoc(ref, body);
+    return Object.assign({ id: ref.id }, body);
   }
   const body = Object.assign({ createdAt: now, updatedAt: now }, data);
-  const ref = await fsMod.addDoc(await col('submissions'), body);
+  await fsMod.setDoc(ref, body);
   return Object.assign({ id: ref.id }, body);
-}
-
-export async function removeSubmission(id) {
-  const db = await init();
-  await fsMod.deleteDoc(fsMod.doc(db, 'submissions', id));
 }

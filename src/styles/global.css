@@ -2818,6 +2818,19 @@ main {
   line-height: 1.35;
 }
 
+/* Inline nickname editor in the check-in card's "who am I" line. */
+.nickname-edit {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin: 8px 0 12px;
+}
+
+.nickname-edit .text-input {
+  flex: 1;
+  min-width: 0;
+}
+
 /* The "already certified today" state of the check-in card. */
 .checkin-done {
   display: flex;
