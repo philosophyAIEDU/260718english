@@ -107,6 +107,43 @@ export function lastSettledDate() {
   return y > CHALLENGE_CONFIG.endDate ? CHALLENGE_CONFIG.endDate : y;
 }
 
+/** Which challenge week (1-based) a date falls in, or null outside the window. */
+export function weekIndex(iso) {
+  const day = dayIndex(iso || today());
+  return day ? Math.ceil(day / 7) : null;
+}
+
+/**
+ * Where the challenge stands right now, for the Home dashboard hero:
+ * which day/week we're on, how far along, and how many days until it
+ * starts (or since it ended) when we're outside the window.
+ */
+export function challengeProgress(todayISO) {
+  const t = todayISO || today();
+  const dates = challengeDates();
+  const totalDays = dates.length;
+  const currentPhase = phase(t);
+  const day = dayIndex(t);
+  const totalWeeks = Math.ceil(totalDays / 7);
+
+  return {
+    phase: currentPhase,
+    totalDays,
+    totalWeeks,
+    day,
+    week: weekIndex(t),
+    // Before the start we show a countdown; after the end, the full bar.
+    percent:
+      currentPhase === 'before' ? 0 : currentPhase === 'after' ? 100 : Math.round((day / totalDays) * 100),
+    daysUntilStart: currentPhase === 'before' ? diffDays(t, CHALLENGE_CONFIG.startDate) : 0,
+    daysLeft: currentPhase === 'running' ? totalDays - day : 0,
+  };
+}
+
+function diffDays(from, to) {
+  return Math.round((toDate(to) - toDate(from)) / 86400000);
+}
+
 export function nowStamp() {
   return new Date().toISOString();
 }

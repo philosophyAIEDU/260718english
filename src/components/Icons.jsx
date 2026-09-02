@@ -109,6 +109,13 @@ export const ArrowLeftIcon = (p) => (
   </Icon>
 );
 
+export const ArrowRightIcon = (p) => (
+  <Icon {...p}>
+    <path d="M5 12h14" />
+    <path d="m13 6 6 6-6 6" />
+  </Icon>
+);
+
 export const SparklesIcon = (p) => (
   <Icon {...p}>
     <path d="M12 4.5 13.8 9l4.5 1.8-4.5 1.8L12 17l-1.8-4.4L5.7 10.8 10.2 9 12 4.5Z" />
@@ -366,6 +373,23 @@ export const CalendarIcon = (p) => (
     <path d="M8 3v4M16 3v4" />
   </Icon>
 );
+
+/**
+ * Name → component map, so data-driven lists (challengeConfig's PILLARS and
+ * RULES) can name their icon as a plain string instead of importing one.
+ */
+export const ICONS = {
+  book: BookOpenIcon,
+  sparkles: SparklesIcon,
+  branch: BranchIcon,
+  trophy: TrophyIcon,
+  check: CheckIcon,
+  speaker: SpeakerIcon,
+  alert: AlertIcon,
+  calendar: CalendarIcon,
+  users: UsersIcon,
+  flame: FlameIcon,
+};
 
 /** Brand mark: an open book with a golden bookmark ribbon. */
 export function BrandMark({ size = 30 }) {

@@ -116,6 +116,10 @@ function ChallengeCheckinInner() {
   if (loading) {
     return (
       <div className="card challenge-card">
+        <h2 className="section-title">
+          <UsersIcon size={15} /> 오늘의 인증
+        </h2>
+        <div className="skeleton skeleton-line w-80" />
         <div className="skeleton skeleton-line w-60" />
       </div>
     );
@@ -139,7 +143,7 @@ function ChallengeCheckinInner() {
     return (
       <div className="card challenge-card">
         <h2 className="section-title">
-          <UsersIcon size={15} /> {CHALLENGE_CONFIG.title} 인증
+          <UsersIcon size={15} /> 챌린지 인증 시작하기
         </h2>
         <p className="muted small" style={{ marginTop: 0 }}>
           운영진이 등록한 명단에서 내 이름을 골라주세요. 이 기기에서 앞으로
@@ -183,7 +187,7 @@ function ChallengeCheckinInner() {
   return (
     <div className="card challenge-card">
       <h2 className="section-title">
-        <UsersIcon size={15} /> {CHALLENGE_CONFIG.title} 인증
+        <UsersIcon size={15} /> 오늘의 인증
       </h2>
       <p className="muted small challenge-whoami">
         <strong>{participants.find((p) => p.id === myId)?.nickname}</strong>님으로 인증 중 ·{' '}
@@ -217,9 +221,15 @@ function ChallengeCheckinInner() {
       )}
 
       {alreadyToday ? (
-        <p className="small share-message" style={{ marginTop: 10 }}>
-          <CheckIcon size={14} /> 오늘 인증 완료! 내일 또 만나요.
-        </p>
+        <div className="checkin-done">
+          <span className="checkin-done-mark">
+            <CheckIcon size={20} />
+          </span>
+          <div>
+            <strong>오늘 인증 완료!</strong>
+            <span className="muted small">내일 또 만나요 — 주 7일 인증이 목표예요.</span>
+          </div>
+        </div>
       ) : (
         <>
           <div className="mode-toggle" role="group" aria-label="오늘 읽었나요, 들었나요">

@@ -65,6 +65,14 @@ npm run build
 
 ## 🎯 챌린지 핵심 기능
 
+- **🚀 챌린지 안내 화면** — 앱을 처음 열면 챌린지가 스스로를 소개합니다. 무엇을 하는지(4가지
+  축), 4주 커리큘럼, 챌린지 규칙(주 7일 인증 · 미인증 6회 킥아웃), 보증금·환급·기부 정책까지
+  한 화면에 담겨 있고, 홈 아래쪽 **"챌린지 안내 · 규칙"**으로 언제든 다시 볼 수 있습니다.
+- **🏠 챌린지 대시보드** — 홈 화면이 지금 며칠차/몇 주차인지, 오늘 인증했는지, 이번 주 수업이
+  무엇인지를 순서대로 보여줍니다. 시작 전에는 D-day 카운트다운이 표시됩니다.
+- **🧑‍💻 4주 커리큘럼 화면** — 주 1회(월 4회) 진행하는 "AI로 나만의 학습앱 만들기" 수업을
+  주차별로 보여줍니다 (앱 기획 → 데이터베이스 연동 → AI API 연동 → 배포). 지금 주차가
+  강조되어, 이번 주에 무엇을 만드는지 바로 확인할 수 있습니다.
 - **📷 Scan a Page** — 내가 읽는 책 한 페이지를 사진으로 찍어 AI 학습 가이드를 받습니다.
 - **📖 Read the Library** — 계정·비용 없이 바로 읽을 수 있는 무료 고전 영어 원서 12종이
   들어있습니다 (아래 목록 참고). Beginner(초록) · Intermediate(골드) · Advanced(자주)
@@ -236,6 +244,8 @@ src/
     ProgressScreen.jsx         # 스트릭·뱃지·진행상황 공유 카드 + 챌린지 인증 캘린더
     LevelTestScreen.jsx        # 6문항 영어 레벨 테스트
     SpeakButton.jsx            # 발음 듣기 버튼 (브라우저 내장 TTS)
+    IntroScreen.jsx            # 챌린지 소개 (첫 실행 + "챌린지 안내 · 규칙"에서 다시 보기)
+    ClassScreen.jsx            # 4주 앱 빌드 수업 커리큘럼
     ChallengeCheckin.jsx       # [Read & Build] 참가자 선택 + 매일 읽기/듣기 인증 (홈 화면)
     ChallengeAttendance.jsx    # 챌린지 인증 캘린더 (Progress 화면)
     AdminScreen.jsx            # 운영자 대시보드 (일일현황 매트릭스 + 명단 관리)
@@ -253,7 +263,7 @@ src/
     imageUtils.js              # 사진 리사이즈/압축 (최대 1600px JPEG)
     exportUtils.js             # Anki CSV / Quizlet TXT 내보내기
     speech.js                   # 브라우저 내장 TTS 래퍼
-    challengeConfig.js         # 챌린지 기간·킥아웃 기준·Firebase 설정  ← 설정은 여기만 수정
+    challengeConfig.js         # 기간·킥아웃 기준·커리큘럼·규칙·보증금·Firebase  ← 설정은 여기만 수정
     challengeUtils.js          # 인증 날짜/집계 로직 (260818comingssoni의 utils.js 포트)
     challengeStore.js          # Firestore 어댑터 (참가자/인증/관리자 인증)
 public/
