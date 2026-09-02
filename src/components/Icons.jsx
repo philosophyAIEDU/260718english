@@ -366,6 +366,14 @@ export const ShieldIcon = (p) => (
   </Icon>
 );
 
+export const ExternalLinkIcon = (p) => (
+  <Icon {...p}>
+    <path d="M14 4h6v6" />
+    <path d="M20 4 10 14" />
+    <path d="M18 13v5.5A1.5 1.5 0 0 1 16.5 20h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H11" />
+  </Icon>
+);
+
 export const CalendarIcon = (p) => (
   <Icon {...p}>
     <rect x="3.5" y="5" width="17" height="16" rx="2.4" />

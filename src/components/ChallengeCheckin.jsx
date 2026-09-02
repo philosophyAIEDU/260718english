@@ -10,9 +10,11 @@ import {
   registerParticipant,
   updateMyNickname,
   listSubmissions,
+  getSubmission,
   saveSubmission,
 } from '../lib/challengeStore.js';
-import { today, buildStats, riskTag } from '../lib/challengeUtils.js';
+import { today, dateRange, dayIndex, shortLabel, isLate, buildStats, riskTag } from '../lib/challengeUtils.js';
+import { detectInAppBrowser, openInExternalBrowser } from '../lib/inAppBrowser.js';
 import {
   BookOpenIcon,
   SpeakerIcon,
@@ -20,6 +22,7 @@ import {
   AlertIcon,
   UsersIcon,
   GoogleIcon,
+  ExternalLinkIcon,
 } from './Icons.jsx';
 
 /**
@@ -50,6 +53,10 @@ function ChallengeCheckinInner() {
   const [message, setMessage] = useState('');
   const [editingNick, setEditingNick] = useState(false);
   const [stat, setStat] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(today());
+  const [existing, setExisting] = useState(undefined); // undefined = loading, null = none yet
+  const [editingSubmission, setEditingSubmission] = useState(false);
+  const [inApp] = useState(detectInAppBrowser);
   const todayISO = today();
 
   useEffect(() => onAuthReady(setUser), []);
@@ -82,6 +89,36 @@ function ChallengeCheckinInner() {
       .then((subs) => setStat(buildStats([participant], subs, todayISO)[0]))
       .catch(() => {});
   };
+
+  // Which dates this participant is even allowed to certify for: from
+  // whichever is later of their join date or the challenge start, through
+  // today. Mirrors 260818comingssoni's "인증할 날짜" picker — it exists so a
+  // submission made just after midnight can still be filed under the
+  // correct day instead of silently landing on the wrong one.
+  const certifyDates = me ? dateRange(me.joinDate > todayISO ? todayISO : me.joinDate, todayISO) : [];
+
+  // Load (or clear) the selected date's existing entry whenever the
+  // participant or the chosen date changes, so re-opening a past date the
+  // learner already certified shows what they submitted instead of a blank
+  // form that would silently overwrite it.
+  useEffect(() => {
+    if (!me) return;
+    let alive = true;
+    setExisting(undefined);
+    setEditingSubmission(false);
+    getSubmission(me.id, selectedDate)
+      .then((sub) => {
+        if (!alive) return;
+        setExisting(sub);
+        setMode(sub?.mode || 'read');
+        setBookTitle(sub?.bookTitle || '');
+      })
+      .catch(() => alive && setExisting(null));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me, selectedDate]);
 
   const run = async (action, onDone) => {
     if (busy) return;
@@ -125,24 +162,40 @@ function ChallengeCheckinInner() {
       }
     );
 
-  const handleSubmit = () =>
-    run(
+  const handleSubmit = () => {
+    // saveSubmission's result — not the `existing` state, which run()'s
+    // onDone would otherwise read from a stale closure — decides whether
+    // the message below reports a late submission.
+    let saved;
+    return run(
       async () => {
-        await saveSubmission({
+        saved = await saveSubmission({
           participantId: me.id,
           nickname: me.nickname,
-          date: todayISO,
+          date: selectedDate,
           mode,
           bookTitle: bookTitle.trim(),
         });
-        const before = await getAllActivity();
-        if (!isActiveToday(before.map((a) => a.date))) {
-          await logActivity({ source: mode === 'listen' ? 'listen' : 'checkin' });
+        setExisting(saved);
+        if (selectedDate === todayISO) {
+          const before = await getAllActivity();
+          if (!isActiveToday(before.map((a) => a.date))) {
+            await logActivity({ source: mode === 'listen' ? 'listen' : 'checkin' });
+          }
         }
         refreshStat(me);
       },
-      () => setMessage(mode === 'listen' ? '오늘의 듣기 인증 완료! 🎧' : '오늘의 읽기 인증 완료! 📖')
+      () => {
+        const late = isLate(selectedDate, saved.createdAt);
+        const verb = mode === 'listen' ? '듣기' : '읽기';
+        setMessage(
+          late
+            ? `${shortLabel(selectedDate)} 인증을 저장했어요. 다만 마감을 넘겨 미인증(X)으로 집계돼요.`
+            : `${selectedDate === todayISO ? '오늘의' : shortLabel(selectedDate)} ${verb} 인증 완료! ${mode === 'listen' ? '🎧' : '📖'}`
+        );
+      }
     );
+  };
 
   const errorBox = error && (
     <div className="error-box">
@@ -176,9 +229,39 @@ function ChallengeCheckinInner() {
           읽거나 들은 것을 인증하면 운영진이 자동으로 확인합니다.
         </p>
         {errorBox}
-        <button className="btn btn-primary btn-block" onClick={handleSignIn} disabled={busy}>
-          <GoogleIcon size={17} /> {busy ? '연결 중…' : 'Google로 시작하기'}
-        </button>
+        {inApp ? (
+          // Google refuses to run its sign-in inside these embedded
+          // browsers no matter what this app does, so a sign-in button
+          // here would just fail — pointing at the way out is the only
+          // thing that actually works.
+          <div className="notice notice-warn">
+            <AlertIcon size={16} />
+            <div>
+              <span>
+                {inApp.label} 안에서는 구글 로그인이 막혀 있어요. 아래 버튼으로 기본
+                브라우저에서 열어주세요.
+              </span>
+              {inApp.id === 'kakaotalk' ? (
+                <button
+                  className="btn btn-sm"
+                  style={{ marginTop: 10 }}
+                  onClick={openInExternalBrowser}
+                >
+                  <ExternalLinkIcon size={14} /> 기본 브라우저에서 열기
+                </button>
+              ) : (
+                <p className="muted small" style={{ margin: '8px 0 0' }}>
+                  오른쪽 위 메뉴(⋮ 또는 …)에서 &quot;다른 브라우저로 열기&quot;를
+                  선택해주세요.
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
+          <button className="btn btn-primary btn-block" onClick={handleSignIn} disabled={busy}>
+            <GoogleIcon size={17} /> {busy ? '연결 중…' : 'Google로 시작하기'}
+          </button>
+        )}
       </div>
     );
   }
@@ -313,19 +396,60 @@ function ChallengeCheckinInner() {
 
       {errorBox}
 
-      {stat?.submittedToday ? (
+      {certifyDates.length > 1 && (
+        <>
+          <label className="field-label" htmlFor="certify-date">
+            인증할 날짜
+          </label>
+          <select
+            id="certify-date"
+            className="text-input"
+            value={selectedDate}
+            onChange={(e) => setSelectedDate(e.target.value)}
+          >
+            {[...certifyDates].reverse().map((d) => (
+              <option key={d} value={d}>
+                {dayIndex(d) ? `${dayIndex(d)}일차 · ` : ''}
+                {shortLabel(d)}
+                {d === todayISO ? ' · 오늘' : ''}
+              </option>
+            ))}
+          </select>
+          {selectedDate !== todayISO && (
+            <p className="notice notice-warn" style={{ marginTop: 8 }}>
+              <AlertIcon size={16} />
+              <span>
+                이 날짜는 이미 마감이 지나서, 지금 제출해도 미인증(X)으로 집계돼요. 오늘
+                날짜로 인증하려면 위에서 &quot;오늘&quot;을 선택하세요.
+              </span>
+            </p>
+          )}
+        </>
+      )}
+
+      {existing === undefined ? (
+        <div className="skeleton skeleton-line w-60" style={{ marginTop: 12 }} />
+      ) : existing && !editingSubmission ? (
         <div className="checkin-done">
           <span className="checkin-done-mark">
             <CheckIcon size={20} />
           </span>
           <div>
-            <strong>오늘 인증 완료!</strong>
-            <span className="muted small">내일 또 만나요 — 주 7일 인증이 목표예요.</span>
+            <strong>
+              {selectedDate === todayISO ? '오늘 인증 완료!' : `${shortLabel(selectedDate)} 인증 완료`}
+            </strong>
+            <span className="muted small">
+              {existing.mode === 'listen' ? '들었어요' : '읽었어요'}
+              {existing.bookTitle ? ` · ${existing.bookTitle}` : ''} ·{' '}
+              <button className="link-button" onClick={() => setEditingSubmission(true)}>
+                수정하기
+              </button>
+            </span>
           </div>
         </div>
       ) : (
         <>
-          <div className="mode-toggle" role="group" aria-label="오늘 읽었나요, 들었나요">
+          <div className="mode-toggle" role="group" aria-label="읽었나요, 들었나요">
             <button
               type="button"
               className={`mode-toggle-btn ${mode === 'read' ? 'active' : ''}`}
@@ -344,7 +468,7 @@ function ChallengeCheckinInner() {
           <input
             className="text-input"
             style={{ marginTop: 8 }}
-            placeholder="오늘 읽거나 들은 책 제목 (선택)"
+            placeholder="읽거나 들은 책 제목 (선택)"
             value={bookTitle}
             onChange={(e) => setBookTitle(e.target.value)}
           />
@@ -354,7 +478,7 @@ function ChallengeCheckinInner() {
             onClick={handleSubmit}
             disabled={busy}
           >
-            {busy ? '저장 중…' : '오늘 인증하기'}
+            {busy ? '저장 중…' : existing ? '인증 수정하기' : selectedDate === todayISO ? '오늘 인증하기' : '인증하기'}
           </button>
         </>
       )}
