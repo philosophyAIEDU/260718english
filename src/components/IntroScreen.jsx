@@ -2,7 +2,6 @@ import {
   CHALLENGE_CONFIG,
   PILLARS,
   RULES,
-  DEPOSIT,
   CURRICULUM,
 } from '../lib/challengeConfig.js';
 import { challengeDates, weekIndex, today, phase } from '../lib/challengeUtils.js';
@@ -16,9 +15,9 @@ import {
 
 /**
  * The challenge's front door: what [Read & Build] is, how the month runs,
- * what the four weekly classes cover, the rules that decide a kickout, and
- * what happens to the deposit. Shown once before a learner sets up their
- * API key, and re-openable any time from Home ("챌린지 안내").
+ * what the four weekly classes cover, and the rules that decide a kickout.
+ * Shown once before a learner sets up their API key, and re-openable any
+ * time from Home ("챌린지 안내").
  *
  * Everything here reads from challengeConfig.js, so the organizer changes
  * the program in one file and this screen follows.
@@ -49,10 +48,6 @@ export default function IntroScreen({ onStart, onBack, startLabel = '시작하�
           <div className="hero-stat">
             <strong>{CURRICULUM.length}회</strong>
             <span>앱 빌드 수업</span>
-          </div>
-          <div className="hero-stat">
-            <strong>{DEPOSIT.amountLabel}</strong>
-            <span>완주 시 환급</span>
           </div>
         </div>
       </div>
@@ -139,33 +134,6 @@ export default function IntroScreen({ onStart, onBack, startLabel = '시작하�
             );
           })}
         </div>
-      </div>
-
-      <div className="section-head">
-        <span className="eyebrow">참가 비용</span>
-        <h2>보증금 {DEPOSIT.amountLabel}</h2>
-      </div>
-      <div className="deposit-card">
-        <div className="deposit-amount">
-          <strong>{DEPOSIT.amount.toLocaleString('ko-KR')}원</strong>
-          <span>보증금</span>
-        </div>
-        <p className="muted small" style={{ margin: 0 }}>
-          {DEPOSIT.note}
-        </p>
-        <ul className="deposit-notes">
-          <li>
-            <CheckIcon size={15} />
-            <span>{DEPOSIT.refund}</span>
-          </li>
-          <li>
-            <CheckIcon size={15} />
-            <span>
-              킥아웃 대상자분들의 보증금은 <strong>{DEPOSIT.charity}</strong>에 기부합니다 —{' '}
-              {DEPOSIT.charityNote}
-            </span>
-          </li>
-        </ul>
       </div>
 
       {onStart && (

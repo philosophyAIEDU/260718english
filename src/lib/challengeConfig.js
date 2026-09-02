@@ -60,20 +60,7 @@ export const CHALLENGE_CONFIG = {
 };
 
 /*
- * 참가비/보증금 정책. 첫 기수는 보증금만 받고, 킥아웃되지 않으면 전액 돌려줍니다.
- * 킥아웃 대상자의 보증금은 기부처(charity)로 전달됩니다.
- */
-export const DEPOSIT = {
-  amount: 50000,
-  amountLabel: '5만원',
-  note: '첫 기수라 보증금만 받습니다 (추후에는 유료로 진행될 예정입니다)',
-  refund: '킥아웃만 당하지 않으시면 보증금 전액을 돌려받으실 수 있습니다',
-  charity: '승일희망재단',
-  charityNote: '루게릭 환우분들을 위한 병원을 운영하는 재단으로, 킥아웃 대상자의 보증금을 기부합니다',
-};
-
-/*
- * 챌린지를 떠받치는 네 개의 축 — 소개 화면과 홈에서 같은 문구를 씁니다.
+ * 챌린지를 떠받치는 세 개의 축 — 소개 화면과 홈에서 같은 문구를 씁니다.
  * icon 값은 components/Icons.jsx에 있는 아이콘 이름과 1:1로 대응합니다.
  */
 export const PILLARS = [
@@ -91,11 +78,6 @@ export const PILLARS = [
     icon: 'branch',
     title: '주 1회 앱 빌드 수업',
     body: '월 4회, AI로 나만의 학습앱을 직접 만듭니다. 데이터베이스와 AI API도 연동해봅니다.',
-  },
-  {
-    icon: 'trophy',
-    title: '보증금 환급제',
-    body: `보증금 ${DEPOSIT.amountLabel}. 끝까지 완주하면 전액 돌려받습니다.`,
   },
 ];
 
@@ -152,11 +134,6 @@ export const RULES = [
     icon: 'alert',
     title: '미인증 6회 = 킥아웃 대상',
     body: '누적 미인증이 6회가 되면 킥아웃 대상이 됩니다. 4회부터는 미리 경고가 표시됩니다.',
-  },
-  {
-    icon: 'trophy',
-    title: '보증금 환급 · 기부',
-    body: `보증금 ${DEPOSIT.amountLabel}은 킥아웃만 당하지 않으면 전액 환급됩니다. 킥아웃 대상자의 보증금은 ${DEPOSIT.charity}에 기부합니다.`,
   },
 ];
 
