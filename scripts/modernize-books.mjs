@@ -222,6 +222,10 @@ async function main() {
       console.log(`\n📖 ${book.title} — skipping: World English Bible text is already modern English and should not be AI-paraphrased.`);
       continue;
     }
+    if (book.noModernize) {
+      console.log(`\n📖 ${book.title} — skipping: each "chapter" here is a short verbatim quotation, not prose to rewrite.`);
+      continue;
+    }
     console.log(`\n📖 ${book.title} (${book.level}) — ${book.chapters.length} chapters`);
 
     for (const [chapterIndex, chapter] of book.chapters.entries()) {
