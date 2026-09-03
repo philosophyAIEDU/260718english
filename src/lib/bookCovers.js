@@ -7,6 +7,7 @@
  */
 
 const COVERS = {
+  'great-lines': { emoji: '💬', from: '#f2a65a', to: '#d1701f' },
   'wizard-of-oz': { emoji: '🌈', from: '#57c97a', to: '#2f9e5b' },
   'alice-in-wonderland': { emoji: '🐇', from: '#6db6f2', to: '#4a7fe0' },
   'secret-garden': { emoji: '🌷', from: '#78d3a2', to: '#3aa877' },

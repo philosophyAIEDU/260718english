@@ -1895,6 +1895,17 @@ main {
   cursor: not-allowed;
 }
 
+/* The standalone "copy this page" button sits directly in the toolbar
+   (not inside .font-size-control), so it needs its own size override. */
+.reader-toolbar > .icon-button {
+  width: 32px;
+  height: 32px;
+}
+
+.copy-status {
+  margin: -4px 0 10px;
+}
+
 .font-size-label {
   font-family: var(--font-sans);
   font-weight: 700;

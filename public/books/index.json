@@ -1,5 +1,18 @@
 [
   {
+    "id": "great-lines",
+    "title": "Great Lines from the Classics",
+    "author": "Various Classic Authors",
+    "year": "1813–1925",
+    "level": "Beginner",
+    "bible": false,
+    "description": "Thirty short, unforgettable lines — one a day for thirty days — quoted straight from the twelve public-domain classics already in this Library (Austen, Dickens, Shelley, Carroll, Baum, Doyle, London, Stevenson, Burnett, Montgomery, Fitzgerald). A quick taste of each book's voice, for days when a whole chapter feels like too much.",
+    "source": "Quoted verbatim from the public-domain full texts already bundled in this Library — see each line’s chapter credit.",
+    "chapterCount": 30,
+    "wordCount": 641,
+    "totalPages": 30
+  },
+  {
     "id": "wizard-of-oz",
     "title": "The Wonderful Wizard of Oz",
     "author": "L. Frank Baum",

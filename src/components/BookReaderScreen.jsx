@@ -7,6 +7,7 @@ import {
 } from '../lib/pagination.js';
 import { getBookProgress, saveBookProgress, logActivity, getSetting, setSetting } from '../lib/db.js';
 import { analyzePageText, GeminiError } from '../lib/geminiClient.js';
+import { copyText } from '../lib/clipboard.js';
 import {
   ArrowLeftIcon,
   ChevronLeftIcon,
@@ -16,6 +17,7 @@ import {
   MinusIcon,
   PlusIcon,
   SpeakerIcon,
+  CopyIcon,
 } from './Icons.jsx';
 import BookCover from './BookCover.jsx';
 
@@ -45,6 +47,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   const [progress, setProgress] = useState(null);
   const [fontStep, setFontStep] = useState(0);
   const [audioSrc, setAudioSrc] = useState(null);
+  const [copyStatus, setCopyStatus] = useState('');
   const [modernMode, setModernMode] = useState(false);
 
   useEffect(() => {
@@ -221,12 +224,22 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
       completeBook: false,
     });
     setFlatIndex(flatIndex + 1);
+    setCopyStatus('');
   };
 
   const goPrev = () => {
     if (flatIndex === 0) return;
     persistProgress(flatIndex - 1);
     setFlatIndex(flatIndex - 1);
+    setCopyStatus('');
+  };
+
+  // Copies exactly what's on screen — the current page's paragraphs (verse
+  // numbers included, for the Bible books) — so a learner can paste a
+  // passage into a dictionary, notes app, or chat without retyping it.
+  const handleCopyPage = async () => {
+    const ok = await copyText(current.paragraphs.join('\n\n'));
+    setCopyStatus(ok ? '이 페이지를 복사했어요.' : '복사에 실패했어요. 직접 선택해서 복사해주세요.');
   };
 
   const jumpToChapter = (chapterIndex) => {
@@ -234,6 +247,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
     if (target !== -1) {
       persistProgress(target);
       setFlatIndex(target);
+      setCopyStatus('');
     }
   };
 
@@ -399,7 +413,16 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
             <PlusIcon size={15} />
           </button>
         </div>
+        <button
+          className="icon-button"
+          onClick={handleCopyPage}
+          aria-label="Copy this page's text"
+          title="이 페이지 원문 복사"
+        >
+          <CopyIcon size={15} />
+        </button>
       </div>
+      {copyStatus && <p className="muted small copy-status">{copyStatus}</p>}
 
       <div className="book-page" style={{ fontSize: `${FONT_SCALES[fontStep]}rem` }}>
         {current.paragraphs.map((p, i) => (
