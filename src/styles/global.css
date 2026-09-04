@@ -26,6 +26,11 @@
  * philosophy-ai-education-materials-creator/SKILL.md for the source values.
  */
 :root[data-theme='light'] {
+  /* Tells the browser this page fully manages its own light/dark styling,
+     so mobile Chrome's "Force dark" / auto-darken-pages feature doesn't
+     also try to invert individual elements on top of our own theme —
+     that fight is what made some card titles unreadable in dark mode. */
+  color-scheme: light;
   --bg: #faf6ed;
   --bg-elevated: #ffffff;
   --bg-card: #ffffff;
@@ -68,6 +73,7 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --bg: #191309;
   --bg-elevated: #221a0d;
   --bg-card: #241b0e;
