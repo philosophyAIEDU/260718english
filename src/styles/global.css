@@ -26,6 +26,11 @@
  * philosophy-ai-education-materials-creator/SKILL.md for the source values.
  */
 :root[data-theme='light'] {
+  /* Tells the browser this page fully manages its own light/dark styling,
+     so mobile Chrome's "Force dark" / auto-darken-pages feature doesn't
+     also try to invert individual elements on top of our own theme —
+     that fight is what made some card titles unreadable in dark mode. */
+  color-scheme: light;
   --bg: #faf6ed;
   --bg-elevated: #ffffff;
   --bg-card: #ffffff;
@@ -68,6 +73,7 @@
 }
 
 :root[data-theme='dark'] {
+  color-scheme: dark;
   --bg: #191309;
   --bg-elevated: #221a0d;
   --bg-card: #241b0e;
@@ -1895,6 +1901,17 @@ main {
   cursor: not-allowed;
 }
 
+/* The standalone "copy this page" button sits directly in the toolbar
+   (not inside .font-size-control), so it needs its own size override. */
+.reader-toolbar > .icon-button {
+  width: 32px;
+  height: 32px;
+}
+
+.copy-status {
+  margin: -4px 0 10px;
+}
+
 .font-size-label {
   font-family: var(--font-sans);
   font-weight: 700;
@@ -2724,62 +2741,6 @@ main {
   line-height: 1.6;
   color: var(--text-soft);
   margin: 0;
-}
-
-/* Deposit + charity callout. */
-.deposit-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-lg);
-  padding: 22px;
-  margin-bottom: 18px;
-  box-shadow: var(--shadow-sm);
-}
-
-.deposit-amount {
-  display: flex;
-  align-items: baseline;
-  gap: 9px;
-  margin-bottom: 4px;
-}
-
-.deposit-amount strong {
-  font-size: 2rem;
-  font-weight: 800;
-  letter-spacing: -0.03em;
-  color: var(--accent);
-  line-height: 1;
-}
-
-.deposit-amount span {
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  color: var(--text-soft);
-}
-
-.deposit-notes {
-  list-style: none;
-  padding: 0;
-  margin: 14px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 9px;
-}
-
-.deposit-notes li {
-  display: flex;
-  gap: 9px;
-  align-items: flex-start;
-  font-family: var(--font-sans);
-  font-size: 0.85rem;
-  line-height: 1.6;
-  color: var(--text-soft);
-}
-
-.deposit-notes svg {
-  flex: none;
-  margin-top: 2px;
-  color: var(--accent);
 }
 
 /* "This week's class" banner on Home. */

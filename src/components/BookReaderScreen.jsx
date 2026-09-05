@@ -16,6 +16,7 @@ import {
   saveModernPage,
 } from '../lib/db.js';
 import { analyzePageText, modernizePageText, GeminiError } from '../lib/geminiClient.js';
+import { copyText } from '../lib/clipboard.js';
 import {
   ArrowLeftIcon,
   ChevronLeftIcon,
@@ -25,6 +26,7 @@ import {
   MinusIcon,
   PlusIcon,
   SpeakerIcon,
+  CopyIcon,
 } from './Icons.jsx';
 import BookCover from './BookCover.jsx';
 
@@ -54,6 +56,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   const [progress, setProgress] = useState(null);
   const [fontStep, setFontStep] = useState(0);
   const [audioSrc, setAudioSrc] = useState(null);
+  const [copyStatus, setCopyStatus] = useState('');
   const [modernMode, setModernMode] = useState(false);
   const [modernParagraphs, setModernParagraphs] = useState(null);
   const [modernizing, setModernizing] = useState(false);
@@ -169,7 +172,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   // already rewritten once costs no further API calls.
   useEffect(() => {
     setModernError('');
-    if (!modernMode) {
+    if (!modernMode || book?.bible || book?.noModernize) {
       setModernParagraphs(null);
       return;
     }
@@ -204,7 +207,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
     return () => {
       alive = false;
     };
-  }, [modernMode, bookId, apiKey, readingLevel, flatIndex, flatPages]);
+  }, [modernMode, book, bookId, apiKey, readingLevel, flatIndex, flatPages]);
 
   if (error) {
     return (
@@ -237,11 +240,16 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   }
 
   const current = flatPages[flatIndex];
+  // The Bible books are already modern English (WEB), and the "Great
+  // Lines from the Classics" quote library exists specifically to quote
+  // its lines verbatim — rewriting either would defeat the point, so the
+  // toggle doesn't offer to.
+  const modernAllowed = !book.bible && !book.noModernize;
   // Whichever text is actually on screen right now — the modern rewrite
   // once it's ready, the original while it's still loading or off. Reading,
   // analyzing, and printing all follow this rather than current.paragraphs
   // directly, so they never disagree with what the learner is looking at.
-  const showingModern = modernMode && Boolean(modernParagraphs) && !modernizing;
+  const showingModern = modernAllowed && modernMode && Boolean(modernParagraphs) && !modernizing;
   const displayParagraphs = showingModern ? modernParagraphs : current.paragraphs;
   const isLastPageOverall = flatIndex === flatPages.length - 1;
   const isLastPageOfChapter =
@@ -274,12 +282,22 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
       completeBook: false,
     });
     setFlatIndex(flatIndex + 1);
+    setCopyStatus('');
   };
 
   const goPrev = () => {
     if (flatIndex === 0) return;
     persistProgress(flatIndex - 1);
     setFlatIndex(flatIndex - 1);
+    setCopyStatus('');
+  };
+
+  // Copies exactly what's on screen — the current page's paragraphs (verse
+  // numbers included, for the Bible books) — so a learner can paste a
+  // passage into a dictionary, notes app, or chat without retyping it.
+  const handleCopyPage = async () => {
+    const ok = await copyText(current.paragraphs.join('\n\n'));
+    setCopyStatus(ok ? '이 페이지를 복사했어요.' : '복사에 실패했어요. 직접 선택해서 복사해주세요.');
   };
 
   const jumpToChapter = (chapterIndex) => {
@@ -287,6 +305,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
     if (target !== -1) {
       persistProgress(target);
       setFlatIndex(target);
+      setCopyStatus('');
     }
   };
 
@@ -383,28 +402,30 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
         </div>
       )}
 
-      <div className="mode-toggle" role="group" aria-label="원문 또는 현대식 영어로 읽기">
-        <button
-          type="button"
-          className={`mode-toggle-btn ${!modernMode ? 'active' : ''}`}
-          onClick={() => modernMode && toggleModernMode()}
-        >
-          📜 원문 그대로
-        </button>
-        <button
-          type="button"
-          className={`mode-toggle-btn ${modernMode ? 'active' : ''}`}
-          onClick={() => !modernMode && toggleModernMode()}
-        >
-          ✨ 현대식 영어
-        </button>
-      </div>
-      {modernMode && modernizing && (
+      {modernAllowed && (
+        <div className="mode-toggle" role="group" aria-label="원문 또는 현대식 영어로 읽기">
+          <button
+            type="button"
+            className={`mode-toggle-btn ${!modernMode ? 'active' : ''}`}
+            onClick={() => modernMode && toggleModernMode()}
+          >
+            📜 원문 그대로
+          </button>
+          <button
+            type="button"
+            className={`mode-toggle-btn ${modernMode ? 'active' : ''}`}
+            onClick={() => !modernMode && toggleModernMode()}
+          >
+            ✨ 현대식 영어
+          </button>
+        </div>
+      )}
+      {modernAllowed && modernMode && modernizing && (
         <p className="loading-status small">
           <span className="spinner" aria-hidden="true" />이 페이지를 현대식 영어로 바꾸는 중…
         </p>
       )}
-      {modernMode && modernError && (
+      {modernAllowed && modernMode && modernError && (
         <div className="error-box">
           <AlertIcon size={17} />
           <span>{modernError}</span>
@@ -455,7 +476,16 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
             <PlusIcon size={15} />
           </button>
         </div>
+        <button
+          className="icon-button"
+          onClick={handleCopyPage}
+          aria-label="Copy this page's text"
+          title="이 페이지 원문 복사"
+        >
+          <CopyIcon size={15} />
+        </button>
       </div>
+      {copyStatus && <p className="muted small copy-status">{copyStatus}</p>}
 
       <div className="book-page" style={{ fontSize: `${FONT_SCALES[fontStep]}rem` }}>
         {displayParagraphs.map((p, i) => (

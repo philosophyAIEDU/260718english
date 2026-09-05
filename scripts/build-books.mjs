@@ -11,7 +11,8 @@
  * Run manually when adding books:  node scripts/build-books.mjs
  * The generated JSON is committed, so users never need to run this.
  */
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { paginateParagraphs, targetWordsForLevel } from '../src/lib/pagination.js';
@@ -24,6 +25,235 @@ const OUT_DIR = path.join(
 );
 
 const BOOKS = [
+  {
+    id: 'great-lines',
+    title: 'Great Lines from the Classics',
+    author: 'Various Classic Authors',
+    year: '1813–1925',
+    level: 'Beginner',
+    // Not modernize-books.mjs material: each "chapter" is a two-line
+    // quote + attribution, not prose to rewrite (see modernize-books.mjs).
+    noModernize: true,
+    description:
+      "Thirty short, unforgettable lines — one a day for thirty days — quoted straight from the twelve public-domain classics already in this Library (Austen, Dickens, Shelley, Carroll, Baum, Doyle, London, Stevenson, Burnett, Montgomery, Fitzgerald). A quick taste of each book's voice, for days when a whole chapter feels like too much.",
+    source: 'Quoted verbatim from the public-domain full texts already bundled in this Library — see each line’s chapter credit.',
+    kind: 'inline',
+    // Each "day" is its own tiny chapter: [quote, attribution]. Both stay
+    // well under a Beginner page's 150-word target, so paginateParagraphs
+    // never splits one — one chapter == one page == one day, always.
+    chapters: [
+      {
+        title: 'Day 1',
+        paragraphs: [
+          '‘And what is the use of a book,’ thought Alice ‘without pictures or conversations?’',
+          '— Lewis Carroll, Alice’s Adventures in Wonderland (1865), opening line',
+        ],
+      },
+      {
+        title: 'Day 2',
+        paragraphs: [
+          'It is a truth universally acknowledged, that a single man in possession of a good fortune, must be in want of a wife.',
+          '— Jane Austen, Pride and Prejudice (1813), opening line',
+        ],
+      },
+      {
+        title: 'Day 3',
+        paragraphs: [
+          'Marley was dead: to begin with. There is no doubt whatever about that.',
+          '— Charles Dickens, A Christmas Carol (1843), opening line',
+        ],
+      },
+      {
+        title: 'Day 4',
+        paragraphs: [
+          'There is no place like home.',
+          '— L. Frank Baum, The Wonderful Wizard of Oz (1900)',
+        ],
+      },
+      {
+        title: 'Day 5',
+        paragraphs: [
+          'You see, but you do not observe. The distinction is clear.',
+          '— Arthur Conan Doyle, The Adventures of Sherlock Holmes (1892), “A Scandal in Bohemia”',
+        ],
+      },
+      {
+        title: 'Day 6',
+        paragraphs: [
+          'It was on a dreary night of November that I beheld the accomplishment of my toils.',
+          '— Mary Shelley, Frankenstein (1818)',
+        ],
+      },
+      {
+        title: 'Day 7',
+        paragraphs: [
+          'Fifteen men on the dead man’s chest— Yo-ho-ho, and a bottle of rum!',
+          '— Robert Louis Stevenson, Treasure Island (1883)',
+        ],
+      },
+      {
+        title: 'Day 8',
+        paragraphs: [
+          'If he be Mr. Hyde, I shall be Mr. Seek.',
+          '— Robert Louis Stevenson, The Strange Case of Dr Jekyll and Mr Hyde (1886)',
+        ],
+      },
+      {
+        title: 'Day 9',
+        paragraphs: [
+          'Isn’t it splendid to think of all the things there are to find out about?',
+          '— L. M. Montgomery, Anne of Green Gables (1908)',
+        ],
+      },
+      {
+        title: 'Day 10',
+        paragraphs: [
+          'Where you tend a rose, my lad, a thistle cannot grow.',
+          '— Frances Hodgson Burnett, The Secret Garden (1911)',
+        ],
+      },
+      {
+        title: 'Day 11',
+        paragraphs: [
+          'So we beat on, boats against the current, borne back ceaselessly into the past.',
+          '— F. Scott Fitzgerald, The Great Gatsby (1925), closing line',
+        ],
+      },
+      {
+        title: 'Day 12',
+        paragraphs: [
+          'He was sounding the deeps of his nature, and of the parts of his nature that were deeper than he, going back into the womb of Time.',
+          '— Jack London, The Call of the Wild (1903)',
+        ],
+      },
+      {
+        title: 'Day 13',
+        paragraphs: [
+          'Curiouser and curiouser!',
+          '— Lewis Carroll, Alice’s Adventures in Wonderland (1865)',
+        ],
+      },
+      {
+        title: 'Day 14',
+        paragraphs: [
+          'Mankind was my business. The common welfare was my business.',
+          '— Charles Dickens, A Christmas Carol (1843)',
+        ],
+      },
+      {
+        title: 'Day 15',
+        paragraphs: [
+          'It is a capital mistake to theorize before one has data.',
+          '— Arthur Conan Doyle, The Adventures of Sherlock Holmes (1892), “A Scandal in Bohemia”',
+        ],
+      },
+      {
+        title: 'Day 16',
+        paragraphs: [
+          'I am malicious because I am miserable.',
+          '— Mary Shelley, Frankenstein (1818)',
+        ],
+      },
+      {
+        title: 'Day 17',
+        paragraphs: [
+          'Dead men don’t bite, you know.',
+          '— Robert Louis Stevenson, Treasure Island (1883)',
+        ],
+      },
+      {
+        title: 'Day 18',
+        paragraphs: [
+          'Man is not truly one, but truly two.',
+          '— Robert Louis Stevenson, The Strange Case of Dr Jekyll and Mr Hyde (1886)',
+        ],
+      },
+      {
+        title: 'Day 19',
+        paragraphs: [
+          'Isn’t it nice to think that tomorrow is a new day with no mistakes in it yet?',
+          '— L. M. Montgomery, Anne of Green Gables (1908)',
+        ],
+      },
+      {
+        title: 'Day 20',
+        paragraphs: [
+          'Two things cannot be in one place.',
+          '— Frances Hodgson Burnett, The Secret Garden (1911)',
+        ],
+      },
+      {
+        title: 'Day 21',
+        paragraphs: [
+          'Gatsby believed in the green light, the orgiastic future that year by year recedes before us.',
+          '— F. Scott Fitzgerald, The Great Gatsby (1925)',
+        ],
+      },
+      {
+        title: 'Day 22',
+        paragraphs: [
+          'If I only had a heart, I should love them.',
+          '— L. Frank Baum, The Wonderful Wizard of Oz (1900)',
+        ],
+      },
+      {
+        title: 'Day 23',
+        paragraphs: [
+          'We’re all mad here. I’m mad. You’re mad.',
+          '— Lewis Carroll, Alice’s Adventures in Wonderland (1865)',
+        ],
+      },
+      {
+        title: 'Day 24',
+        paragraphs: [
+          'When you have excluded the impossible, whatever remains, however improbable, must be the truth.',
+          '— Arthur Conan Doyle, The Adventures of Sherlock Holmes (1892), “The Adventure of the Beryl Coronet”',
+        ],
+      },
+      {
+        title: 'Day 25',
+        paragraphs: [
+          'I have described myself as always having been imbued with a fervent longing to penetrate the secrets of nature.',
+          '— Mary Shelley, Frankenstein (1818)',
+        ],
+      },
+      {
+        title: 'Day 26',
+        paragraphs: [
+          'I will honour Christmas in my heart, and try to keep it all the year.',
+          '— Charles Dickens, A Christmas Carol (1843)',
+        ],
+      },
+      {
+        title: 'Day 27',
+        paragraphs: [
+          'A bosom friend—an intimate friend, you know—a really kindred spirit to whom I can confide my inmost soul.',
+          '— L. M. Montgomery, Anne of Green Gables (1908)',
+        ],
+      },
+      {
+        title: 'Day 28',
+        paragraphs: [
+          'Off with her head!',
+          '— Lewis Carroll, Alice’s Adventures in Wonderland (1865), the Queen of Hearts',
+        ],
+      },
+      {
+        title: 'Day 29',
+        paragraphs: [
+          '“Can’t repeat the past?” he cried incredulously. “Why of course you can!”',
+          '— F. Scott Fitzgerald, The Great Gatsby (1925)',
+        ],
+      },
+      {
+        title: 'Day 30',
+        paragraphs: [
+          'God bless us, every one!',
+          '— Charles Dickens, A Christmas Carol (1843), Tiny Tim',
+        ],
+      },
+    ],
+  },
   {
     id: 'wizard-of-oz',
     title: 'The Wonderful Wizard of Oz',
@@ -169,6 +399,93 @@ const BOOKS = [
     source: 'Project Gutenberg #84 (public domain)',
     kind: 'chapter-arabic-bare',
     url: 'https://raw.githubusercontent.com/GITenberg/Frankenstein_84/master/84.txt',
+  },
+
+  // --- The Bible (World English Bible) ------------------------------
+  // A handful of the most commonly-read books, not the full 66-book
+  // Bible, so the Library stays a reasonable size. Text comes verse-by-
+  // verse from midvash/bible-data, a structured mirror of the WEB — see
+  // fetchBibleChapters() below. `bible: true` marks these for the reader
+  // (no "📜 원문 / ✨ 현대식 영어" toggle — the WEB is already modern
+  // English) and tells scripts/modernize-books.mjs to skip them, since
+  // AI-paraphrasing scripture would risk changing its meaning.
+  {
+    id: 'genesis',
+    title: 'Genesis',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Intermediate',
+    bible: true,
+    description:
+      "The first book of the Bible: the creation of the world, Adam and Eve, Noah's flood, and the patriarchs Abraham, Isaac, Jacob, and Joseph — traditionally attributed to Moses. Sweeping origin stories told in straightforward narrative prose.",
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Gen',
+  },
+  {
+    id: 'psalms',
+    title: 'Psalms',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Intermediate',
+    bible: true,
+    description:
+      '150 songs and prayers of praise, lament, thanksgiving, and reflection, traditionally attributed chiefly to King David. Short, vivid, poetic chapters that read well one at a time.',
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Ps',
+  },
+  {
+    id: 'proverbs',
+    title: 'Proverbs',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Beginner',
+    bible: true,
+    description:
+      'Short, memorable sayings about wisdom, work, friendship, and character, traditionally attributed to Solomon. Each verse is a self-contained thought — easy to read a little at a time.',
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Prov',
+  },
+  {
+    id: 'matthew',
+    title: 'Matthew',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Intermediate',
+    bible: true,
+    description:
+      "The first Gospel: the birth, teaching, miracles, death, and resurrection of Jesus, with an eye to how his life fulfilled Hebrew prophecy. Clear, steady narrative prose.",
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Matt',
+  },
+  {
+    id: 'john',
+    title: 'John',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Beginner',
+    bible: true,
+    description:
+      'The most personal of the four Gospels, telling the story of Jesus through vivid scenes and extended first-person teaching. Simple vocabulary and short sentences make it a popular first book to read.',
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'John',
+  },
+  {
+    id: 'romans',
+    title: 'Romans',
+    author: 'World English Bible',
+    year: 2000,
+    level: 'Advanced',
+    bible: true,
+    description:
+      "Paul's letter to the church in Rome, laying out core Christian teaching on sin, faith, and grace in dense, tightly-reasoned argument — a real step up in difficulty from the Gospels.",
+    source: 'World English Bible (WEB), public domain — worldenglish.bible',
+    kind: 'bible-web',
+    osis: 'Rom',
   },
 ];
 
@@ -442,6 +759,26 @@ function parseXhtmlParagraphs(xhtml) {
   return paragraphs;
 }
 
+/**
+ * Fetch one Bible book (World English Bible, public domain) as
+ * chapter/verse JSON from midvash/bible-data — a structured mirror keyed
+ * by OSIS book code — and reshape it to the app's { title, paragraphs }
+ * chapter format. Each verse becomes its own paragraph, prefixed with its
+ * verse number (e.g. "16 For God so loved the world…"), the way most
+ * Bible readers print verse text — this also keeps citations legible
+ * since paragraphs get regrouped into pages by word count.
+ */
+async function fetchBibleChapters(osis) {
+  const url = `https://raw.githubusercontent.com/midvash/bible-data/main/versions/en/web/books/${osis}.json`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${res.status} for ${url}`);
+  const data = await res.json();
+  return data.chapters.map((c) => ({
+    title: `Chapter ${c.chapter}`,
+    paragraphs: c.verses.map((v) => `${v.number} ${v.text}`),
+  }));
+}
+
 const countWords = (chapters) =>
   chapters.reduce(
     (sum, c) => sum + c.paragraphs.reduce((s, p) => s + p.split(/\s+/).length, 0),
@@ -459,48 +796,77 @@ const PLAIN_TEXT_PARSERS = {
   'chapter-caps-bare': parseChapterCapsBare,
 };
 
+/**
+ * --only=id1,id2 limits which books are actually re-fetched from the
+ * network (handy when adding a few new books without re-downloading the
+ * whole library). Every book in BOOKS still gets a manifest entry: for
+ * ids outside --only, the already-committed public/books/<id>.json is
+ * read back off disk instead of being re-fetched.
+ */
+function parseOnly(argv) {
+  const arg = argv.find((a) => a.startsWith('--only='));
+  return arg ? new Set(arg.slice('--only='.length).split(',').filter(Boolean)) : null;
+}
+
 async function main() {
   await mkdir(OUT_DIR, { recursive: true });
+  const only = parseOnly(process.argv.slice(2));
   const manifest = [];
 
   for (const book of BOOKS) {
-    let chapters;
-    if (book.kind === 'standardebooks-xhtml') {
-      chapters = [];
-      for (let i = 1; i <= book.chapterCount; i += 1) {
-        const xhtml = await fetchText(book.urlTemplate.replace('%d', i));
-        chapters.push({ title: `Chapter ${i}`, paragraphs: parseXhtmlParagraphs(xhtml) });
+    const filePath = path.join(OUT_DIR, `${book.id}.json`);
+    const shouldFetch = !only || only.has(book.id);
+
+    if (!shouldFetch) {
+      if (!existsSync(filePath)) {
+        throw new Error(`--only omits "${book.id}" but public/books/${book.id}.json doesn't exist yet — fetch it at least once.`);
       }
     } else {
-      const text = await fetchText(book.url);
-      const parse = PLAIN_TEXT_PARSERS[book.kind];
-      if (!parse) throw new Error(`Unknown book kind: ${book.kind}`);
-      chapters = parse(text);
+      let chapters;
+      if (book.kind === 'standardebooks-xhtml') {
+        chapters = [];
+        for (let i = 1; i <= book.chapterCount; i += 1) {
+          const xhtml = await fetchText(book.urlTemplate.replace('%d', i));
+          chapters.push({ title: `Chapter ${i}`, paragraphs: parseXhtmlParagraphs(xhtml) });
+        }
+      } else if (book.kind === 'bible-web') {
+        chapters = await fetchBibleChapters(book.osis);
+      } else if (book.kind === 'inline') {
+        // No network fetch — chapters are authored directly in BOOKS
+        // (see 'great-lines' above), e.g. a small hand-picked collection
+        // that doesn't correspond to one downloadable source text.
+        chapters = book.chapters;
+      } else {
+        const text = await fetchText(book.url);
+        const parse = PLAIN_TEXT_PARSERS[book.kind];
+        if (!parse) throw new Error(`Unknown book kind: ${book.kind}`);
+        chapters = parse(text);
+      }
+
+      const { kind, url, urlTemplate, chapterCount, osis, chapters: _inlineChapters, ...meta } = book;
+      await writeFile(filePath, JSON.stringify({ ...meta, chapters }));
     }
 
-    const { kind, url, urlTemplate, chapterCount, ...meta } = book;
-    const record = { ...meta, chapters };
-    await writeFile(
-      path.join(OUT_DIR, `${book.id}.json`),
-      JSON.stringify(record)
-    );
+    const record = JSON.parse(await readFile(filePath, 'utf8'));
     // Total page count (same level-aware pagination the in-app reader
     // uses), so the Library list can show a 14-day reading plan without
     // fetching the full book JSON.
-    const targetWords = targetWordsForLevel(book.level);
-    const totalPages = chapters.reduce(
+    const targetWords = targetWordsForLevel(record.level);
+    const totalPages = record.chapters.reduce(
       (sum, c) => sum + paginateParagraphs(c.paragraphs, targetWords).length,
       0
     );
+    const wordCount = countWords(record.chapters);
+    const { chapters, ...meta } = record;
 
     manifest.push({
       ...meta,
       chapterCount: chapters.length,
-      wordCount: countWords(chapters),
+      wordCount,
       totalPages,
     });
     console.log(
-      `${book.id}: ${chapters.length} chapters, ${countWords(chapters).toLocaleString()} words, ${totalPages} pages`
+      `${book.id}${shouldFetch ? '' : ' (cached)'}: ${chapters.length} chapters, ${wordCount.toLocaleString()} words, ${totalPages} pages`
     );
   }
 
