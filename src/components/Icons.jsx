@@ -366,6 +366,14 @@ export const ShieldIcon = (p) => (
   </Icon>
 );
 
+export const FileTextIcon = (p) => (
+  <Icon {...p}>
+    <path d="M7 3.5h7l4 4V19a1.4 1.4 0 0 1-1.4 1.4H7A1.4 1.4 0 0 1 5.6 19V4.9A1.4 1.4 0 0 1 7 3.5Z" />
+    <path d="M14 3.5v4h4" />
+    <path d="M8.5 12.5h7M8.5 15.5h7M8.5 9.5h3" />
+  </Icon>
+);
+
 export const CopyIcon = (p) => (
   <Icon {...p}>
     <rect x="8" y="8" width="12" height="12" rx="2" />

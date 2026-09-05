@@ -10,6 +10,7 @@ import {
   CheckIcon,
   TrophyIcon,
   ShieldIcon,
+  FileTextIcon,
 } from './Icons.jsx';
 
 /**
@@ -169,6 +170,24 @@ export default function ApiKeyScreen({
           </button>
         </div>
       )}
+
+      <div className="card">
+        <h2 className="section-title">
+          <FileTextIcon size={15} /> 사용자 가이드
+        </h2>
+        <p className="muted small" style={{ marginTop: 0 }}>
+          API 키 발급부터 챌린지 참여, 매일 인증, 라이브러리 읽기, 단어장·복습까지
+          한 번에 정리한 PDF 가이드입니다.
+        </p>
+        <a
+          className="btn"
+          href={`${import.meta.env.BASE_URL}guide/user-guide.pdf`}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <FileTextIcon size={16} /> 사용자 가이드 PDF 보기
+        </a>
+      </div>
 
       {isFirebaseConfigured() && onOpenAdmin && (
         <div className="card">
