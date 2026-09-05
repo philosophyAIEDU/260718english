@@ -10,6 +10,8 @@
  *  - `modernPages`  : cached "현대식 영어" rewrites for library pages, so
  *                      revisiting a page never re-calls Gemini for text
  *                      already rewritten once on this device.
+ *  - `notes`        : one free-text notepad per library book, for jotting
+ *                      down unfamiliar words or thoughts while reading.
  *
  * Nothing is ever sent to any server other than the direct Gemini API call
  * the user triggers with their own key.
@@ -18,7 +20,7 @@ import { openDB } from 'idb';
 import { initialScheduleState } from './spacedRepetition.js';
 
 const DB_NAME = 'readmate';
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 let dbPromise = null;
 
@@ -53,6 +55,11 @@ function getDB() {
         if (oldVersion < 3) {
           if (!db.objectStoreNames.contains('modernPages')) {
             db.createObjectStore('modernPages', { keyPath: 'id' });
+          }
+        }
+        if (oldVersion < 4) {
+          if (!db.objectStoreNames.contains('notes')) {
+            db.createObjectStore('notes', { keyPath: 'bookId' });
           }
         }
       },
@@ -212,4 +219,18 @@ export async function getModernPage(id) {
 export async function saveModernPage(id, paragraphs) {
   const db = await getDB();
   return db.put('modernPages', { id, paragraphs, createdAt: new Date().toISOString() });
+}
+
+/* ----------------------------------- notes ------------------------------ */
+
+/** One free-text notepad per Library book — a place to jot down unfamiliar
+ * words or thoughts while reading, separate from the starred Word Book. */
+export async function getNote(bookId) {
+  const db = await getDB();
+  return db.get('notes', bookId);
+}
+
+export async function saveNote(bookId, text) {
+  const db = await getDB();
+  return db.put('notes', { bookId, text, updatedAt: new Date().toISOString() });
 }

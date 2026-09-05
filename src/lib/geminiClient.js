@@ -191,6 +191,140 @@ export async function modernizePageText(apiKey, paragraphs, options = {}) {
   throw lastError;
 }
 
+const LOOKUP_SYSTEM_PROMPT = `You are a dictionary for an English learner reading an English book. The learner tapped one word or short phrase they don't know while reading a specific sentence.
+
+Explain that word AS USED IN THAT SENTENCE — if it has multiple meanings, pick the one that fits the context, not a generic first-dictionary-entry meaning.
+
+Return ONLY a JSON object of this exact shape:
+{
+  "word": "the word or phrase, exactly as given",
+  "partOfSpeech": "noun | verb | adjective | adverb | phrase | idiom",
+  "collinsDefinition": "A full-sentence, Collins COBUILD style explanatory definition, e.g. 'If someone is reluctant to do something, they do not really want to do it.'",
+  "longmanSynonyms": ["2-3", "short", "synonyms"],
+  "exampleFromPage": "A NEW example sentence that YOU write yourself, using the word in a situation similar to the context sentence. Do NOT copy the context sentence.",
+  "wordFamily": ["related noun/verb/adjective/adverb forms, each labelled, e.g. 'reluctance (noun)'"],
+  "collocations": ["1-2 common collocations, e.g. 'reluctant to admit'"],
+  "register": "formal | informal | neutral | literary"
+}
+
+Rules:
+- Every string must be plain English text. No Korean, no romanized Korean, no other languages.
+- Do not reproduce the context sentence verbatim anywhere in your answer except quoting the single tapped word/phrase itself.
+- Return ONLY the JSON object. No markdown fences, no commentary.`;
+
+/**
+ * Look up one word or short phrase a learner tapped while reading a Library
+ * page, in the context of the sentence it appeared in. Returns an object
+ * shaped exactly like a `keyVocabulary` entry from analyzePageText/Image, so
+ * the result can be starred straight into the Word Book with saveVocabEntry
+ * — no separate schema for the reader's tap-to-look-up dictionary.
+ *
+ * @param {string} apiKey
+ * @param {string} word            the tapped word or phrase
+ * @param {string} contextSentence the paragraph/sentence it appeared in
+ * @param {object} [options]       { level?: 'Beginner'|'Intermediate'|'Advanced' }
+ * @returns {Promise<object>} a single normalized vocabulary entry
+ */
+export async function lookupWord(apiKey, word, contextSentence, options = {}) {
+  const { level } = options;
+  const guidance = LEVEL_INSTRUCTIONS[level];
+  const systemPrompt = guidance ? `${LOOKUP_SYSTEM_PROMPT}\n\n${guidance}` : LOOKUP_SYSTEM_PROMPT;
+  const userText = `Word or phrase to explain: "${word}"\n\nContext sentence it appeared in:\n"""\n${contextSentence}\n"""\n\nExplain it following your instructions exactly.`;
+
+  const body = {
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ role: 'user', parts: [{ text: userText }] }],
+    generationConfig: { temperature: 0.4, responseMimeType: 'application/json' },
+  };
+
+  let lastError = null;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+    if (attempt > 0) {
+      const delay = BASE_DELAY_MS * 2 ** (attempt - 1);
+      await sleep(delay);
+    }
+    try {
+      return await requestWordLookup(apiKey, body, word);
+    } catch (err) {
+      lastError = err;
+      if (!(err instanceof GeminiError) || !err.retryable) throw err;
+    }
+  }
+  throw lastError;
+}
+
+async function requestWordLookup(apiKey, body, word) {
+  let response;
+  try {
+    response = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new GeminiError('Network error — check your internet connection and try again.', { retryable: true });
+  }
+
+  if (!response.ok) {
+    const status = response.status;
+    let detail = '';
+    try {
+      detail = (await response.json())?.error?.message || '';
+    } catch {
+      /* body was not JSON */
+    }
+    if (status === 400 && /api key/i.test(detail)) {
+      throw new GeminiError('The API key was rejected. Please check it on the Settings screen.', { status });
+    }
+    if (status === 401 || status === 403) {
+      throw new GeminiError('This API key is not authorized for the Gemini API. Please check it on the Settings screen.', { status });
+    }
+    if (status === 429) {
+      throw new GeminiError('Rate limit reached. Waiting a moment before retrying…', { status, retryable: true });
+    }
+    if (status >= 500) {
+      throw new GeminiError('The Gemini service had a temporary problem.', { status, retryable: true });
+    }
+    throw new GeminiError(detail || `Request failed with status ${status}.`, { status });
+  }
+
+  const json = await response.json();
+  const candidate = json?.candidates?.[0];
+  const text = (candidate?.content?.parts || [])
+    .filter((p) => typeof p.text === 'string' && !p.thought)
+    .map((p) => p.text)
+    .join('');
+
+  if (!text) {
+    const finishReason = candidate?.finishReason;
+    if (finishReason === 'RECITATION') {
+      throw new GeminiError('다시 시도해주세요 — 사전 뜻풀이를 만들지 못했어요.', { retryable: true });
+    }
+    throw new GeminiError(
+      `Gemini returned an empty response${finishReason ? ` (${finishReason})` : ''}. Please try again.`,
+      { retryable: true }
+    );
+  }
+
+  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+  let parsed;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new GeminiError('뜻풀이를 읽지 못했어요. 다시 시도해주세요.', { retryable: true });
+  }
+  return {
+    word: parsed.word || word,
+    partOfSpeech: parsed.partOfSpeech || '',
+    collinsDefinition: parsed.collinsDefinition || '',
+    longmanSynonyms: Array.isArray(parsed.longmanSynonyms) ? parsed.longmanSynonyms : [],
+    exampleFromPage: parsed.exampleFromPage || '',
+    wordFamily: Array.isArray(parsed.wordFamily) ? parsed.wordFamily : [],
+    collocations: Array.isArray(parsed.collocations) ? parsed.collocations : [],
+    register: (parsed.register || 'neutral').toLowerCase(),
+  };
+}
+
 async function requestModernizedPage(apiKey, body, expectedCount) {
   let response;
   try {

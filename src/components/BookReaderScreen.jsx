@@ -29,6 +29,17 @@ import {
   CopyIcon,
 } from './Icons.jsx';
 import BookCover from './BookCover.jsx';
+import WordLookupPanel from './WordLookupPanel.jsx';
+import NotepadPanel from './NotepadPanel.jsx';
+
+// Splits a paragraph into alternating [text, word, text, word, ...] chunks so
+// each word can be rendered as its own clickable span while everything else
+// (spaces, punctuation) renders as plain text right next to it — the page
+// reads exactly as before, just with tappable words layered on top.
+const WORD_PATTERN = /([A-Za-z][A-Za-z'’-]*)/g;
+function splitIntoWordChunks(paragraph) {
+  return paragraph.split(WORD_PATTERN);
+}
 
 // Reading challenges are aimed at learners still building stamina, so
 // text size defaults a step larger than the rest of the UI and can be
@@ -45,8 +56,22 @@ const AVERAGE_READING_WPM = 130; // conservative pace, comfortable for beginners
  * page" regardless of chapter boundaries, with a chapter picker for
  * jumping around. "Analyze this page" sends the page's plain text straight
  * to Gemini — no photo, no OCR, since we already have the text.
+ *
+ * Every word on the page is individually tappable: tapping one opens
+ * WordLookupPanel, a quick context-aware dictionary lookup that can be
+ * starred straight into the Word Book (see WordLookupPanel.jsx), so a
+ * learner isn't forced to run a full page analysis just to check one word.
+ * NotepadPanel adds a free-text scratchpad per book for jotting down
+ * unfamiliar words or thoughts while reading.
  */
-export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack, onAnalyzed }) {
+export default function BookReaderScreen({
+  bookId,
+  apiKey,
+  readingLevel,
+  onBack,
+  onAnalyzed,
+  onVocabChanged,
+}) {
   const [book, setBook] = useState(null); // null = loading
   const [error, setError] = useState('');
   const [flatIndex, setFlatIndex] = useState(0);
@@ -61,6 +86,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   const [modernParagraphs, setModernParagraphs] = useState(null);
   const [modernizing, setModernizing] = useState(false);
   const [modernError, setModernError] = useState('');
+  const [lookupTarget, setLookupTarget] = useState(null); // { word, context } | null
 
   useEffect(() => {
     getSetting('readerFontStep').then((step) => {
@@ -283,6 +309,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
     });
     setFlatIndex(flatIndex + 1);
     setCopyStatus('');
+    setLookupTarget(null);
   };
 
   const goPrev = () => {
@@ -290,6 +317,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
     persistProgress(flatIndex - 1);
     setFlatIndex(flatIndex - 1);
     setCopyStatus('');
+    setLookupTarget(null);
   };
 
   // Copies exactly what's on screen — the current page's paragraphs (verse
@@ -306,7 +334,12 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
       persistProgress(target);
       setFlatIndex(target);
       setCopyStatus('');
+      setLookupTarget(null);
     }
+  };
+
+  const handleWordClick = (word, context) => {
+    setLookupTarget({ word, context });
   };
 
   const handleAnalyze = async () => {
@@ -489,9 +522,37 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
 
       <div className="book-page" style={{ fontSize: `${FONT_SCALES[fontStep]}rem` }}>
         {displayParagraphs.map((p, i) => (
-          <p key={i}>{p}</p>
+          <p key={i}>
+            {splitIntoWordChunks(p).map((chunk, j) =>
+              j % 2 === 1 ? (
+                <span
+                  key={j}
+                  className="lookup-word"
+                  onClick={() => handleWordClick(chunk, p)}
+                  title="탭해서 뜻 찾기"
+                >
+                  {chunk}
+                </span>
+              ) : (
+                chunk
+              )
+            )}
+          </p>
         ))}
       </div>
+      <p className="muted small lookup-hint">단어를 탭하면 이 문장 속 뜻을 바로 찾아줘요.</p>
+
+      {lookupTarget && (
+        <WordLookupPanel
+          key={`${lookupTarget.word}-${flatIndex}`}
+          apiKey={apiKey}
+          readingLevel={readingLevel}
+          word={lookupTarget.word}
+          context={lookupTarget.context}
+          onClose={() => setLookupTarget(null)}
+          onVocabChanged={onVocabChanged}
+        />
+      )}
 
       <p className="reader-page-count">
         Page {current.pageIndexInChapter + 1} of {current.pageCountInChapter} in this chapter
@@ -517,6 +578,8 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
       <button className="btn btn-primary btn-block" onClick={handleAnalyze} style={{ marginTop: 14 }}>
         <SparklesIcon size={17} /> Analyze this page
       </button>
+
+      <NotepadPanel bookId={bookId} />
 
       {analyzeError && (
         <div className="error-box">
