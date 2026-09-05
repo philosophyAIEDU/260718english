@@ -122,6 +122,154 @@ export async function analyzePageText(apiKey, pageText, options = {}) {
   );
 }
 
+const MODERNIZE_SYSTEM_PROMPT = `You help English learners study contemporary English by modernizing classic novels.
+
+The user sends you several consecutive paragraphs from a public-domain 19th- or early-20th-century novel. Rewrite them in modern, natural, contemporary English, as if a present-day author retold this exact scene today — not a light paraphrase with a few words swapped.
+
+Rules:
+- Keep the same characters, events, dialogue content, and meaning. Do not add, remove, or invent plot content.
+- Replace archaic vocabulary, obsolete verb forms and pronouns (thee/thou/thy, -eth/-est endings, "shall", "whilst", "ere", "hath", etc.), and ornate or convoluted 19th-century sentence structures with clear, natural, everyday modern English.
+- This must be a SUBSTANTIAL, thorough rewrite — restructure sentences freely, split or combine them as needed — as long as the meaning and the order of events are preserved. Do not just swap individual words while keeping the original sentence structure.
+- Preserve paragraph breaks: return exactly one output paragraph for each input paragraph, in the same order, covering the same content.
+- Every string must be plain English text. No Korean, no commentary, no notes about your process.
+- Return ONLY a JSON object of this exact shape: {"paragraphs": ["rewritten paragraph 1", "rewritten paragraph 2", ...]}. No markdown fences.`;
+
+const MODERNIZE_LEVEL_GUIDANCE = {
+  Beginner:
+    'Use very common, high-frequency words and short, simple sentences — the kind of English a beginner learner meets in everyday conversation. Avoid idioms and complex clause structures.',
+  Intermediate:
+    'Use natural, everyday-to-moderately-advanced vocabulary and normal-length sentences, the way a contemporary novel for adult readers would read.',
+  Advanced:
+    'You may use richer, more nuanced vocabulary and varied sentence structure, as long as it still reads as natural, contemporary English rather than 19th-century prose.',
+};
+
+/**
+ * Rewrite one reader page's paragraphs into modern, contemporary English —
+ * used by the Library reader's "현대식 영어" toggle. Unlike analyzePageText,
+ * this doesn't go through the study-guide JSON schema or its copyright
+ * rules (there's nothing to paraphrase-and-cite here; the whole point is a
+ * full rewrite), so it has its own system prompt, request path, and higher
+ * temperature — the same anti-recitation strategy analyzeContent already
+ * uses (varied wording makes Gemini's own copyright filter far less likely
+ * to flag the output as too close to the source).
+ *
+ * @param {string} apiKey
+ * @param {string[]} paragraphs  the page's original paragraphs, in order
+ * @param {object} [options] { level?: 'Beginner'|'Intermediate'|'Advanced', onStatus?: function }
+ * @returns {Promise<string[]>} the rewritten paragraphs, same order
+ */
+export async function modernizePageText(apiKey, paragraphs, options = {}) {
+  const { level, onStatus } = options;
+  const guidance = MODERNIZE_LEVEL_GUIDANCE[level] || MODERNIZE_LEVEL_GUIDANCE.Intermediate;
+  const systemPrompt = `${MODERNIZE_SYSTEM_PROMPT}\n\n${guidance}`;
+  const userText = `Here are ${paragraphs.length} consecutive paragraphs from the novel:\n\n${paragraphs
+    .map((p, i) => `[${i + 1}] """${p}"""`)
+    .join('\n\n')}\n\nRewrite them following your instructions exactly.`;
+
+  const body = {
+    systemInstruction: { parts: [{ text: systemPrompt }] },
+    contents: [{ role: 'user', parts: [{ text: userText }] }],
+    generationConfig: { temperature: 0.9, responseMimeType: 'application/json' },
+  };
+
+  let lastError = null;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt += 1) {
+    if (attempt > 0) {
+      const delay = BASE_DELAY_MS * 2 ** (attempt - 1);
+      onStatus?.(`Retrying (attempt ${attempt + 1} of ${MAX_RETRIES + 1})…`);
+      await sleep(delay);
+    } else {
+      onStatus?.('Rewriting this page in modern English…');
+    }
+    try {
+      return await requestModernizedPage(apiKey, body, paragraphs.length);
+    } catch (err) {
+      lastError = err;
+      if (!(err instanceof GeminiError) || !err.retryable) throw err;
+    }
+  }
+  throw lastError;
+}
+
+async function requestModernizedPage(apiKey, body, expectedCount) {
+  let response;
+  try {
+    response = await fetch(ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new GeminiError('Network error — check your internet connection and try again.', { retryable: true });
+  }
+
+  if (!response.ok) {
+    const status = response.status;
+    let detail = '';
+    try {
+      detail = (await response.json())?.error?.message || '';
+    } catch {
+      /* body was not JSON */
+    }
+    if (status === 400 && /api key/i.test(detail)) {
+      throw new GeminiError('The API key was rejected. Please check it on the Settings screen.', { status });
+    }
+    if (status === 401 || status === 403) {
+      throw new GeminiError('This API key is not authorized for the Gemini API. Please check it on the Settings screen.', { status });
+    }
+    if (status === 429) {
+      throw new GeminiError('Rate limit reached. Waiting a moment before retrying…', { status, retryable: true });
+    }
+    if (status >= 500) {
+      throw new GeminiError('The Gemini service had a temporary problem.', { status, retryable: true });
+    }
+    throw new GeminiError(detail || `Request failed with status ${status}.`, { status });
+  }
+
+  const json = await response.json();
+  const candidate = json?.candidates?.[0];
+  const text = (candidate?.content?.parts || [])
+    .filter((p) => typeof p.text === 'string' && !p.thought)
+    .map((p) => p.text)
+    .join('');
+
+  if (!text) {
+    const finishReason = candidate?.finishReason;
+    if (finishReason === 'RECITATION') {
+      throw new GeminiError(
+        "Gemini's copyright filter stopped this rewrite because it was too close to the original. Please try again — a retry usually succeeds.",
+        { retryable: true }
+      );
+    }
+    if (finishReason === 'MAX_TOKENS') {
+      throw new GeminiError('Gemini ran out of space before finishing. Retrying…', { retryable: true });
+    }
+    throw new GeminiError(
+      `Gemini returned an empty response${finishReason ? ` (${finishReason})` : ''}. Please try again.`,
+      { retryable: true }
+    );
+  }
+
+  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/, '');
+  let parsed;
+  try {
+    parsed = JSON.parse(cleaned);
+  } catch {
+    throw new GeminiError('Could not read the rewritten page. Please try again.', { retryable: true });
+  }
+  const rewritten = Array.isArray(parsed.paragraphs) ? parsed.paragraphs.map((p) => String(p).trim()).filter(Boolean) : [];
+  if (rewritten.length === 0) {
+    throw new GeminiError('Gemini returned no rewritten text. Please try again.', { retryable: true });
+  }
+  // A count mismatch isn't fatal — the page still renders — but a very
+  // short response next to a much longer original usually means the
+  // rewrite got cut off mid-page, which is worth retrying for.
+  if (rewritten.length < expectedCount / 2) {
+    throw new GeminiError('The rewrite looked incomplete. Retrying…', { retryable: true });
+  }
+  return rewritten;
+}
+
 async function analyzeContent(apiKey, userParts, level, onStatus) {
   const body = {
     systemInstruction: { parts: [{ text: systemPromptFor(level) }] },

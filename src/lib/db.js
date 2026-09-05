@@ -7,6 +7,9 @@
  *  - `activity`     : one record per completed analysis (photo or library
  *                      page), used to compute reading streaks and badges.
  *  - `bookProgress` : per-book reading position, for the library reader.
+ *  - `modernPages`  : cached "현대식 영어" rewrites for library pages, so
+ *                      revisiting a page never re-calls Gemini for text
+ *                      already rewritten once on this device.
  *
  * Nothing is ever sent to any server other than the direct Gemini API call
  * the user triggers with their own key.
@@ -15,7 +18,7 @@ import { openDB } from 'idb';
 import { initialScheduleState } from './spacedRepetition.js';
 
 const DB_NAME = 'readmate';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbPromise = null;
 
@@ -45,6 +48,11 @@ function getDB() {
           }
           if (!db.objectStoreNames.contains('bookProgress')) {
             db.createObjectStore('bookProgress', { keyPath: 'bookId' });
+          }
+        }
+        if (oldVersion < 3) {
+          if (!db.objectStoreNames.contains('modernPages')) {
+            db.createObjectStore('modernPages', { keyPath: 'id' });
           }
         }
       },
@@ -187,4 +195,21 @@ export async function getAllBookProgress() {
 export async function saveBookProgress(record) {
   const db = await getDB();
   return db.put('bookProgress', record);
+}
+
+/* -------------------------------- modernPages ---------------------------- */
+
+/** One reader page's cached "현대식 영어" rewrite, keyed by book/chapter/page. */
+export function modernPageId(bookId, chapterIndex, pageIndexInChapter) {
+  return `${bookId}#${chapterIndex}#${pageIndexInChapter}`;
+}
+
+export async function getModernPage(id) {
+  const db = await getDB();
+  return db.get('modernPages', id);
+}
+
+export async function saveModernPage(id, paragraphs) {
+  const db = await getDB();
+  return db.put('modernPages', { id, paragraphs, createdAt: new Date().toISOString() });
 }
