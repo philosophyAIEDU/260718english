@@ -235,6 +235,7 @@ export default function App() {
               readingLevel={readingLevel}
               onBack={() => setView('library')}
               onAnalyzed={handleLibraryResult}
+              onVocabChanged={refreshChallengeStats}
             />
           )}
 

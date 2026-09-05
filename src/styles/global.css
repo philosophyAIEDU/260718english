@@ -1947,6 +1947,95 @@ main {
   margin: 0 0 14px;
 }
 
+/* Tap-any-word dictionary lookup */
+.lookup-word {
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 0.12s var(--ease), color 0.12s var(--ease);
+}
+
+.lookup-word:hover {
+  background: var(--accent-soft, rgba(153, 104, 11, 0.14));
+  color: var(--accent);
+}
+
+.lookup-hint {
+  text-align: center;
+  margin: -8px 0 14px;
+}
+
+.lookup-panel {
+  animation: lookup-fade-in 0.16s var(--ease);
+}
+
+@keyframes lookup-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.lookup-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.lookup-panel-title {
+  margin: 0;
+  font-size: 1.02rem;
+  font-family: var(--font-sans);
+}
+
+/* Per-book notepad */
+.notepad-panel {
+  margin-bottom: 14px;
+}
+
+.notepad-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.notepad-toggle span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notepad-toggle svg.chevron-open {
+  transform: rotate(180deg);
+}
+
+.notepad-textarea {
+  min-height: 110px;
+  resize: vertical;
+  font-family: var(--font-sans);
+}
+
+.notepad-status {
+  min-height: 1.2em;
+  margin: 6px 0 0;
+  text-align: right;
+}
+
 .reader-nav {
   display: flex;
   gap: 10px;
