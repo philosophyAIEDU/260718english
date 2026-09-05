@@ -5,8 +5,17 @@ import {
   dayForPageIndex,
   CHALLENGE_DAYS,
 } from '../lib/pagination.js';
-import { getBookProgress, saveBookProgress, logActivity, getSetting, setSetting } from '../lib/db.js';
-import { analyzePageText, GeminiError } from '../lib/geminiClient.js';
+import {
+  getBookProgress,
+  saveBookProgress,
+  logActivity,
+  getSetting,
+  setSetting,
+  modernPageId,
+  getModernPage,
+  saveModernPage,
+} from '../lib/db.js';
+import { analyzePageText, modernizePageText, GeminiError } from '../lib/geminiClient.js';
 import { copyText } from '../lib/clipboard.js';
 import {
   ArrowLeftIcon,
@@ -49,14 +58,17 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   const [audioSrc, setAudioSrc] = useState(null);
   const [copyStatus, setCopyStatus] = useState('');
   const [modernMode, setModernMode] = useState(false);
+  const [modernParagraphs, setModernParagraphs] = useState(null);
+  const [modernizing, setModernizing] = useState(false);
+  const [modernError, setModernError] = useState('');
 
   useEffect(() => {
     getSetting('readerFontStep').then((step) => {
       if (typeof step === 'number' && FONT_SCALES[step]) setFontStep(step);
     });
-    // Off by default: modern text only exists once the organizer has run
-    // scripts/modernize-books.mjs, and a stale "on" from a book that had it
-    // shouldn't silently apply the moment a book without it is opened.
+    // Off by default: switching it on calls Gemini, so a learner should
+    // choose that per session rather than have a past "on" silently start
+    // spending API calls the moment a book is opened.
     getSetting('readerModernMode').then((v) => setModernMode(Boolean(v)));
   }, []);
 
@@ -100,24 +112,17 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
     };
   }, [bookId]);
 
-  // Every chapter always has its original `paragraphs`; `modernParagraphs`
-  // only exists once scripts/modernize-books.mjs has been run for that
-  // book. Falling back per-chapter (rather than all-or-nothing for the
-  // book) means a partially-modernized book still reads fine — modern
-  // where it's ready, original everywhere else.
-  const modernAvailable = useMemo(
-    () => Boolean(book?.chapters?.some((c) => c.modernParagraphs?.length)),
-    [book]
-  );
-
+  // Pagination always follows the original text, regardless of modernMode
+  // — the modern rewrite is a per-page overlay fetched on demand (see the
+  // effect below), not a separately-paginated alternate text. That keeps
+  // page numbers, "Day X of N", and saved reading position identical in
+  // both modes, so switching mid-book never jumps the reader around.
   const flatPages = useMemo(() => {
     if (!book) return [];
     const targetWords = targetWordsForLevel(book.level);
     const pages = [];
     book.chapters.forEach((chapter, chapterIndex) => {
-      const source =
-        modernMode && chapter.modernParagraphs?.length ? chapter.modernParagraphs : chapter.paragraphs;
-      const chapterPages = paginateParagraphs(source, targetWords);
+      const chapterPages = paginateParagraphs(chapter.paragraphs, targetWords);
       chapterPages.forEach((page, pageIndexInChapter) => {
         pages.push({
           chapterIndex,
@@ -126,12 +131,11 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
           pageCountInChapter: chapterPages.length,
           paragraphs: page.paragraphs,
           wordCount: page.wordCount,
-          isModern: source === chapter.modernParagraphs,
         });
       });
     });
     return pages;
-  }, [book, modernMode]);
+  }, [book]);
 
   // Resume from saved progress once pages are known.
   useEffect(() => {
@@ -161,6 +165,49 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
       alive = false;
     };
   }, [bookId, currentChapterIndex]);
+
+  // "현대식 영어" is generated one page at a time, on demand, the moment a
+  // learner asks for it — never the whole book up front. A device-local
+  // cache (db.js's modernPages store) means flipping back to a page
+  // already rewritten once costs no further API calls.
+  useEffect(() => {
+    setModernError('');
+    if (!modernMode || book?.bible || book?.noModernize) {
+      setModernParagraphs(null);
+      return;
+    }
+    const page = flatPages[flatIndex];
+    if (!page) return;
+    const id = modernPageId(bookId, page.chapterIndex, page.pageIndexInChapter);
+    let alive = true;
+    setModernParagraphs(null);
+    getModernPage(id)
+      .then((cached) => {
+        if (!alive) return undefined;
+        if (cached) {
+          setModernParagraphs(cached.paragraphs);
+          return undefined;
+        }
+        setModernizing(true);
+        return modernizePageText(apiKey, page.paragraphs, { level: readingLevel }).then((rewritten) => {
+          if (!alive) return;
+          setModernParagraphs(rewritten);
+          saveModernPage(id, rewritten).catch(() => {});
+        });
+      })
+      .catch((err) => {
+        if (!alive) return;
+        setModernError(
+          err instanceof GeminiError ? err.message : '현대식 영어로 바꾸지 못했어요. 다시 시도해주세요.'
+        );
+      })
+      .finally(() => {
+        if (alive) setModernizing(false);
+      });
+    return () => {
+      alive = false;
+    };
+  }, [modernMode, book, bookId, apiKey, readingLevel, flatIndex, flatPages]);
 
   if (error) {
     return (
@@ -193,6 +240,17 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
   }
 
   const current = flatPages[flatIndex];
+  // The Bible books are already modern English (WEB), and the "Great
+  // Lines from the Classics" quote library exists specifically to quote
+  // its lines verbatim — rewriting either would defeat the point, so the
+  // toggle doesn't offer to.
+  const modernAllowed = !book.bible && !book.noModernize;
+  // Whichever text is actually on screen right now — the modern rewrite
+  // once it's ready, the original while it's still loading or off. Reading,
+  // analyzing, and printing all follow this rather than current.paragraphs
+  // directly, so they never disagree with what the learner is looking at.
+  const showingModern = modernAllowed && modernMode && Boolean(modernParagraphs) && !modernizing;
+  const displayParagraphs = showingModern ? modernParagraphs : current.paragraphs;
   const isLastPageOverall = flatIndex === flatPages.length - 1;
   const isLastPageOfChapter =
     flatIndex === flatPages.length - 1 ||
@@ -257,7 +315,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
     setAnalyzing(true);
     setStatus('Sending the page to Gemini…');
     try {
-      const pageText = current.paragraphs.join('\n\n');
+      const pageText = displayParagraphs.join('\n\n');
       const guide = await analyzePageText(apiKey, pageText, {
         level: readingLevel,
         onStatus: setStatus,
@@ -278,7 +336,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
         onBackToSource: onBack,
         source: {
           type: 'library',
-          paragraphs: current.paragraphs,
+          paragraphs: displayParagraphs,
           bookTitle: book.title,
           chapterTitle: current.chapterTitle,
         },
@@ -344,7 +402,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
         </div>
       )}
 
-      {modernAvailable && (
+      {modernAllowed && (
         <div className="mode-toggle" role="group" aria-label="원문 또는 현대식 영어로 읽기">
           <button
             type="button"
@@ -362,13 +420,18 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
           </button>
         </div>
       )}
-      {modernMode && !current.isModern && (
-        <div className="notice">
-          <SparklesIcon size={16} />
-          <span>
-            이 챕터는 아직 현대식 영어 버전이 없어서 원문으로 보여드려요. 다른
-            챕터에는 있을 수 있어요.
-          </span>
+      {modernAllowed && modernMode && modernizing && (
+        <p className="loading-status small">
+          <span className="spinner" aria-hidden="true" />이 페이지를 현대식 영어로 바꾸는 중…
+        </p>
+      )}
+      {modernAllowed && modernMode && modernError && (
+        <div className="error-box">
+          <AlertIcon size={17} />
+          <span>{modernError}</span>
+          <button className="btn btn-sm" onClick={() => toggleModernMode()}>
+            원문으로 보기
+          </button>
         </div>
       )}
 
@@ -425,7 +488,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
       {copyStatus && <p className="muted small copy-status">{copyStatus}</p>}
 
       <div className="book-page" style={{ fontSize: `${FONT_SCALES[fontStep]}rem` }}>
-        {current.paragraphs.map((p, i) => (
+        {displayParagraphs.map((p, i) => (
           <p key={i}>{p}</p>
         ))}
       </div>
@@ -434,7 +497,7 @@ export default function BookReaderScreen({ bookId, apiKey, readingLevel, onBack,
         Page {current.pageIndexInChapter + 1} of {current.pageCountInChapter} in this chapter
         {' · '}
         Day {dayForPageIndex(flatIndex, flatPages.length)} of {CHALLENGE_DAYS}
-        {current.isModern && (
+        {showingModern && (
           <>
             {' · '}
             <span title="AI가 원작을 현대식 영어로 다시 쓴 버전입니다">✨ AI 현대식 영어</span>
