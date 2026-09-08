@@ -271,6 +271,18 @@ public/audio/<bookId>/ch<챕터 번호(1부터)>.mp3
 `public/books/index.json`에 있는 그 책의 `id`와 같아야 합니다. 로컬 TTS로 직접 만든
 mp3를 그대로 이 경로에 넣어 커밋하면 배포된 사이트에서도 바로 재생됩니다.
 
+**챕터별 원문 텍스트를 손으로 복사할 필요는 없습니다** — `scripts/extract-chapter-texts.mjs`가
+`public/books/<bookId>.json`을 읽어서 챕터마다 `ch1.txt`, `ch2.txt`, ... 파일로 뽑아줍니다.
+파일명이 그대로 `chN.mp3`와 짝이 맞아서, 로컬 TTS 도구에 하나씩 붙여넣고 나온 결과를 같은
+번호로 저장하기만 하면 됩니다.
+
+```
+node scripts/extract-chapter-texts.mjs --book wizard-of-oz --out ./tts-text/wizard-of-oz
+```
+
+`--out`을 생략하면 `scratchpad/tts-text/<bookId>/`에 만들어집니다. 함께 생성되는
+`_checklist.txt`로 몇 챕터까지 변환했는지 체크하며 진행할 수 있습니다.
+
 ## 🔥 Firebase 설정 방법 (챌린지 인증)
 
 이 기능은 [필로소피 AI 교육의 "퍼스널메이커스 독서 챌린지" 인증 시스템](https://github.com/philosophyAIEDU/260818comingssoni)과
