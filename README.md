@@ -271,13 +271,19 @@ public/audio/<bookId>/ch<챕터 번호(1부터)>.mp3
 `public/books/index.json`에 있는 그 책의 `id`와 같아야 합니다. 로컬 TTS로 직접 만든
 mp3를 그대로 이 경로에 넣어 커밋하면 배포된 사이트에서도 바로 재생됩니다.
 
-**이미 들어있는 낭독 파일** — "명대사 라이브러리"(`great-lines`, 30일치)는 30개
-챕터 낭독 mp3가 `public/audio/great-lines/`에 모두 포함되어 있어, 각 Day를 열면
-바로 "명대사 이어 듣기" 플레이어가 나타납니다. 오픈소스 로컬 TTS **Kokoro-82M**
-(`af_heart` 보이스)로 만들었고, 각 챕터는 명대사 원문 + 출처 한 줄을 이어서
-읽어 줍니다. 재생을 누르면 그 Day부터 마지막 Day까지 자동으로 이어서 재생되며
-(리더 화면 체크박스로 끌 수 있음, 기기에 기억됨), 다른 책에는 이 "이어 듣기"가
-적용되지 않습니다.
+**이미 들어있는 낭독 파일** — 아래 8권은 챕터별 낭독 mp3가 `public/audio/`에 모두
+들어 있어, 리더 화면을 열면 바로 재생 플레이어가 나타납니다. 전부 오픈소스 로컬
+TTS **Kokoro-82M** (`af_heart` 보이스)로 만들었습니다.
+
+| 책 | 파일 | 비고 |
+|---|---|---|
+| `great-lines` (명대사) | 30개 | 명대사 원문 + 출처 한 줄. 재생하면 그 Day부터 마지막 Day까지 자동으로 이어 재생(리더 화면 체크박스로 끔, 기기에 기억). 이 "이어 듣기"는 명대사에만 적용됩니다. |
+| `genesis` | 50개 | 성경 6권은 낭독이 자연스럽도록 절 번호를 떼고 낭독(화면에는 절 번호 그대로 표시). `LORD`→`Lord` 등 대문자 정규화. mp3는 24 kHz 모노·64 kbps. |
+| `psalms` | 150개 | |
+| `proverbs` | 31개 | |
+| `matthew` | 28개 | |
+| `john` | 21개 | |
+| `romans` | 16개 | |
 
 **챕터별 원문 텍스트를 손으로 복사할 필요는 없습니다** — `scripts/extract-chapter-texts.mjs`가
 `public/books/<bookId>.json`을 읽어서 챕터마다 `ch1.txt`, `ch2.txt`, ... 파일로 뽑아줍니다.
@@ -292,9 +298,9 @@ node scripts/extract-chapter-texts.mjs --book wizard-of-oz --out ./tts-text/wiza
 `_checklist.txt`로 몇 챕터까지 변환했는지 체크하며 진행할 수 있습니다.
 
 명대사 라이브러리(`great-lines`, 30장)와 영어 성경 6권(Genesis·Psalms·Proverbs·
-Matthew·John·Romans)은 이미 뽑아서 [`tts-text/`](tts-text/) 폴더에 커밋해뒀습니다
-— 저장소를 내려받아 그 폴더를 그대로 로컬 TTS 도구 쪽으로 옮기면 바로 작업을
-시작할 수 있습니다. (`great-lines`는 mp3까지 완성되어 있습니다.)
+Matthew·John·Romans)은 이미 뽑아서 [`tts-text/`](tts-text/) 폴더에 커밋해뒀고,
+**이 7권은 mp3까지 완성되어 있습니다.** 나머지 원서(오즈·앨리스 등)는 위
+`extract-chapter-texts.mjs`로 텍스트를 뽑아 같은 방식으로 채우면 됩니다.
 
 ## 🔥 Firebase 설정 방법 (챌린지 인증)
 
