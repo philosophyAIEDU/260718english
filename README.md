@@ -283,6 +283,10 @@ node scripts/extract-chapter-texts.mjs --book wizard-of-oz --out ./tts-text/wiza
 `--out`을 생략하면 `scratchpad/tts-text/<bookId>/`에 만들어집니다. 함께 생성되는
 `_checklist.txt`로 몇 챕터까지 변환했는지 체크하며 진행할 수 있습니다.
 
+영어 성경 6권(Genesis·Psalms·Proverbs·Matthew·John·Romans)은 이미 뽑아서
+[`tts-text/`](tts-text/) 폴더에 커밋해뒀습니다 — 저장소를 내려받아 그 폴더를 그대로
+로컬 TTS 도구 쪽으로 옮기면 바로 작업을 시작할 수 있습니다.
+
 ## 🔥 Firebase 설정 방법 (챌린지 인증)
 
 이 기능은 [필로소피 AI 교육의 "퍼스널메이커스 독서 챌린지" 인증 시스템](https://github.com/philosophyAIEDU/260818comingssoni)과
