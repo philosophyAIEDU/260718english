@@ -1,0 +1,16 @@
+The Adventures of Sherlock Holmes — 챕터별 TTS 원문
+총 12개 챕터. 각 chN.txt를 TTS 도구에 붙여넣고,
+나온 결과를 chN.mp3로 저장해서 public/audio/sherlock-holmes/ 폴더에 넣어주세요.
+
+[x] ch1.txt — A Scandal in Bohemia (46379자)
+[x] ch2.txt — The Red-headed League (49252자)
+[x] ch3.txt — A Case of Identity (37902자)
+[x] ch4.txt — The Boscombe Valley Mystery (51323자)
+[x] ch5.txt — The Five Orange Pips (39444자)
+[x] ch6.txt — The Man with the Twisted Lip (49171자)
+[x] ch7.txt — The Adventure of the Blue Carbuncle (42063자)
+[x] ch8.txt — The Adventure of the Speckled Band (52939자)
+[x] ch9.txt — The Adventure of the Engineer's Thumb (44559자)
+[x] ch10.txt — The Adventure of the Noble Bachelor (44041자)
+[x] ch12.txt — The Adventure of the Copper Beeches (53017자)
+[x] ch11.txt — The Adventure of the Beryl Coronet (50972자)

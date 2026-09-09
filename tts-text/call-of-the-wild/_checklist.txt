@@ -1,0 +1,11 @@
+The Call of the Wild — 챕터별 TTS 원문
+총 7개 챕터. 각 chN.txt를 TTS 도구에 붙여넣고,
+나온 결과를 chN.mp3로 저장해서 public/audio/call-of-the-wild/ 폴더에 넣어주세요.
+
+[x] ch1.txt — Into the Primitive (20579자)
+[x] ch2.txt — The Law of Club and Fang (18298자)
+[x] ch3.txt — The Dominant Primordial Beast (28338자)
+[x] ch4.txt — Who Has Won to Mastership (17499자)
+[x] ch5.txt — The Toil of Trace and Trail (29593자)
+[x] ch7.txt — The Sounding of the Call (34299자)
+[x] ch6.txt — For the Love of a Man (26392자)

@@ -1,0 +1,16 @@
+Alice's Adventures in Wonderland — 챕터별 TTS 원문
+총 12개 챕터. 각 chN.txt를 TTS 도구에 붙여넣고,
+나온 결과를 chN.mp3로 저장해서 public/audio/alice-in-wonderland/ 폴더에 넣어주세요.
+
+[x] ch2.txt — The Pool of Tears (10884자)
+[x] ch1.txt — Down the Rabbit-Hole (11304자)
+[x] ch4.txt — The Rabbit Sends in a Little Bill (13826자)
+[x] ch3.txt — A Caucus-Race and a Long Tale (9136자)
+[x] ch6.txt — Pig and Pepper (13773자)
+[x] ch5.txt — Advice from a Caterpillar (11777자)
+[x] ch7.txt — A Mad Tea-Party (12631자)
+[x] ch10.txt — The Lobster Quadrille (11361자)
+[x] ch8.txt — The Queen's Croquet-Ground (13615자)
+[x] ch9.txt — The Mock Turtle's Story (12583자)
+[x] ch11.txt — Who Stole the Tarts? (10329자)
+[x] ch12.txt — Alice's Evidence (11545자)
