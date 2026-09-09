@@ -14,22 +14,37 @@
 낭독 mp3는 모두 오픈소스 로컬 TTS **Kokoro-82M** · `af_heart` 보이스로 만들었고,
 `public/audio/<bookId>/chN.mp3` 에 챕터별로 들어 있습니다.
 
-| 폴더 | 책 | 챕터 수 | 낭독 mp3 |
-|---|---|---|---|
-| `great-lines/` | Great Lines from the Classics | 30 | ✅ 30개 (명대사 + 출처 한 줄) |
-| `genesis/` | Genesis | 50 | ✅ 50개 |
-| `psalms/` | Psalms | 150 | ✅ 150개 |
-| `proverbs/` | Proverbs | 31 | ✅ 31개 |
-| `matthew/` | Matthew | 28 | ✅ 28개 |
-| `john/` | John | 21 | ✅ 21개 |
-| `romans/` | Romans | 16 | ✅ 16개 |
+**라이브러리 19권 전체**가 mp3까지 완성되어 있습니다 (총 589개 챕터).
 
-- `great-lines`: 각 `chN.txt`의 명대사 + 출처 한 줄(앞의 `—` 제거, `(1865)` →
-  `1865`)을 이어 붙여 낭독.
-- 성경 6권: 낭독이 자연스럽도록 각 절 앞의 **절 번호를 떼고**, `LORD` 같은 전체
-  대문자 단어는 첫 글자만 대문자로 바꿔(→ `Lord`) 철자 그대로 읽지 않게 했습니다.
-  화면에는 절 번호가 그대로 보이고, 오디오만 이어지는 산문으로 들립니다.
-  mp3는 24 kHz 모노 · 64 kbps(음성용).
+| 폴더 | 챕터 수 | mp3 | 비트레이트 |
+|---|---|---|---|
+| `great-lines/` (명대사) | 30 | ✅ | 192 kbps |
+| `wizard-of-oz/` | 24 | ✅ | 48 kbps |
+| `alice-in-wonderland/` | 12 | ✅ | 48 kbps |
+| `secret-garden/` | 27 | ✅ | 48 kbps |
+| `anne-of-green-gables/` | 38 | ✅ | 48 kbps |
+| `sherlock-holmes/` | 12 | ✅ | 48 kbps |
+| `call-of-the-wild/` | 7 | ✅ | 48 kbps |
+| `christmas-carol/` | 5 | ✅ | 48 kbps |
+| `treasure-island/` | 34 | ✅ | 48 kbps |
+| `jekyll-and-hyde/` | 10 | ✅ | 48 kbps |
+| `great-gatsby/` | 9 | ✅ | 48 kbps |
+| `pride-and-prejudice/` | 61 | ✅ | 48 kbps |
+| `frankenstein/` | 24 | ✅ | 48 kbps |
+| `genesis/` | 50 | ✅ | 64 kbps |
+| `psalms/` | 150 | ✅ | 64 kbps |
+| `proverbs/` | 31 | ✅ | 64 kbps |
+| `matthew/` | 28 | ✅ | 64 kbps |
+| `john/` | 21 | ✅ | 64 kbps |
+| `romans/` | 16 | ✅ | 64 kbps |
+
+모두 24 kHz 모노. `public/audio/` 전체 약 1.7 GB.
+
+- `great-lines`: 명대사 + 출처 한 줄(앞의 `—` 제거, `(1865)` → `1865`).
+- 성경 6권: 낭독이 자연스럽도록 각 절 앞의 **절 번호를 떼고**, `LORD` 같은
+  전체 대문자 단어는 첫 글자만 대문자로(→ `Lord`) 바꿔 철자로 읽히지 않게 했습니다.
+  화면에는 절 번호가 그대로 보입니다.
+- 고전 원서 12권: 본문 그대로. `--` → 대시, 강조용 전체 대문자 단어만 정규화.
 
 ## 다른 책도 뽑으려면
 

@@ -1,0 +1,14 @@
+The Strange Case of Dr. Jekyll and Mr. Hyde — 챕터별 TTS 원문
+총 10개 챕터. 각 chN.txt를 TTS 도구에 붙여넣고,
+나온 결과를 chN.mp3로 저장해서 public/audio/jekyll-and-hyde/ 폴더에 넣어주세요.
+
+[x] ch2.txt — Search for Mr. Hyde (16006자)
+[x] ch1.txt — Story of the Door (12726자)
+[x] ch3.txt — Dr. Jekyll Was Quite at Ease (4236자)
+[x] ch4.txt — The Carew Murder Case (9136자)
+[x] ch5.txt — Incident of the Letter (8904자)
+[x] ch6.txt — Incident of Dr. Lanyon (8002자)
+[x] ch7.txt — Incident at the Window (2940자)
+[x] ch8.txt — The Last Night (23566자)
+[x] ch9.txt — Dr. Lanyon's Narrative (14990자)
+[x] ch10.txt — Henry Jekyll's Full Statement of the Case (37686자)
