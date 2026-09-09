@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   paginateParagraphs,
   targetWordsForLevel,
@@ -87,6 +87,13 @@ export default function BookReaderScreen({
   const [modernizing, setModernizing] = useState(false);
   const [modernError, setModernError] = useState('');
   const [lookupTarget, setLookupTarget] = useState(null); // { word, context } | null
+  // "명대사 이어 듣기": once a Day's narration ends, roll straight into the
+  // next Day's. On by default, remembered per device. audioRef drives the
+  // chained playback; pendingAutoPlayRef is the "the src that's loading now
+  // should start playing on its own" flag set the moment one track ends.
+  const [autoAdvanceAudio, setAutoAdvanceAudio] = useState(true);
+  const audioRef = useRef(null);
+  const pendingAutoPlayRef = useRef(false);
 
   useEffect(() => {
     getSetting('readerFontStep').then((step) => {
@@ -96,7 +103,15 @@ export default function BookReaderScreen({
     // choose that per session rather than have a past "on" silently start
     // spending API calls the moment a book is opened.
     getSetting('readerModernMode').then((v) => setModernMode(Boolean(v)));
+    // Default on: only ever false if the learner explicitly turned it off.
+    getSetting('readerAudioAutoAdvance').then((v) => setAutoAdvanceAudio(v !== false));
   }, []);
+
+  const toggleAutoAdvanceAudio = () => {
+    const next = !autoAdvanceAudio;
+    setAutoAdvanceAudio(next);
+    setSetting('readerAudioAutoAdvance', next).catch(() => {});
+  };
 
   const toggleModernMode = () => {
     const next = !modernMode;
@@ -192,6 +207,18 @@ export default function BookReaderScreen({
     };
   }, [bookId, currentChapterIndex]);
 
+  // When "이어 듣기" advanced us to a new Day, the fresh <audio src> has just
+  // mounted here — start it playing without waiting for another tap. Runs
+  // only right after an onEnded-triggered advance (pendingAutoPlayRef), so
+  // normal page navigation still loads the player paused.
+  useEffect(() => {
+    if (!pendingAutoPlayRef.current) return;
+    pendingAutoPlayRef.current = false;
+    if (audioSrc && audioRef.current) {
+      audioRef.current.play().catch(() => {});
+    }
+  }, [audioSrc]);
+
   // "현대식 영어" is generated one page at a time, on demand, the moment a
   // learner asks for it — never the whole book up front. A device-local
   // cache (db.js's modernPages store) means flipping back to a page
@@ -281,6 +308,11 @@ export default function BookReaderScreen({
   const isLastPageOfChapter =
     flatIndex === flatPages.length - 1 ||
     flatPages[flatIndex + 1].chapterIndex !== current.chapterIndex;
+  // "이어 듣기" is for the quote library, where every chapter is a single
+  // short page ("Day N") and hearing them roll on one after another is the
+  // point. For a full-length book it would just yank the reader off the
+  // page mid-paragraph, so it stays off there.
+  const audioAutoAdvanceSupported = bookId === 'great-lines';
 
   const persistProgress = (nextFlatIndex, { completeChapter, completeBook } = {}) => {
     const next = { ...progress };
@@ -310,6 +342,15 @@ export default function BookReaderScreen({
     setFlatIndex(flatIndex + 1);
     setCopyStatus('');
     setLookupTarget(null);
+  };
+
+  // Narration for this Day finished: if "이어 듣기" is on, flip to the next
+  // Day (same as tapping Next) and let the autoplay effect above start its
+  // audio. On the last Day there's nowhere to go, so it just stops.
+  const handleAudioEnded = () => {
+    if (!audioAutoAdvanceSupported || !autoAdvanceAudio || isLastPageOverall) return;
+    pendingAutoPlayRef.current = true;
+    goNext();
   };
 
   const goPrev = () => {
@@ -472,12 +513,32 @@ export default function BookReaderScreen({
         <div className="audio-player-card">
           <SpeakerIcon size={17} />
           <div className="audio-player-body">
-            <strong>이 챕터 듣기</strong>
+            <strong>{audioAutoAdvanceSupported ? '명대사 이어 듣기' : '이 챕터 듣기'}</strong>
             <span className="muted small">
-              읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈
-              화면에서 &quot;들었어요&quot;로 인증하세요.
+              {audioAutoAdvanceSupported
+                ? '재생을 누르면 이 Day부터 마지막 Day까지 명대사가 자동으로 이어서 낭독돼요. 들어도 챌린지 인증에 인정됩니다.'
+                : '읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈 화면에서 "들었어요"로 인증하세요.'}
             </span>
-            <audio controls src={audioSrc} style={{ width: '100%', marginTop: 6 }} />
+            <audio
+              ref={audioRef}
+              controls
+              src={audioSrc}
+              onEnded={handleAudioEnded}
+              style={{ width: '100%', marginTop: 6 }}
+            />
+            {audioAutoAdvanceSupported && (
+              <label
+                className="muted small"
+                style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}
+              >
+                <input
+                  type="checkbox"
+                  checked={autoAdvanceAudio}
+                  onChange={toggleAutoAdvanceAudio}
+                />
+                한 Day가 끝나면 다음 Day를 자동으로 재생
+              </label>
+            )}
           </div>
         </div>
       )}
