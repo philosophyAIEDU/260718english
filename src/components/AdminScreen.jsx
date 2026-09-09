@@ -10,7 +10,14 @@ import {
   removeParticipant,
   listSubmissions,
 } from '../lib/challengeStore.js';
-import { challengeDates, buildStats, riskTag, shortLabel, today } from '../lib/challengeUtils.js';
+import {
+  challengeDates,
+  buildStats,
+  riskTag,
+  shortLabel,
+  today,
+  isHoliday,
+} from '../lib/challengeUtils.js';
 import { buildDailyNotice } from '../lib/noticeTemplate.js';
 import { copyText } from '../lib/clipboard.js';
 import {
@@ -253,6 +260,9 @@ function AdminScreenInner({ onBack }) {
           <p className="muted small" style={{ marginTop: 0 }}>
             누적 미인증 {CHALLENGE_CONFIG.riskThreshold}회부터 위험, {CHALLENGE_CONFIG.kickoutThreshold}
             회부터 킥아웃 대상입니다. 오늘은 24시 마감 전이라 아직 미인증으로 확정하지 않아요.
+            {CHALLENGE_CONFIG.holidays?.length > 0 && (
+              <> 골드로 표시된 <strong>연휴 기간</strong>은 전원 자동 면제(P)되어 미인증에 들어가지 않아요.</>
+            )}
           </p>
           <div className="matrix-scroll">
             <table className="matrix-table">
@@ -262,7 +272,7 @@ function AdminScreenInner({ onBack }) {
                   <th>미인증</th>
                   <th>상태</th>
                   {dates.map((d) => (
-                    <th key={d} title={d}>
+                    <th key={d} title={isHoliday(d) ? `${d} · 연휴(자동 면제)` : d} className={isHoliday(d) ? 'matrix-holiday-col' : undefined}>
                       {shortLabel(d)}
                     </th>
                   ))}
