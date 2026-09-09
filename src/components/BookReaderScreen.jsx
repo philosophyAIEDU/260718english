@@ -41,6 +41,15 @@ function splitIntoWordChunks(paragraph) {
   return paragraph.split(WORD_PATTERN);
 }
 
+// Bible verses are stored as "N verse text" — pull the leading verse number
+// off so it can be rendered as its own clickable element (jump-to-verse
+// audio) with the rest of the text tokenized as usual.
+const VERSE_PATTERN = /^(\d+)(\s+)([\s\S]*)$/;
+function splitVerseNumber(paragraph) {
+  const m = paragraph.match(VERSE_PATTERN);
+  return m ? { verse: m[1], gap: m[2], text: m[3] } : null;
+}
+
 // Reading challenges are aimed at learners still building stamina, so
 // text size defaults a step larger than the rest of the UI and can be
 // bumped up further — a big, easy-to-track line is one less obstacle
@@ -218,6 +227,46 @@ export default function BookReaderScreen({
       audioRef.current.play().catch(() => {});
     }
   }, [audioSrc]);
+
+  // Verse → estimated audio position, for the Bible books' "tap a verse
+  // number to jump the narration there" feature. There's no real per-verse
+  // timing from the TTS pass (no forced alignment was run), so this is an
+  // estimate: each verse's start is the fraction of the WHOLE CHAPTER'S
+  // spoken text (verse numbers stripped, matching what was actually sent
+  // to the TTS — see tts-text/README.md) that comes before it, times the
+  // audio's total duration. Steady-paced narration (like the Kokoro voice
+  // used here) lands close with this; it isn't frame-accurate.
+  const chapterVerseRatios = useMemo(() => {
+    if (!book?.bible || currentChapterIndex == null) return null;
+    const paragraphs = book.chapters[currentChapterIndex]?.paragraphs || [];
+    const map = new Map();
+    let acc = 0;
+    const lengths = paragraphs.map((p) => splitVerseNumber(p)?.text.length ?? p.length);
+    const total = lengths.reduce((sum, len) => sum + len, 0) || 1;
+    paragraphs.forEach((p, i) => {
+      const parsed = splitVerseNumber(p);
+      if (parsed) map.set(parsed.verse, acc / total);
+      acc += lengths[i];
+    });
+    return map;
+  }, [book, currentChapterIndex]);
+
+  const handleVerseJump = (verse) => {
+    const audio = audioRef.current;
+    const ratio = chapterVerseRatios?.get(verse);
+    if (!audio || ratio == null) return;
+    const seekAndPlay = () => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        audio.currentTime = ratio * audio.duration;
+      }
+      audio.play().catch(() => {});
+    };
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+      seekAndPlay();
+    } else {
+      audio.addEventListener('loadedmetadata', seekAndPlay, { once: true });
+    }
+  };
 
   // "현대식 영어" is generated one page at a time, on demand, the moment a
   // learner asks for it — never the whole book up front. A device-local
@@ -518,6 +567,7 @@ export default function BookReaderScreen({
               {audioAutoAdvanceSupported
                 ? '재생을 누르면 이 Day부터 마지막 Day까지 명대사가 자동으로 이어서 낭독돼요. 들어도 챌린지 인증에 인정됩니다.'
                 : '읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈 화면에서 "들었어요"로 인증하세요.'}
+              {book.bible && ' 본문의 절 번호를 탭하면 그 절부터 들을 수 있어요 (정확한 타이밍이 아닌 어림값이에요).'}
             </span>
             <audio
               ref={audioRef}
@@ -582,26 +632,46 @@ export default function BookReaderScreen({
       {copyStatus && <p className="muted small copy-status">{copyStatus}</p>}
 
       <div className="book-page" style={{ fontSize: `${FONT_SCALES[fontStep]}rem` }}>
-        {displayParagraphs.map((p, i) => (
-          <p key={i}>
-            {splitIntoWordChunks(p).map((chunk, j) =>
-              j % 2 === 1 ? (
-                <span
-                  key={j}
-                  className="lookup-word"
-                  onClick={() => handleWordClick(chunk, p)}
-                  title="탭해서 뜻 찾기"
-                >
-                  {chunk}
-                </span>
-              ) : (
-                chunk
-              )
-            )}
-          </p>
-        ))}
+        {displayParagraphs.map((p, i) => {
+          const verseParts = book.bible ? splitVerseNumber(p) : null;
+          const body = verseParts ? verseParts.text : p;
+          return (
+            <p key={i}>
+              {verseParts &&
+                (audioSrc ? (
+                  <sup
+                    className="verse-jump"
+                    onClick={() => handleVerseJump(verseParts.verse)}
+                    title="이 절부터 듣기 (어림값)"
+                  >
+                    {verseParts.verse}
+                  </sup>
+                ) : (
+                  <sup className="verse-num">{verseParts.verse}</sup>
+                ))}
+              {verseParts && verseParts.gap}
+              {splitIntoWordChunks(body).map((chunk, j) =>
+                j % 2 === 1 ? (
+                  <span
+                    key={j}
+                    className="lookup-word"
+                    onClick={() => handleWordClick(chunk, p)}
+                    title="탭해서 뜻 찾기"
+                  >
+                    {chunk}
+                  </span>
+                ) : (
+                  chunk
+                )
+              )}
+            </p>
+          );
+        })}
       </div>
-      <p className="muted small lookup-hint">단어를 탭하면 이 문장 속 뜻을 바로 찾아줘요.</p>
+      <p className="muted small lookup-hint">
+        단어를 탭하면 이 문장 속 뜻을 바로 찾아줘요.
+        {book.bible && audioSrc && ' 절 번호를 탭하면 그 절부터 들을 수 있어요.'}
+      </p>
 
       {lookupTarget && (
         <WordLookupPanel
