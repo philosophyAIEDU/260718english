@@ -1959,6 +1959,29 @@ main {
   color: var(--accent);
 }
 
+/* Bible verse numbers: plain when there's no audio to jump to, clickable
+   (jump-to-verse narration) when there is. */
+.verse-num {
+  color: var(--text-faint);
+  font-size: 0.72em;
+  margin-right: 2px;
+}
+
+.verse-jump {
+  cursor: pointer;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 0.72em;
+  margin-right: 2px;
+  padding: 1px 3px;
+  border-radius: 3px;
+  transition: background-color 0.12s var(--ease);
+}
+
+.verse-jump:hover {
+  background: var(--accent-soft, rgba(153, 104, 11, 0.14));
+}
+
 .lookup-hint {
   text-align: center;
   margin: -8px 0 14px;
