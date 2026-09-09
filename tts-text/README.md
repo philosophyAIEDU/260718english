@@ -9,16 +9,21 @@
 뽑은 것입니다. 파일명이 리더 화면이 찾는 `public/audio/<bookId>/chN.mp3` 규칙과
 그대로 짝이 맞습니다 — TTS 결과를 같은 번호로 저장해서 그 경로에 넣으면 됩니다.
 
-## 현재 들어있는 책 (영어 성경 6권)
+## 현재 들어있는 책
 
-| 폴더 | 책 | 챕터 수 |
-|---|---|---|
-| `genesis/` | Genesis | 50 |
-| `psalms/` | Psalms | 150 |
-| `proverbs/` | Proverbs | 31 |
-| `matthew/` | Matthew | 28 |
-| `john/` | John | 21 |
-| `romans/` | Romans | 16 |
+| 폴더 | 책 | 챕터 수 | 낭독 mp3 |
+|---|---|---|---|
+| `great-lines/` | Great Lines from the Classics | 30 | ✅ `public/audio/great-lines/` 에 30개 모두 포함 (Kokoro-82M · `af_heart`) |
+| `genesis/` | Genesis | 50 | — |
+| `psalms/` | Psalms | 150 | — |
+| `proverbs/` | Proverbs | 31 | — |
+| `matthew/` | Matthew | 28 | — |
+| `john/` | John | 21 | — |
+| `romans/` | Romans | 16 | — |
+
+`great-lines`는 각 `chN.txt`의 명대사 + 출처 한 줄(앞의 `—` 제거, `(1865)` →
+`1865`)을 이어 붙여 낭독한 것입니다. 나머지 6권은 아직 텍스트만 있고 mp3는
+비어 있습니다.
 
 ## 다른 책도 뽑으려면
 
