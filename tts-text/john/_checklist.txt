@@ -1,0 +1,25 @@
+John — 챕터별 TTS 원문
+총 21개 챕터. 각 chN.txt를 TTS 도구에 붙여넣고,
+나온 결과를 chN.mp3로 저장해서 public/audio/john/ 폴더에 넣어주세요.
+
+[ ] ch1.txt — Chapter 1 (5267자)
+[ ] ch2.txt — Chapter 2 (2659자)
+[ ] ch3.txt — Chapter 3 (3931자)
+[ ] ch4.txt — Chapter 4 (5816자)
+[ ] ch5.txt — Chapter 5 (5187자)
+[ ] ch6.txt — Chapter 6 (7890자)
+[ ] ch7.txt — Chapter 7 (5372자)
+[ ] ch8.txt — Chapter 8 (6684자)
+[ ] ch9.txt — Chapter 9 (4310자)
+[ ] ch10.txt — Chapter 10 (4183자)
+[ ] ch11.txt — Chapter 11 (6219자)
+[ ] ch12.txt — Chapter 12 (5758자)
+[ ] ch13.txt — Chapter 13 (4354자)
+[ ] ch14.txt — Chapter 14 (3527자)
+[ ] ch15.txt — Chapter 15 (3100자)
+[ ] ch16.txt — Chapter 16 (4085자)
+[ ] ch17.txt — Chapter 17 (3090자)
+[ ] ch18.txt — Chapter 18 (5197자)
+[ ] ch19.txt — Chapter 19 (5505자)
+[ ] ch20.txt — Chapter 20 (3923자)
+[ ] ch21.txt — Chapter 21 (3785자)

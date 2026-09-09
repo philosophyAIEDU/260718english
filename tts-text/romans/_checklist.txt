@@ -1,0 +1,20 @@
+Romans — 챕터별 TTS 원문
+총 16개 챕터. 각 chN.txt를 TTS 도구에 붙여넣고,
+나온 결과를 chN.mp3로 저장해서 public/audio/romans/ 폴더에 넣어주세요.
+
+[ ] ch1.txt — Chapter 1 (4081자)
+[ ] ch3.txt — Chapter 3 (3175자)
+[ ] ch2.txt — Chapter 2 (3378자)
+[ ] ch5.txt — Chapter 5 (2643자)
+[ ] ch6.txt — Chapter 6 (2697자)
+[ ] ch4.txt — Chapter 4 (3177자)
+[ ] ch8.txt — Chapter 8 (4776자)
+[ ] ch7.txt — Chapter 7 (3095자)
+[ ] ch9.txt — Chapter 9 (3806자)
+[ ] ch10.txt — Chapter 10 (2473자)
+[ ] ch11.txt — Chapter 11 (4345자)
+[ ] ch12.txt — Chapter 12 (2302자)
+[ ] ch14.txt — Chapter 14 (3184자)
+[ ] ch13.txt — Chapter 13 (1992자)
+[ ] ch15.txt — Chapter 15 (4049자)
+[ ] ch16.txt — Chapter 16 (2517자)
