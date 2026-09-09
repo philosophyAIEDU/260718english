@@ -2406,6 +2406,8 @@ main {
 .matrix-cell.status-P { background: var(--gold-bg); color: var(--gold); font-weight: 700; }
 .matrix-cell.status-blank { color: var(--text-faint); }
 
+.matrix-holiday-col { background: var(--gold-bg); color: var(--gold); }
+
 .roster-list {
   display: flex;
   flex-direction: column;

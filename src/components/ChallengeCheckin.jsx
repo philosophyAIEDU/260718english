@@ -13,7 +13,16 @@ import {
   getSubmission,
   saveSubmission,
 } from '../lib/challengeStore.js';
-import { today, dateRange, dayIndex, shortLabel, isLate, buildStats, riskTag } from '../lib/challengeUtils.js';
+import {
+  today,
+  dateRange,
+  dayIndex,
+  shortLabel,
+  isLate,
+  isHoliday,
+  buildStats,
+  riskTag,
+} from '../lib/challengeUtils.js';
 import { detectInAppBrowser, openInExternalBrowser } from '../lib/inAppBrowser.js';
 import {
   BookOpenIcon,
@@ -377,6 +386,15 @@ function ChallengeCheckinInner() {
           <span>연속 {stat.streak}일</span>
           <span className="challenge-tag">{tag.label}</span>
         </div>
+      )}
+      {isHoliday(todayISO) && (
+        <p className="notice">
+          <UsersIcon size={16} />
+          <span>
+            오늘은 연휴라 인증하지 않아도 미인증으로 집계되지 않아요. 그래도 읽거나
+            들으셨다면 평소처럼 인증하셔도 좋아요!
+          </span>
+        </p>
       )}
       {stat && stat.atRisk && !stat.kickoutEligible && (
         <p className="notice notice-warn">

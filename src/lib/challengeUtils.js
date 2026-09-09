@@ -171,6 +171,12 @@ export function normalizeNick(s) {
   return String(s || '').trim().replace(/\s+/g, ' ');
 }
 
+/** Is this date a challenge-wide holiday (CHALLENGE_CONFIG.holidays)? Everyone
+ * is exempt on these dates — no per-participant setup needed. */
+export function isHoliday(date) {
+  return (CHALLENGE_CONFIG.holidays || []).includes(date);
+}
+
 /**
  * One participant's status on one date.
  * @param {object} participant { joinDate, status, outDate, exemptDates }
@@ -183,7 +189,11 @@ export function statusFor(participant, date, submissionByDate, todayISO) {
   if (participant.status === 'out' && participant.outDate && date > participant.outDate) return '·';
   const sub = submissionByDate.get(date);
   if (sub && !isLate(date, sub.createdAt)) return 'O';
-  if ((participant.exemptDates || []).includes(date)) return 'P';
+  // A holiday exempts everyone the same way a per-participant exemption
+  // does — doesn't count as missed, doesn't break a streak — but a
+  // participant who still certifies on one gets full credit (the check
+  // above already returned 'O' in that case).
+  if (isHoliday(date) || (participant.exemptDates || []).includes(date)) return 'P';
   if (date >= todayISO) return '-';
   return 'X';
 }
