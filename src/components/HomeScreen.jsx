@@ -185,7 +185,7 @@ export default function HomeScreen({
         )}
       </div>
 
-      <ChallengeCheckin />
+      <ChallengeCheckin onGoLibrary={onLibrary} />
 
       {thisWeekClass && (
         <button className="class-banner" onClick={onOpenClass}>
@@ -268,8 +268,8 @@ export default function HomeScreen({
           <ShareIcon size={15} />
         </button>
         <p className="muted small checkin-hint">
-          챌린지 방에 올릴 인증 이미지를 만들어요. (공식 인증은 위의 &quot;오늘
-          인증하기&quot;로 해주세요)
+          챌린지 방에 올릴 인증 이미지를 만들어요. (공식 인증은 라이브러리에서 오늘
+          분량을 읽거나 들으면 자동으로 처리돼요)
         </p>
         {checkinMessage && (
           <p className="small share-message">
@@ -310,8 +310,9 @@ export default function HomeScreen({
                 1일 → 3일 → 7일 → 14일 간격으로 Review 탭에 다시 나타납니다.
               </li>
               <li>
-                <strong>매일 인증하기</strong> — 홈 화면의 “오늘 인증하기”로 읽기
-                또는 듣기를 인증하세요. 주 7일, 미인증 {CHALLENGE_CONFIG.kickoutThreshold}
+                <strong>매일 인증하기</strong> — 버튼을 눌러서 인증하는 게 아니에요.
+                라이브러리에서 그날 배정된 분량을 끝까지 읽거나 들으면 그 순간
+                자동으로 인증됩니다. 주 7일, 미인증 {CHALLENGE_CONFIG.kickoutThreshold}
                 회가 되면 킥아웃 대상이 됩니다.
               </li>
               <li>

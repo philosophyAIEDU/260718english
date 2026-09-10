@@ -1,6 +1,4 @@
 import { useEffect, useState } from 'react';
-import { logActivity, getAllActivity } from '../lib/db.js';
-import { isActiveToday } from '../lib/streaks.js';
 import { isFirebaseConfigured, CHALLENGE_CONFIG } from '../lib/challengeConfig.js';
 import {
   onAuthReady,
@@ -11,18 +9,8 @@ import {
   updateMyNickname,
   listSubmissions,
   getSubmission,
-  saveSubmission,
 } from '../lib/challengeStore.js';
-import {
-  today,
-  dateRange,
-  dayIndex,
-  shortLabel,
-  isLate,
-  isHoliday,
-  buildStats,
-  riskTag,
-} from '../lib/challengeUtils.js';
+import { today, dayIndex, shortLabel, isHoliday, buildStats, riskTag } from '../lib/challengeUtils.js';
 import { detectInAppBrowser, openInExternalBrowser } from '../lib/inAppBrowser.js';
 import {
   BookOpenIcon,
@@ -32,39 +20,39 @@ import {
   UsersIcon,
   GoogleIcon,
   ExternalLinkIcon,
+  ArrowRightIcon,
 } from './Icons.jsx';
 
 /**
- * The daily check-in, and the gate in front of it.
+ * The daily check-in status, and the gate in front of it.
  *
  * A participant signs in with Google once and picks a nickname; that
  * creates their entry under their account, so the organizer never
- * maintains a roster and nobody can certify as someone else. After that
- * this card is just "읽었어요 / 들었어요 → 오늘 인증하기", plus how many
- * days they've missed against the kickout threshold.
+ * maintains a roster and nobody can certify as someone else.
+ *
+ * There is deliberately no "그냥 눌러서 인증" button here — certifying a day
+ * only happens by actually reading or listening to that day's assigned
+ * pages in the Library reader (see BookReaderScreen's auto-checkin), so
+ * this card is read-only: it shows whether today is certified yet and, if
+ * not, points straight at the Library.
  *
  * Renders nothing when CHALLENGE_CONFIG.firebase.projectId is empty, so a
  * deployment that isn't running this cohort is unaffected.
  */
-export default function ChallengeCheckin() {
+export default function ChallengeCheckin({ onGoLibrary }) {
   if (!isFirebaseConfigured()) return null;
-  return <ChallengeCheckinInner />;
+  return <ChallengeCheckinInner onGoLibrary={onGoLibrary} />;
 }
 
-function ChallengeCheckinInner() {
+function ChallengeCheckinInner({ onGoLibrary }) {
   const [user, setUser] = useState(undefined); // undefined = still checking
   const [me, setMe] = useState(undefined); // undefined = not loaded, null = not joined
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [nickname, setNickname] = useState('');
-  const [mode, setMode] = useState('read');
-  const [bookTitle, setBookTitle] = useState('');
-  const [message, setMessage] = useState('');
   const [editingNick, setEditingNick] = useState(false);
   const [stat, setStat] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(today());
   const [existing, setExisting] = useState(undefined); // undefined = loading, null = none yet
-  const [editingSubmission, setEditingSubmission] = useState(false);
   const [inApp] = useState(detectInAppBrowser);
   const todayISO = today();
 
@@ -99,41 +87,25 @@ function ChallengeCheckinInner() {
       .catch(() => {});
   };
 
-  // Which dates this participant is even allowed to certify for: from
-  // whichever is later of their join date or the challenge start, through
-  // today. Mirrors 260818comingssoni's "인증할 날짜" picker — it exists so a
-  // submission made just after midnight can still be filed under the
-  // correct day instead of silently landing on the wrong one.
-  const certifyDates = me ? dateRange(me.joinDate > todayISO ? todayISO : me.joinDate, todayISO) : [];
-
-  // Load (or clear) the selected date's existing entry whenever the
-  // participant or the chosen date changes, so re-opening a past date the
-  // learner already certified shows what they submitted instead of a blank
-  // form that would silently overwrite it.
+  // Today's certification status — set by the Library reader's auto-checkin,
+  // never by this card. Reloads whenever this screen (re)mounts, e.g.
+  // coming back from a reading/listening session.
   useEffect(() => {
     if (!me) return;
     let alive = true;
     setExisting(undefined);
-    setEditingSubmission(false);
-    getSubmission(me.id, selectedDate)
-      .then((sub) => {
-        if (!alive) return;
-        setExisting(sub);
-        setMode(sub?.mode || 'read');
-        setBookTitle(sub?.bookTitle || '');
-      })
+    getSubmission(me.id, todayISO)
+      .then((sub) => alive && setExisting(sub))
       .catch(() => alive && setExisting(null));
     return () => {
       alive = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [me, selectedDate]);
+  }, [me, todayISO]);
 
   const run = async (action, onDone) => {
     if (busy) return;
     setBusy(true);
     setError('');
-    setMessage('');
     try {
       await action();
       onDone?.();
@@ -156,7 +128,7 @@ function ChallengeCheckinInner() {
         setMe(participant);
         refreshStat(participant);
       },
-      () => setMessage('환영합니다! 이제 매일 인증하시면 됩니다.')
+      () => {}
     );
 
   const handleRename = () =>
@@ -165,46 +137,8 @@ function ChallengeCheckinInner() {
         const nick = await updateMyNickname(nickname);
         setMe((prev) => ({ ...prev, nickname: nick }));
       },
-      () => {
-        setEditingNick(false);
-        setMessage('닉네임을 변경했어요.');
-      }
+      () => setEditingNick(false)
     );
-
-  const handleSubmit = () => {
-    // saveSubmission's result — not the `existing` state, which run()'s
-    // onDone would otherwise read from a stale closure — decides whether
-    // the message below reports a late submission.
-    let saved;
-    return run(
-      async () => {
-        saved = await saveSubmission({
-          participantId: me.id,
-          nickname: me.nickname,
-          date: selectedDate,
-          mode,
-          bookTitle: bookTitle.trim(),
-        });
-        setExisting(saved);
-        if (selectedDate === todayISO) {
-          const before = await getAllActivity();
-          if (!isActiveToday(before.map((a) => a.date))) {
-            await logActivity({ source: mode === 'listen' ? 'listen' : 'checkin' });
-          }
-        }
-        refreshStat(me);
-      },
-      () => {
-        const late = isLate(selectedDate, saved.createdAt);
-        const verb = mode === 'listen' ? '듣기' : '읽기';
-        setMessage(
-          late
-            ? `${shortLabel(selectedDate)} 인증을 저장했어요. 다만 마감을 넘겨 미인증(X)으로 집계돼요.`
-            : `${selectedDate === todayISO ? '오늘의' : shortLabel(selectedDate)} ${verb} 인증 완료! ${mode === 'listen' ? '🎧' : '📖'}`
-        );
-      }
-    );
-  };
 
   const errorBox = error && (
     <div className="error-box">
@@ -234,8 +168,8 @@ function ChallengeCheckinInner() {
           <UsersIcon size={15} /> 챌린지 참여하기
         </h2>
         <p className="muted small" style={{ marginTop: 0 }}>
-          구글 계정으로 로그인하고 닉네임만 정하면 바로 참여할 수 있어요. 매일
-          읽거나 들은 것을 인증하면 운영진이 자동으로 확인합니다.
+          구글 계정으로 로그인하고 닉네임만 정하면 바로 참여할 수 있어요. 라이브러리에서
+          매일 배정된 분량을 읽거나 들으면 자동으로 인증됩니다.
         </p>
         {errorBox}
         {inApp ? (
@@ -392,7 +326,7 @@ function ChallengeCheckinInner() {
           <UsersIcon size={16} />
           <span>
             오늘은 연휴라 인증하지 않아도 미인증으로 집계되지 않아요. 그래도 읽거나
-            들으셨다면 평소처럼 인증하셔도 좋아요!
+            들으셨다면 자동으로 인증됩니다.
           </span>
         </p>
       )}
@@ -401,7 +335,7 @@ function ChallengeCheckinInner() {
           <AlertIcon size={16} />
           <span>
             누적 미인증 {stat.missed}회 — {CHALLENGE_CONFIG.kickoutThreshold}회가 되면
-            킥아웃 대상이 돼요. 오늘 꼭 인증해보세요!
+            킥아웃 대상이 돼요. 오늘 꼭 읽거나 들어보세요!
           </span>
         </p>
       )}
@@ -414,97 +348,44 @@ function ChallengeCheckinInner() {
 
       {errorBox}
 
-      {certifyDates.length > 1 && (
-        <>
-          <label className="field-label" htmlFor="certify-date">
-            인증할 날짜
-          </label>
-          <select
-            id="certify-date"
-            className="text-input"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          >
-            {[...certifyDates].reverse().map((d) => (
-              <option key={d} value={d}>
-                {dayIndex(d) ? `${dayIndex(d)}일차 · ` : ''}
-                {shortLabel(d)}
-                {d === todayISO ? ' · 오늘' : ''}
-              </option>
-            ))}
-          </select>
-          {selectedDate !== todayISO && (
-            <p className="notice notice-warn" style={{ marginTop: 8 }}>
-              <AlertIcon size={16} />
-              <span>
-                이 날짜는 이미 마감이 지나서, 지금 제출해도 미인증(X)으로 집계돼요. 오늘
-                날짜로 인증하려면 위에서 &quot;오늘&quot;을 선택하세요.
-              </span>
-            </p>
-          )}
-        </>
-      )}
-
       {existing === undefined ? (
         <div className="skeleton skeleton-line w-60" style={{ marginTop: 12 }} />
-      ) : existing && !editingSubmission ? (
+      ) : existing ? (
         <div className="checkin-done">
           <span className="checkin-done-mark">
             <CheckIcon size={20} />
           </span>
           <div>
-            <strong>
-              {selectedDate === todayISO ? '오늘 인증 완료!' : `${shortLabel(selectedDate)} 인증 완료`}
-            </strong>
+            <strong>오늘 인증 완료!{dayIndex(todayISO) ? ` (Day ${dayIndex(todayISO)})` : ''}</strong>
             <span className="muted small">
-              {existing.mode === 'listen' ? '들었어요' : '읽었어요'}
-              {existing.bookTitle ? ` · ${existing.bookTitle}` : ''} ·{' '}
-              <button className="link-button" onClick={() => setEditingSubmission(true)}>
-                수정하기
-              </button>
+              {existing.mode === 'listen' ? (
+                <>
+                  <SpeakerIcon size={12} /> 들었어요
+                </>
+              ) : (
+                <>
+                  <BookOpenIcon size={12} /> 읽었어요
+                </>
+              )}
+              {existing.bookTitle ? ` · ${existing.bookTitle}` : ''}
             </span>
           </div>
         </div>
       ) : (
-        <>
-          <div className="mode-toggle" role="group" aria-label="읽었나요, 들었나요">
-            <button
-              type="button"
-              className={`mode-toggle-btn ${mode === 'read' ? 'active' : ''}`}
-              onClick={() => setMode('read')}
-            >
-              <BookOpenIcon size={16} /> 읽었어요
+        <div className="checkin-pending">
+          <p className="checkin-pending-lead">
+            <strong>{shortLabel(todayISO)} 아직 인증되지 않았어요.</strong>
+          </p>
+          <p className="muted small" style={{ margin: '4px 0 12px' }}>
+            버튼을 눌러서 인증하는 게 아니에요 — 라이브러리에서 오늘 배정된 분량을
+            끝까지 읽거나 들으면 그 순간 자동으로 인증됩니다.
+          </p>
+          {onGoLibrary && (
+            <button className="btn btn-primary btn-block" onClick={onGoLibrary}>
+              <BookOpenIcon size={16} /> 라이브러리에서 읽거나 듣기 <ArrowRightIcon size={15} />
             </button>
-            <button
-              type="button"
-              className={`mode-toggle-btn ${mode === 'listen' ? 'active' : ''}`}
-              onClick={() => setMode('listen')}
-            >
-              <SpeakerIcon size={16} /> 들었어요
-            </button>
-          </div>
-          <input
-            className="text-input"
-            style={{ marginTop: 8 }}
-            placeholder="읽거나 들은 책 제목 (선택)"
-            value={bookTitle}
-            onChange={(e) => setBookTitle(e.target.value)}
-          />
-          <button
-            className="btn btn-primary btn-block"
-            style={{ marginTop: 10 }}
-            onClick={handleSubmit}
-            disabled={busy}
-          >
-            {busy ? '저장 중…' : existing ? '인증 수정하기' : selectedDate === todayISO ? '오늘 인증하기' : '인증하기'}
-          </button>
-        </>
-      )}
-
-      {message && (
-        <p className="small share-message">
-          <CheckIcon size={14} /> {message}
-        </p>
+          )}
+        </div>
       )}
     </div>
   );

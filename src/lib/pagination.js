@@ -70,3 +70,17 @@ export function dayForPageIndex(pageIndex, totalPages, days = CHALLENGE_DAYS) {
   const perDay = pagesPerDay(totalPages, days);
   return Math.min(days, Math.floor(pageIndex / perDay) + 1);
 }
+
+/**
+ * The inverse of dayForPageIndex: the [start, end) flat-page-index range
+ * assigned to a given challenge day (1-based). Used to turn "Day N" into a
+ * concrete "today's pages are index start..end-1" range for both the
+ * reader's own reading-progress display and its listening-time goal, so the
+ * two always agree on what "today's assignment" means.
+ */
+export function pageRangeForDay(day, totalPages, days = CHALLENGE_DAYS) {
+  const perDay = pagesPerDay(totalPages, days);
+  const start = Math.min(totalPages, (day - 1) * perDay);
+  const end = Math.min(totalPages, start + perDay);
+  return { start, end };
+}

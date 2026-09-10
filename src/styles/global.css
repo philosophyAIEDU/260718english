@@ -2371,6 +2371,89 @@ main {
 .audio-player-card svg { flex: none; color: var(--accent); margin-top: 2px; }
 .audio-player-body { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 
+/*
+ * "오늘의 읽기 목표" — deliberately the loudest card on the reader screen,
+ * right under the book title, so a learner can't miss that today's
+ * certification rides on actually finishing these pages (there's no manual
+ * "인증하기" button anywhere anymore — see ChallengeCheckin).
+ */
+.today-goal-card {
+  background: var(--gold-bg);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  margin: 12px 0;
+}
+
+.today-goal-card.today-goal-done {
+  background: var(--collins-bg);
+  border-color: var(--collins);
+}
+
+.today-goal-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gold-dark, #9a7b1e);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+}
+
+.today-goal-done .today-goal-head { color: var(--collins); }
+.today-goal-head svg { flex: none; }
+
+.today-goal-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 10px;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--text-soft);
+}
+
+.today-goal-pct {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--gold-dark, #9a7b1e);
+}
+
+.today-goal-done .today-goal-pct { color: var(--collins); }
+
+.today-goal-track {
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(120, 110, 90, 0.18);
+  overflow: hidden;
+  margin-top: 6px;
+}
+
+.today-goal-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--gold-dark, #9a7b1e);
+  transition: width 0.3s ease;
+}
+
+.today-goal-done .today-goal-fill { background: var(--collins); }
+
+.today-goal-status {
+  margin: 8px 0 0;
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-soft);
+  line-height: 1.5;
+}
+
+.today-goal-status-done {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--collins);
+}
+
 .admin-tabs {
   display: flex;
   gap: 8px;
@@ -2948,6 +3031,21 @@ main {
   display: block;
   font-family: var(--font-sans);
   line-height: 1.5;
+}
+
+/* The "not certified yet today" state — points straight at the Library
+ * instead of offering any self-report button. */
+.checkin-pending {
+  background: var(--bg-inset);
+  border-radius: var(--radius);
+  padding: 15px 16px;
+  margin-top: 12px;
+}
+
+.checkin-pending-lead {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
 }
 
 /* Quiet inline links to the rules / curriculum at the foot of Home. */

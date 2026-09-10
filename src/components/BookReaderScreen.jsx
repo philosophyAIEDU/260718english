@@ -3,6 +3,7 @@ import {
   paginateParagraphs,
   targetWordsForLevel,
   dayForPageIndex,
+  pageRangeForDay,
   CHALLENGE_DAYS,
 } from '../lib/pagination.js';
 import {
@@ -38,6 +39,7 @@ import {
   SpeakerIcon,
   CopyIcon,
   CheckIcon,
+  BookOpenIcon,
 } from './Icons.jsx';
 import BookCover from './BookCover.jsx';
 import WordLookupPanel from './WordLookupPanel.jsx';
@@ -128,17 +130,21 @@ export default function BookReaderScreen({
   const audioRef = useRef(null);
   const pendingAutoPlayRef = useRef(false);
 
-  // "오늘 듣기": count how many seconds of narration the learner has actually
-  // played for this book today, and once it reaches the day's assigned
-  // amount, file the challenge "들었어요" for them automatically.
+  // "오늘 읽기 / 오늘 듣기": there's no manual "인증하기" button anymore (see
+  // ChallengeCheckin) — certifying today only happens here, automatically,
+  // once the learner has actually read through or listened to today's
+  // assigned pages. `checkedInToday` reflects whichever mode got there
+  // first; the two auto-checkin attempt refs below are separate so a
+  // failed listen attempt never blocks a later read attempt (or vice versa).
   const [challengeMe, setChallengeMe] = useState(null); // participant, or null
-  const [listenCheckedIn, setListenCheckedIn] = useState(false); // already has today's submission
+  const [checkedInToday, setCheckedInToday] = useState(false); // already has today's submission
   const [listenSecToday, setListenSecToday] = useState(0);
   const [autoCheckinMsg, setAutoCheckinMsg] = useState('');
   const listenSecRef = useRef(0); // hot path: updated on every timeupdate
   const listenTickRef = useRef(null); // { wall, ct } of the previous timeupdate
   const listenPersistedRef = useRef(0); // last value written to storage / state
-  const checkinAttemptRef = useRef(false);
+  const listenCheckinAttemptRef = useRef(false);
+  const readCheckinAttemptRef = useRef(false);
   const todayISO = challengeToday();
 
   useEffect(() => {
@@ -153,9 +159,9 @@ export default function BookReaderScreen({
     getSetting('readerAudioAutoAdvance').then((v) => setAutoAdvanceAudio(v !== false));
   }, []);
 
-  // Who this device is in the challenge (for auto "들었어요"). Skipped
-  // entirely when Firebase isn't configured — then listening still shows a
-  // progress bar but there's nothing to submit to.
+  // Who this device is in the challenge (for auto read/listen check-in).
+  // Skipped entirely when Firebase isn't configured — then reading and
+  // listening still show progress, but there's nothing to submit to.
   useEffect(() => {
     if (!isFirebaseConfigured()) return undefined;
     return onAuthReady((user) => {
@@ -168,7 +174,7 @@ export default function BookReaderScreen({
           setChallengeMe(participant);
           if (participant) {
             getSubmission(participant.id, todayISO)
-              .then((sub) => setListenCheckedIn(Boolean(sub)))
+              .then((sub) => setCheckedInToday(Boolean(sub)))
               .catch(() => {});
           }
         })
@@ -184,7 +190,8 @@ export default function BookReaderScreen({
     listenSecRef.current = 0;
     listenPersistedRef.current = 0;
     listenTickRef.current = null;
-    checkinAttemptRef.current = false;
+    listenCheckinAttemptRef.current = false;
+    readCheckinAttemptRef.current = false;
     setListenSecToday(0);
     setAutoCheckinMsg('');
     getSetting(key)
@@ -272,20 +279,100 @@ export default function BookReaderScreen({
     return pages;
   }, [book]);
 
-  // How many seconds of narration count as "today's assignment" for this
-  // book: the same page-per-day split the reader already uses for "Day X of
-  // N", turned into listening time via TTS_WPM. 0 outside the challenge
-  // window, or once the book's pages run out before the current day.
-  const listenTargetSec = useMemo(() => {
+  // Which flat-page-indices are "today's assignment" for this book — the
+  // same page-per-day split the reader uses for "Day X of N", shared by the
+  // reading-progress card and the listening-time goal below so the two
+  // always agree on what "today" means. null outside the challenge window,
+  // or once the book's pages run out before the current day.
+  const todayPageRange = useMemo(() => {
     const day = dayIndex(todayISO);
-    if (!day || flatPages.length === 0) return 0;
-    const perDay = Math.max(1, Math.ceil(flatPages.length / CHALLENGE_DAYS));
-    const start = (day - 1) * perDay;
-    if (start >= flatPages.length) return 0;
-    const end = Math.min(start + perDay, flatPages.length);
-    const words = flatPages.slice(start, end).reduce((sum, p) => sum + (p.wordCount || 0), 0);
-    return Math.round((words / TTS_WPM) * 60);
+    if (!day || flatPages.length === 0) return null;
+    const range = pageRangeForDay(day, flatPages.length);
+    return range.start < range.end ? range : null;
   }, [flatPages, todayISO]);
+
+  // How many seconds of narration count as "today's assignment": today's
+  // page range's word count, turned into listening time via TTS_WPM.
+  const listenTargetSec = useMemo(() => {
+    if (!todayPageRange) return 0;
+    const words = flatPages
+      .slice(todayPageRange.start, todayPageRange.end)
+      .reduce((sum, p) => sum + (p.wordCount || 0), 0);
+    return Math.round((words / TTS_WPM) * 60);
+  }, [flatPages, todayPageRange]);
+
+  // How much of today's assigned pages the learner has actually reached —
+  // approximated as "furthest page position reached", the same way
+  // completedChapterIndices tracks reading progress elsewhere. Reading is
+  // "done for today" once that position has passed the last page assigned.
+  const readTargetPages = todayPageRange ? todayPageRange.end - todayPageRange.start : 0;
+  const pagesReadToday = todayPageRange
+    ? Math.max(0, Math.min(readTargetPages, flatIndex - todayPageRange.start + 1))
+    : 0;
+  const readPercent = readTargetPages ? Math.round((pagesReadToday / readTargetPages) * 100) : 0;
+  const readComplete = Boolean(todayPageRange) && flatIndex >= todayPageRange.end - 1;
+
+  // Once today's assigned amount is met — by reading through the pages or
+  // by listening to the narration — file the challenge check-in
+  // automatically. There's no manual "인증하기" button anymore (see
+  // ChallengeCheckin): this is the only way a day gets certified. Only
+  // fires when there's a participant to file for, nothing filed yet today,
+  // and the relevant goal is genuinely met.
+  const maybeAutoCheckin = (mode) => {
+    const attemptRef = mode === 'listen' ? listenCheckinAttemptRef : readCheckinAttemptRef;
+    if (attemptRef.current || checkedInToday) return;
+    if (!challengeMe || challengeMe.status === 'out') return;
+    if (mode === 'listen') {
+      if (!listenTargetSec || listenSecRef.current < listenTargetSec * LISTEN_CHECKIN_FRACTION) return;
+    } else if (!readComplete) {
+      return;
+    }
+    attemptRef.current = true;
+    (async () => {
+      try {
+        const existing = await getSubmission(challengeMe.id, todayISO);
+        if (existing) {
+          setCheckedInToday(true);
+          return;
+        }
+        await saveSubmission({
+          participantId: challengeMe.id,
+          nickname: challengeMe.nickname,
+          date: todayISO,
+          mode,
+          bookTitle: book.title,
+        });
+        const acts = await getAllActivity();
+        if (!isActiveToday(acts.map((a) => a.date))) {
+          await logActivity({ source: mode, bookId, bookTitle: book.title });
+        }
+        setCheckedInToday(true);
+        setAutoCheckinMsg(
+          mode === 'listen'
+            ? '오늘 듣기 인증이 자동으로 완료됐어요! 🎧'
+            : '오늘 읽기 인증이 자동으로 완료됐어요! 📖'
+        );
+      } catch {
+        attemptRef.current = false; // let the next threshold tick retry
+        setAutoCheckinMsg(
+          mode === 'listen'
+            ? '듣기 인증 자동 저장에 실패했어요. 인터넷 연결을 확인하고 다시 시도해주세요.'
+            : '읽기 인증 자동 저장에 실패했어요. 인터넷 연결을 확인하고 다시 시도해주세요.'
+        );
+      }
+    })();
+  };
+
+  // Reading's own trigger: re-checked every time the furthest page reached
+  // changes (page nav, chapter jump, or simply resuming a session that was
+  // already past today's target). Listening's trigger lives on the audio
+  // element's timeupdate/pause/ended handlers below instead, since it needs
+  // to react to playback time rather than a React state change.
+  useEffect(() => {
+    if (!readComplete) return;
+    maybeAutoCheckin('read');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [readComplete, challengeMe, checkedInToday, todayISO]);
 
   // Resume from saved progress once pages are known.
   useEffect(() => {
@@ -493,42 +580,6 @@ export default function BookReaderScreen({
     setLookupTarget(null);
   };
 
-  // Once today's listening goal is met, file the challenge "들었어요" without
-  // making the learner go do it by hand. Only fires when there's a
-  // participant to file for, nothing filed yet today, and it's a real
-  // played-through amount (see handleAudioTimeUpdate's seek guarding).
-  const maybeAutoCheckin = () => {
-    if (checkinAttemptRef.current || listenCheckedIn) return;
-    if (!challengeMe || challengeMe.status === 'out') return;
-    if (!listenTargetSec || listenSecRef.current < listenTargetSec * LISTEN_CHECKIN_FRACTION) return;
-    checkinAttemptRef.current = true;
-    (async () => {
-      try {
-        const existing = await getSubmission(challengeMe.id, todayISO);
-        if (existing) {
-          setListenCheckedIn(true);
-          return;
-        }
-        await saveSubmission({
-          participantId: challengeMe.id,
-          nickname: challengeMe.nickname,
-          date: todayISO,
-          mode: 'listen',
-          bookTitle: book.title,
-        });
-        const acts = await getAllActivity();
-        if (!isActiveToday(acts.map((a) => a.date))) {
-          await logActivity({ source: 'listen', bookId, bookTitle: book.title });
-        }
-        setListenCheckedIn(true);
-        setAutoCheckinMsg('오늘 듣기 인증이 자동으로 완료됐어요! 🎧');
-      } catch {
-        checkinAttemptRef.current = false; // let the next threshold tick retry
-        setAutoCheckinMsg('듣기 인증 자동 저장에 실패했어요. 홈 화면에서 "들었어요"로 인증해주세요.');
-      }
-    })();
-  };
-
   // Accumulate only genuinely-played seconds: reject the jump when the
   // learner drags the scrubber, and never credit faster-than-realtime
   // playback. Persists (and re-checks the goal) every few counted seconds.
@@ -551,7 +602,7 @@ export default function BookReaderScreen({
       listenPersistedRef.current = listenSecRef.current;
       setListenSecToday(listenSecRef.current);
       setSetting(`listenSec:${bookId}:${todayISO}`, Math.round(listenSecRef.current)).catch(() => {});
-      maybeAutoCheckin();
+      maybeAutoCheckin('listen');
     }
   };
 
@@ -562,7 +613,7 @@ export default function BookReaderScreen({
     listenPersistedRef.current = listenSecRef.current;
     setListenSecToday(listenSecRef.current);
     setSetting(`listenSec:${bookId}:${todayISO}`, Math.round(listenSecRef.current)).catch(() => {});
-    maybeAutoCheckin();
+    maybeAutoCheckin('listen');
   };
 
   // Narration for this Day finished: if "이어 듣기" is on, flip to the next
@@ -688,6 +739,50 @@ export default function BookReaderScreen({
         </div>
       </div>
 
+      {todayPageRange && (
+        <div className={`today-goal-card ${readComplete ? 'today-goal-done' : ''}`}>
+          <div className="today-goal-head">
+            <BookOpenIcon size={17} />
+            <strong>오늘의 읽기 목표 · Day {dayIndex(todayISO)}</strong>
+          </div>
+          <div className="today-goal-row">
+            <span>
+              {readTargetPages}페이지 중 {pagesReadToday}페이지 읽음
+            </span>
+            <span className="today-goal-pct">{readPercent}%</span>
+          </div>
+          <div className="today-goal-track">
+            <div className="today-goal-fill" style={{ width: `${readPercent}%` }} />
+          </div>
+          {readComplete ? (
+            <p className="today-goal-status today-goal-status-done">
+              <CheckIcon size={13} /> 오늘 목표 페이지를 다 읽었어요!{' '}
+              {checkedInToday
+                ? '인증 완료 📖'
+                : isFirebaseConfigured() && challengeMe
+                  ? '인증을 저장하는 중…'
+                  : isFirebaseConfigured()
+                    ? '홈 화면에서 로그인하고 참여하면 자동으로 인증돼요.'
+                    : ''}
+            </p>
+          ) : (
+            <p className="today-goal-status">
+              {isFirebaseConfigured() && challengeMe
+                ? '그냥 클릭 한 번으로 인증되지 않아요 — 오늘 배정된 페이지를 끝까지 읽어야 자동으로 인증됩니다.'
+                : isFirebaseConfigured()
+                  ? '홈 화면에서 로그인하고 참여하면, 여기까지 다 읽었을 때 자동으로 인증돼요.'
+                  : '오늘 배정된 페이지 기준이에요.'}
+            </p>
+          )}
+        </div>
+      )}
+
+      {autoCheckinMsg && (
+        <p className="small share-message">
+          <CheckIcon size={14} /> {autoCheckinMsg}
+        </p>
+      )}
+
       {book.level === 'Beginner' && (
         <div className="notice beginner-tip">
           <SparklesIcon size={16} />
@@ -741,7 +836,7 @@ export default function BookReaderScreen({
                 ? '재생을 누르면 이 Day부터 마지막 Day까지 명대사가 자동으로 이어서 낭독돼요. 들어도 챌린지 인증에 인정됩니다.'
                 : listenTargetSec > 0
                   ? '읽기가 부담스러우면 들어도 됩니다. 오늘 배정된 분량만큼 들으면 아래에서 자동으로 "들었어요" 인증돼요.'
-                  : '읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈 화면에서 "들었어요"로 인증하세요.'}
+                  : '읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요.'}
               {book.bible && ' 본문의 절 번호를 탭하면 그 절부터 들을 수 있어요 (정확한 타이밍이 아닌 어림값이에요).'}
             </span>
             <audio
@@ -797,7 +892,7 @@ export default function BookReaderScreen({
                     }}
                   />
                 </div>
-                {listenCheckedIn ? (
+                {checkedInToday ? (
                   <p className="small" style={{ margin: '6px 0 0', color: 'var(--gold-dark, #9a7b1e)' }}>
                     <CheckIcon size={13} /> 오늘 듣기 인증 완료 🎧
                   </p>
@@ -806,7 +901,9 @@ export default function BookReaderScreen({
                     오늘 배정된 분량을 다 들었어요.{' '}
                     {isFirebaseConfigured() && challengeMe
                       ? '인증을 저장하는 중…'
-                      : '홈 화면에서 "들었어요"로 인증하세요.'}
+                      : isFirebaseConfigured()
+                        ? '홈 화면에서 로그인하고 참여하면 자동으로 인증돼요.'
+                        : ''}
                   </p>
                 ) : (
                   <p className="muted small" style={{ margin: '6px 0 0' }}>
@@ -818,12 +915,6 @@ export default function BookReaderScreen({
                   </p>
                 )}
               </div>
-            )}
-
-            {autoCheckinMsg && (
-              <p className="small share-message" style={{ marginTop: 6 }}>
-                <CheckIcon size={14} /> {autoCheckinMsg}
-              </p>
             )}
           </div>
         </div>
