@@ -1,0 +1,13 @@
+The Great Gatsby — 챕터별 TTS 원문
+총 9개 챕터. 각 chN.txt를 TTS 도구에 붙여넣고,
+나온 결과를 chN.mp3로 저장해서 public/audio/great-gatsby/ 폴더에 넣어주세요.
+
+[x] ch1.txt — Chapter 1 (32955자)
+[x] ch2.txt — Chapter 2 (23662자)
+[x] ch4.txt — Chapter 4 (30367자)
+[x] ch3.txt — Chapter 3 (32579자)
+[x] ch5.txt — Chapter 5 (23540자)
+[x] ch6.txt — Chapter 6 (22802자)
+[x] ch7.txt — Chapter 7 (49053자)
+[x] ch9.txt — Chapter 9 (27898자)
+[x] ch8.txt — Chapter 8 (25033자)

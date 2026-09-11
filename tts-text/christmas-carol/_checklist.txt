@@ -1,0 +1,9 @@
+A Christmas Carol — 챕터별 TTS 원문
+총 5개 챕터. 각 chN.txt를 TTS 도구에 붙여넣고,
+나온 결과를 chN.mp3로 저장해서 public/audio/christmas-carol/ 폴더에 넣어주세요.
+
+[x] ch1.txt — Stave I: Marley's Ghost (36104자)
+[x] ch2.txt — Stave II: The First of the Three Spirits (33890자)
+[x] ch3.txt — Stave III: The Second of the Three Spirits (46131자)
+[x] ch4.txt — Stave IV: The Last of the Spirits (28982자)
+[x] ch5.txt — Stave V: The End of It (12469자)

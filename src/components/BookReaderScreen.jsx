@@ -9,12 +9,22 @@ import {
   getBookProgress,
   saveBookProgress,
   logActivity,
+  getAllActivity,
   getSetting,
   setSetting,
   modernPageId,
   getModernPage,
   saveModernPage,
 } from '../lib/db.js';
+import { isActiveToday } from '../lib/streaks.js';
+import { isFirebaseConfigured } from '../lib/challengeConfig.js';
+import { today as challengeToday, dayIndex } from '../lib/challengeUtils.js';
+import {
+  onAuthReady,
+  getMyParticipant,
+  getSubmission,
+  saveSubmission,
+} from '../lib/challengeStore.js';
 import { analyzePageText, modernizePageText, GeminiError } from '../lib/geminiClient.js';
 import { copyText } from '../lib/clipboard.js';
 import {
@@ -27,6 +37,7 @@ import {
   PlusIcon,
   SpeakerIcon,
   CopyIcon,
+  CheckIcon,
 } from './Icons.jsx';
 import BookCover from './BookCover.jsx';
 import WordLookupPanel from './WordLookupPanel.jsx';
@@ -58,6 +69,19 @@ function splitVerseNumber(paragraph) {
 // default 1.06rem exactly, then steps up for easier reading.
 const FONT_SCALES = [1.06, 1.22, 1.38, 1.54];
 const AVERAGE_READING_WPM = 130; // conservative pace, comfortable for beginners
+
+// Roughly how fast the Kokoro narration reads (measured across the shipped
+// Bible + novel mp3s: ~180 words/min). Used only to turn "today's assigned
+// pages" into a listening-seconds goal, so it doesn't need to be exact.
+const TTS_WPM = 180;
+// Fraction of that goal a learner must actually have played (not seeked
+// past) for the listen check-in to fire on its own.
+const LISTEN_CHECKIN_FRACTION = 0.9;
+
+function fmtMMSS(totalSeconds) {
+  const s = Math.max(0, Math.round(totalSeconds));
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
 
 /**
  * In-app reader for one Library book. Chapters are flattened into a single
@@ -104,6 +128,19 @@ export default function BookReaderScreen({
   const audioRef = useRef(null);
   const pendingAutoPlayRef = useRef(false);
 
+  // "오늘 듣기": count how many seconds of narration the learner has actually
+  // played for this book today, and once it reaches the day's assigned
+  // amount, file the challenge "들었어요" for them automatically.
+  const [challengeMe, setChallengeMe] = useState(null); // participant, or null
+  const [listenCheckedIn, setListenCheckedIn] = useState(false); // already has today's submission
+  const [listenSecToday, setListenSecToday] = useState(0);
+  const [autoCheckinMsg, setAutoCheckinMsg] = useState('');
+  const listenSecRef = useRef(0); // hot path: updated on every timeupdate
+  const listenTickRef = useRef(null); // { wall, ct } of the previous timeupdate
+  const listenPersistedRef = useRef(0); // last value written to storage / state
+  const checkinAttemptRef = useRef(false);
+  const todayISO = challengeToday();
+
   useEffect(() => {
     getSetting('readerFontStep').then((step) => {
       if (typeof step === 'number' && FONT_SCALES[step]) setFontStep(step);
@@ -115,6 +152,54 @@ export default function BookReaderScreen({
     // Default on: only ever false if the learner explicitly turned it off.
     getSetting('readerAudioAutoAdvance').then((v) => setAutoAdvanceAudio(v !== false));
   }, []);
+
+  // Who this device is in the challenge (for auto "들었어요"). Skipped
+  // entirely when Firebase isn't configured — then listening still shows a
+  // progress bar but there's nothing to submit to.
+  useEffect(() => {
+    if (!isFirebaseConfigured()) return undefined;
+    return onAuthReady((user) => {
+      if (!user) {
+        setChallengeMe(null);
+        return;
+      }
+      getMyParticipant()
+        .then((participant) => {
+          setChallengeMe(participant);
+          if (participant) {
+            getSubmission(participant.id, todayISO)
+              .then((sub) => setListenCheckedIn(Boolean(sub)))
+              .catch(() => {});
+          }
+        })
+        .catch(() => {});
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [todayISO]);
+
+  // Restore today's already-listened seconds for this book, and flush the
+  // running count back to storage when leaving (or when the day rolls over).
+  useEffect(() => {
+    const key = `listenSec:${bookId}:${todayISO}`;
+    listenSecRef.current = 0;
+    listenPersistedRef.current = 0;
+    listenTickRef.current = null;
+    checkinAttemptRef.current = false;
+    setListenSecToday(0);
+    setAutoCheckinMsg('');
+    getSetting(key)
+      .then((v) => {
+        if (typeof v === 'number' && v > 0) {
+          listenSecRef.current = v;
+          listenPersistedRef.current = v;
+          setListenSecToday(v);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      setSetting(key, Math.round(listenSecRef.current)).catch(() => {});
+    };
+  }, [bookId, todayISO]);
 
   const toggleAutoAdvanceAudio = () => {
     const next = !autoAdvanceAudio;
@@ -186,6 +271,21 @@ export default function BookReaderScreen({
     });
     return pages;
   }, [book]);
+
+  // How many seconds of narration count as "today's assignment" for this
+  // book: the same page-per-day split the reader already uses for "Day X of
+  // N", turned into listening time via TTS_WPM. 0 outside the challenge
+  // window, or once the book's pages run out before the current day.
+  const listenTargetSec = useMemo(() => {
+    const day = dayIndex(todayISO);
+    if (!day || flatPages.length === 0) return 0;
+    const perDay = Math.max(1, Math.ceil(flatPages.length / CHALLENGE_DAYS));
+    const start = (day - 1) * perDay;
+    if (start >= flatPages.length) return 0;
+    const end = Math.min(start + perDay, flatPages.length);
+    const words = flatPages.slice(start, end).reduce((sum, p) => sum + (p.wordCount || 0), 0);
+    return Math.round((words / TTS_WPM) * 60);
+  }, [flatPages, todayISO]);
 
   // Resume from saved progress once pages are known.
   useEffect(() => {
@@ -396,15 +496,89 @@ export default function BookReaderScreen({
     setLookupTarget(null);
   };
 
-  // Narration finished: if "이어 듣기" is on, jump to the next chapter's
-  // first page and let the autoplay effect above start its audio. This
-  // jumps by CHAPTER, not by flatIndex/page, because one mp3 covers a
-  // whole chapter regardless of how many reader pages that chapter is
-  // split into — advancing just one page would leave most of a
-  // multi-page chapter's remaining pages behind even though their audio
-  // already played. On the last chapter there's nowhere to go, so it
-  // just stops.
+  // Once today's listening goal is met, file the challenge "들었어요" without
+  // making the learner go do it by hand. Only fires when there's a
+  // participant to file for, nothing filed yet today, and it's a real
+  // played-through amount (see handleAudioTimeUpdate's seek guarding).
+  const maybeAutoCheckin = () => {
+    if (checkinAttemptRef.current || listenCheckedIn) return;
+    if (!challengeMe || challengeMe.status === 'out') return;
+    if (!listenTargetSec || listenSecRef.current < listenTargetSec * LISTEN_CHECKIN_FRACTION) return;
+    checkinAttemptRef.current = true;
+    (async () => {
+      try {
+        const existing = await getSubmission(challengeMe.id, todayISO);
+        if (existing) {
+          setListenCheckedIn(true);
+          return;
+        }
+        await saveSubmission({
+          participantId: challengeMe.id,
+          nickname: challengeMe.nickname,
+          date: todayISO,
+          mode: 'listen',
+          bookTitle: book.title,
+        });
+        const acts = await getAllActivity();
+        if (!isActiveToday(acts.map((a) => a.date))) {
+          await logActivity({ source: 'listen', bookId, bookTitle: book.title });
+        }
+        setListenCheckedIn(true);
+        setAutoCheckinMsg('오늘 듣기 인증이 자동으로 완료됐어요! 🎧');
+      } catch {
+        checkinAttemptRef.current = false; // let the next threshold tick retry
+        setAutoCheckinMsg('듣기 인증 자동 저장에 실패했어요. 홈 화면에서 "들었어요"로 인증해주세요.');
+      }
+    })();
+  };
+
+  // Accumulate only genuinely-played seconds: reject the jump when the
+  // learner drags the scrubber, and never credit faster-than-realtime
+  // playback. Persists (and re-checks the goal) every few counted seconds.
+  const handleAudioTimeUpdate = () => {
+    const el = audioRef.current;
+    if (!el || el.paused || el.seeking) {
+      listenTickRef.current = null;
+      return;
+    }
+    const wall = performance.now();
+    const ct = el.currentTime;
+    const prev = listenTickRef.current;
+    listenTickRef.current = { wall, ct };
+    if (!prev) return;
+    const dMedia = ct - prev.ct;
+    const dWall = (wall - prev.wall) / 1000;
+    if (dMedia <= 0 || dMedia > 2 || dWall <= 0 || dWall > 2) return;
+    listenSecRef.current += Math.min(dMedia, dWall * 1.1);
+    if (listenSecRef.current - listenPersistedRef.current >= 4) {
+      listenPersistedRef.current = listenSecRef.current;
+      setListenSecToday(listenSecRef.current);
+      setSetting(`listenSec:${bookId}:${todayISO}`, Math.round(listenSecRef.current)).catch(() => {});
+      maybeAutoCheckin();
+    }
+  };
+
+  // Pause / end / page-change: push the running count to state + storage and
+  // give the goal one more chance to trip.
+  const flushListen = () => {
+    listenTickRef.current = null;
+    listenPersistedRef.current = listenSecRef.current;
+    setListenSecToday(listenSecRef.current);
+    setSetting(`listenSec:${bookId}:${todayISO}`, Math.round(listenSecRef.current)).catch(() => {});
+    maybeAutoCheckin();
+  };
+
+  // Narration finished: record the last stretch of listening (flushListen,
+  // which also gives the auto-checkin one more chance to fire), then if
+  // "이어 듣기" is on, jump to the next chapter's first page and let the
+  // autoplay effect above start its audio. This jumps by CHAPTER, not by
+  // flatIndex/page, because one mp3 covers a whole chapter regardless of
+  // how many reader pages that chapter is split into — advancing just one
+  // page would leave most of a multi-page chapter's remaining pages
+  // behind even though their audio already played. On the last chapter
+  // there's nowhere to go, so it just stops.
   const handleAudioEnded = () => {
+    flushListen();
     if (!autoAdvanceAudio) return;
     const nextChapterIndex = currentChapterIndex + 1;
     if (nextChapterIndex >= book.chapters.length) return;
@@ -576,7 +750,9 @@ export default function BookReaderScreen({
             <span className="muted small">
               {isDayPerChapter
                 ? '재생을 누르면 이 Day부터 마지막 Day까지 명대사가 자동으로 이어서 낭독돼요. 들어도 챌린지 인증에 인정됩니다.'
-                : '읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈 화면에서 "들었어요"로 인증하세요. 챕터가 끝나면 다음 챕터로 페이지가 자동으로 넘어가요.'}
+                : listenTargetSec > 0
+                  ? '읽기가 부담스러우면 들어도 됩니다. 오늘 배정된 분량만큼 들으면 아래에서 자동으로 "들었어요" 인증되고, 챕터가 끝나면 다음 챕터로 페이지도 자동으로 넘어가요.'
+                  : '읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈 화면에서 "들었어요"로 인증하세요. 챕터가 끝나면 다음 챕터로 페이지가 자동으로 넘어가요.'}
               {book.bible && ' 본문의 절 번호를 탭하면 그 절부터 들을 수 있어요 (정확한 타이밍이 아닌 어림값이에요).'}
             </span>
             <audio
@@ -584,6 +760,8 @@ export default function BookReaderScreen({
               controls
               src={audioSrc}
               onEnded={handleAudioEnded}
+              onTimeUpdate={handleAudioTimeUpdate}
+              onPause={flushListen}
               style={{ width: '100%', marginTop: 6 }}
             />
             <label
@@ -595,6 +773,65 @@ export default function BookReaderScreen({
                 ? '한 Day가 끝나면 다음 Day를 자동으로 재생'
                 : '이 챕터가 끝나면 다음 챕터를 자동으로 재생하고 페이지도 넘기기'}
             </label>
+
+            {listenTargetSec > 0 && (
+              <div className="listen-goal" style={{ marginTop: 10 }}>
+                <div
+                  className="muted small"
+                  style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}
+                >
+                  <span>오늘 듣기 {dayIndex(todayISO) ? `· Day ${dayIndex(todayISO)}` : ''}</span>
+                  <span>
+                    {fmtMMSS(Math.min(listenSecToday, listenTargetSec))} / {fmtMMSS(listenTargetSec)}
+                  </span>
+                </div>
+                <div
+                  aria-hidden="true"
+                  style={{
+                    height: 6,
+                    borderRadius: 999,
+                    background: 'rgba(120,110,90,0.18)',
+                    overflow: 'hidden',
+                    marginTop: 4,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: '100%',
+                      width: `${Math.min(100, Math.round((listenSecToday / listenTargetSec) * 100))}%`,
+                      background: 'var(--gold-dark, #9a7b1e)',
+                      transition: 'width .3s ease',
+                    }}
+                  />
+                </div>
+                {listenCheckedIn ? (
+                  <p className="small" style={{ margin: '6px 0 0', color: 'var(--gold-dark, #9a7b1e)' }}>
+                    <CheckIcon size={13} /> 오늘 듣기 인증 완료 🎧
+                  </p>
+                ) : listenSecToday >= listenTargetSec * LISTEN_CHECKIN_FRACTION ? (
+                  <p className="muted small" style={{ margin: '6px 0 0' }}>
+                    오늘 배정된 분량을 다 들었어요.{' '}
+                    {isFirebaseConfigured() && challengeMe
+                      ? '인증을 저장하는 중…'
+                      : '홈 화면에서 "들었어요"로 인증하세요.'}
+                  </p>
+                ) : (
+                  <p className="muted small" style={{ margin: '6px 0 0' }}>
+                    {isFirebaseConfigured() && challengeMe
+                      ? '여기까지 들으면 자동으로 듣기 인증돼요.'
+                      : isFirebaseConfigured()
+                        ? '로그인하면 여기까지 들었을 때 자동으로 인증돼요.'
+                        : '오늘 배정된 분량 기준이에요.'}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {autoCheckinMsg && (
+              <p className="small share-message" style={{ marginTop: 6 }}>
+                <CheckIcon size={14} /> {autoCheckinMsg}
+              </p>
+            )}
           </div>
         </div>
       )}
