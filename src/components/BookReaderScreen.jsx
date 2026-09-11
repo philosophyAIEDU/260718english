@@ -357,11 +357,14 @@ export default function BookReaderScreen({
   const isLastPageOfChapter =
     flatIndex === flatPages.length - 1 ||
     flatPages[flatIndex + 1].chapterIndex !== current.chapterIndex;
-  // "이어 듣기" is for the quote library, where every chapter is a single
-  // short page ("Day N") and hearing them roll on one after another is the
-  // point. For a full-length book it would just yank the reader off the
-  // page mid-paragraph, so it stays off there.
-  const audioAutoAdvanceSupported = bookId === 'great-lines';
+  // The quote library's chapters are each a single page ("Day N"), so
+  // "이어 듣기" there reads as flipping straight to the next Day. Every
+  // other book paginates a chapter across several reader pages while one
+  // mp3 still covers the whole chapter, so the same "이어 듣기" toggle
+  // there means "when this chapter's narration ends, jump to the next
+  // chapter's first page" (see handleAudioEnded) — the wording below just
+  // picks the term ("Day"/"챕터") that matches how the book is organized.
+  const isDayPerChapter = bookId === 'great-lines';
 
   const persistProgress = (nextFlatIndex, { completeChapter, completeBook } = {}) => {
     const next = { ...progress };
@@ -393,13 +396,20 @@ export default function BookReaderScreen({
     setLookupTarget(null);
   };
 
-  // Narration for this Day finished: if "이어 듣기" is on, flip to the next
-  // Day (same as tapping Next) and let the autoplay effect above start its
-  // audio. On the last Day there's nowhere to go, so it just stops.
+  // Narration finished: if "이어 듣기" is on, jump to the next chapter's
+  // first page and let the autoplay effect above start its audio. This
+  // jumps by CHAPTER, not by flatIndex/page, because one mp3 covers a
+  // whole chapter regardless of how many reader pages that chapter is
+  // split into — advancing just one page would leave most of a
+  // multi-page chapter's remaining pages behind even though their audio
+  // already played. On the last chapter there's nowhere to go, so it
+  // just stops.
   const handleAudioEnded = () => {
-    if (!audioAutoAdvanceSupported || !autoAdvanceAudio || isLastPageOverall) return;
+    if (!autoAdvanceAudio) return;
+    const nextChapterIndex = currentChapterIndex + 1;
+    if (nextChapterIndex >= book.chapters.length) return;
     pendingAutoPlayRef.current = true;
-    goNext();
+    jumpToChapter(nextChapterIndex);
   };
 
   const goPrev = () => {
@@ -562,11 +572,11 @@ export default function BookReaderScreen({
         <div className="audio-player-card">
           <SpeakerIcon size={17} />
           <div className="audio-player-body">
-            <strong>{audioAutoAdvanceSupported ? '명대사 이어 듣기' : '이 챕터 듣기'}</strong>
+            <strong>{isDayPerChapter ? '명대사 이어 듣기' : '이 챕터 듣기'}</strong>
             <span className="muted small">
-              {audioAutoAdvanceSupported
+              {isDayPerChapter
                 ? '재생을 누르면 이 Day부터 마지막 Day까지 명대사가 자동으로 이어서 낭독돼요. 들어도 챌린지 인증에 인정됩니다.'
-                : '읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈 화면에서 "들었어요"로 인증하세요.'}
+                : '읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈 화면에서 "들었어요"로 인증하세요. 챕터가 끝나면 다음 챕터로 페이지가 자동으로 넘어가요.'}
               {book.bible && ' 본문의 절 번호를 탭하면 그 절부터 들을 수 있어요 (정확한 타이밍이 아닌 어림값이에요).'}
             </span>
             <audio
@@ -576,19 +586,15 @@ export default function BookReaderScreen({
               onEnded={handleAudioEnded}
               style={{ width: '100%', marginTop: 6 }}
             />
-            {audioAutoAdvanceSupported && (
-              <label
-                className="muted small"
-                style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}
-              >
-                <input
-                  type="checkbox"
-                  checked={autoAdvanceAudio}
-                  onChange={toggleAutoAdvanceAudio}
-                />
-                한 Day가 끝나면 다음 Day를 자동으로 재생
-              </label>
-            )}
+            <label
+              className="muted small"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}
+            >
+              <input type="checkbox" checked={autoAdvanceAudio} onChange={toggleAutoAdvanceAudio} />
+              {isDayPerChapter
+                ? '한 Day가 끝나면 다음 Day를 자동으로 재생'
+                : '이 챕터가 끝나면 다음 챕터를 자동으로 재생하고 페이지도 넘기기'}
+            </label>
           </div>
         </div>
       )}
