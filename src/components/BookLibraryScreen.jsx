@@ -1,7 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
-import { getAllBookProgress } from '../lib/db.js';
+import { getAllBookProgress, getFavoriteBookIds, saveFavoriteBookIds } from '../lib/db.js';
 import { CHALLENGE_DAYS } from '../lib/pagination.js';
-import { ArrowLeftIcon, TrophyIcon, CalendarIcon, ClockIcon } from './Icons.jsx';
+import {
+  ArrowLeftIcon,
+  ArrowRightIcon,
+  TrophyIcon,
+  CalendarIcon,
+  ClockIcon,
+  StarIcon,
+} from './Icons.jsx';
 import BookCover from './BookCover.jsx';
 
 const LEVEL_ORDER = ['Beginner', 'Intermediate', 'Advanced'];
@@ -33,10 +40,18 @@ function dailyMinutes(wordCount) {
  * challenge. Books matching the learner's level-test result are flagged
  * "Recommended for you", and the first Beginner book is suggested for
  * absolute newcomers.
+ *
+ * Two shortcuts sit above the level sections so a book being actively read
+ * doesn't get lost among all 19: a "이어서 읽기" banner jumps straight into
+ * whichever book was most recently touched (resuming at its saved page),
+ * and a ⭐ toggle on every card pins a book into its own section at the top
+ * — handy for something like a long, many-chapter Bible book that would
+ * otherwise sit deep in its level section.
  */
 export default function BookLibraryScreen({ readingLevel, onOpenBook, onBack }) {
   const [books, setBooks] = useState(null); // null = loading
   const [progressByBook, setProgressByBook] = useState({});
+  const [favoriteIds, setFavoriteIds] = useState(new Set());
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -47,8 +62,9 @@ export default function BookLibraryScreen({ readingLevel, onOpenBook, onBack }) 
         return r.json();
       }),
       getAllBookProgress(),
+      getFavoriteBookIds(),
     ])
-      .then(([index, progress]) => {
+      .then(([index, progress, favorites]) => {
         if (!alive) return;
         setBooks(index);
         const map = {};
@@ -56,6 +72,7 @@ export default function BookLibraryScreen({ readingLevel, onOpenBook, onBack }) 
           map[p.bookId] = p;
         });
         setProgressByBook(map);
+        setFavoriteIds(new Set(favorites));
       })
       .catch(() => {
         if (alive) setError('Could not load the Library. Please try again.');
@@ -65,18 +82,121 @@ export default function BookLibraryScreen({ readingLevel, onOpenBook, onBack }) 
     };
   }, []);
 
+  const toggleFavorite = (bookId, e) => {
+    e.stopPropagation();
+    setFavoriteIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(bookId)) next.delete(bookId);
+      else next.add(bookId);
+      saveFavoriteBookIds([...next]).catch(() => {});
+      return next;
+    });
+  };
+
+  // Whichever book has the most recently updated reading position — the
+  // one thing worth surfacing above everything else, since it's almost
+  // always exactly the book a returning learner wants.
+  const continueBook = useMemo(() => {
+    if (!books) return null;
+    const entries = Object.values(progressByBook).filter((p) => typeof p.flatIndex === 'number');
+    if (entries.length === 0) return null;
+    const latest = entries.reduce((a, b) => ((a.updatedAt || '') > (b.updatedAt || '') ? a : b));
+    return books.find((b) => b.id === latest.bookId) || null;
+  }, [books, progressByBook]);
+
+  const favoriteBooks = useMemo(() => {
+    if (!books) return [];
+    return books.filter((b) => favoriteIds.has(b.id));
+  }, [books, favoriteIds]);
+
   const groupedByLevel = useMemo(() => {
     if (!books) return [];
     return LEVEL_ORDER.map((level) => ({
       level,
-      books: books.filter((b) => b.level === level),
+      // Favorited books already have their own section up top — leaving
+      // them here too would just be the same card twice on one screen.
+      books: books.filter((b) => b.level === level && !favoriteIds.has(b.id)),
     })).filter((g) => g.books.length > 0);
-  }, [books]);
+  }, [books, favoriteIds]);
 
   const anyStarted = books
     ? books.some((b) => (progressByBook[b.id]?.completedChapterIndices?.length || 0) > 0 || progressByBook[b.id]?.flatIndex)
     : false;
   const firstBeginner = books?.find((b) => b.level === 'Beginner');
+
+  const renderBookCard = (book) => {
+    const progress = progressByBook[book.id];
+    const chaptersDone = progress?.completedChapterIndices?.length || 0;
+    const started = chaptersDone > 0 || !!progress?.flatIndex;
+    const pct = book.chapterCount
+      ? Math.min(100, Math.round((chaptersDone / book.chapterCount) * 100))
+      : 0;
+    const levelClass = LEVEL_CLASS[book.level] || 'beginner';
+    const info = LEVEL_INFO[book.level] || LEVEL_INFO.Beginner;
+    const isFavorite = favoriteIds.has(book.id);
+
+    return (
+      <div className="book-card-wrap" key={book.id}>
+        <button
+          className={`book-card-fav ${isFavorite ? 'is-active' : ''}`}
+          onClick={(e) => toggleFavorite(book.id, e)}
+          aria-label={isFavorite ? '즐겨찾기에서 빼기' : '즐겨찾기에 추가'}
+          title={isFavorite ? '즐겨찾기에서 빼기' : '즐겨찾기에 추가 (상단에 고정)'}
+        >
+          <StarIcon size={18} filled={isFavorite} />
+        </button>
+        <button className={`book-card book-card-${levelClass}`} onClick={() => onOpenBook(book.id)}>
+          <BookCover bookId={book.id} />
+          <div className="book-card-body">
+            <div className="book-card-head">
+              <h3>{book.title}</h3>
+              <span className={`pill pill-level-${levelClass}`}>{book.level}</span>
+            </div>
+            <p className="muted small book-card-author">
+              {book.author} · {book.year}
+            </p>
+
+            <div className="book-card-meta">
+              <span className="meta-chip">
+                <ClockIcon size={12} /> 하루 ~{dailyMinutes(book.wordCount)}분
+              </span>
+              <span className="meta-chip">
+                <CalendarIcon size={12} /> {CHALLENGE_DAYS}일 완독
+              </span>
+              <span className="difficulty-meter" title={info.label} aria-label={`난이도 ${info.label}`}>
+                {[0, 1, 2].map((i) => (
+                  <span key={i} className={`diff-dot ${i < info.dots ? 'on' : ''}`} />
+                ))}
+              </span>
+            </div>
+
+            {readingLevel === book.level && (
+              <p className="recommended-tag">
+                <TrophyIcon size={12} /> Recommended for you
+              </p>
+            )}
+
+            <p className="small book-card-desc">{book.description}</p>
+
+            {started ? (
+              <>
+                <div className="progress-track" style={{ marginBottom: 4 }}>
+                  <div className="progress-fill" style={{ width: `${pct}%` }} />
+                </div>
+                <p className="muted small continue-line" style={{ margin: 0 }}>
+                  {progress.bookCompleted ? '✓ 완독! 언제든 다시 읽기' : `이어 읽기 · ${pct}% 진행`}
+                </p>
+              </>
+            ) : (
+              <p className="muted small" style={{ margin: 0 }}>
+                {book.chapterCount}개 챕터 · {book.wordCount.toLocaleString()} 단어
+              </p>
+            )}
+          </div>
+        </button>
+      </div>
+    );
+  };
 
   return (
     <section>
@@ -88,6 +208,24 @@ export default function BookLibraryScreen({ readingLevel, onOpenBook, onBack }) 
         <h2>Library</h2>
         <span className="count">무료 · 바로 읽기</span>
       </div>
+
+      {/* Returning-learner shortcut: skip straight to whatever was being
+          read last time, instead of scrolling to find it again. */}
+      {continueBook && (
+        <button className="starter-banner continue-banner" onClick={() => onOpenBook(continueBook.id)}>
+          <BookCover bookId={continueBook.id} size="sm" />
+          <span className="starter-banner-body">
+            <span className="starter-banner-label">이어서 읽기</span>
+            <strong>{continueBook.title}</strong>
+            <span className="muted small">
+              {progressByBook[continueBook.id]?.bookCompleted
+                ? '완독! 다시 펼쳐보기'
+                : '읽던 곳에서 바로 이어집니다'}
+            </span>
+          </span>
+          <ArrowRightIcon size={18} className="continue-banner-arrow" />
+        </button>
+      )}
 
       {/* Friendly starter nudge for absolute beginners. */}
       {!anyStarted && firstBeginner && (
@@ -116,6 +254,17 @@ export default function BookLibraryScreen({ readingLevel, onOpenBook, onBack }) 
         </div>
       )}
 
+      {favoriteBooks.length > 0 && (
+        <div className="level-section level-section-favorite">
+          <div className="level-section-header">
+            <StarIcon size={13} filled />
+            즐겨찾기
+            <span className="level-section-hint">직접 고정한 책</span>
+          </div>
+          {favoriteBooks.map(renderBookCard)}
+        </div>
+      )}
+
       {groupedByLevel.map((group) => (
         <div className={`level-section level-section-${LEVEL_CLASS[group.level]}`} key={group.level}>
           <div className="level-section-header">
@@ -124,74 +273,7 @@ export default function BookLibraryScreen({ readingLevel, onOpenBook, onBack }) 
             <span className="level-section-hint">{LEVEL_INFO[group.level].label}</span>
           </div>
 
-          {group.books.map((book) => {
-            const progress = progressByBook[book.id];
-            const chaptersDone = progress?.completedChapterIndices?.length || 0;
-            const started = chaptersDone > 0 || !!progress?.flatIndex;
-            const pct = book.chapterCount
-              ? Math.min(100, Math.round((chaptersDone / book.chapterCount) * 100))
-              : 0;
-            const levelClass = LEVEL_CLASS[book.level] || 'beginner';
-            const info = LEVEL_INFO[book.level] || LEVEL_INFO.Beginner;
-
-            return (
-              <button
-                key={book.id}
-                className={`book-card book-card-${levelClass}`}
-                onClick={() => onOpenBook(book.id)}
-              >
-                <BookCover bookId={book.id} />
-                <div className="book-card-body">
-                  <div className="book-card-head">
-                    <h3>{book.title}</h3>
-                    <span className={`pill pill-level-${levelClass}`}>{book.level}</span>
-                  </div>
-                  <p className="muted small book-card-author">
-                    {book.author} · {book.year}
-                  </p>
-
-                  <div className="book-card-meta">
-                    <span className="meta-chip">
-                      <ClockIcon size={12} /> 하루 ~{dailyMinutes(book.wordCount)}분
-                    </span>
-                    <span className="meta-chip">
-                      <CalendarIcon size={12} /> {CHALLENGE_DAYS}일 완독
-                    </span>
-                    <span className="difficulty-meter" title={info.label} aria-label={`난이도 ${info.label}`}>
-                      {[0, 1, 2].map((i) => (
-                        <span key={i} className={`diff-dot ${i < info.dots ? 'on' : ''}`} />
-                      ))}
-                    </span>
-                  </div>
-
-                  {readingLevel === book.level && (
-                    <p className="recommended-tag">
-                      <TrophyIcon size={12} /> Recommended for you
-                    </p>
-                  )}
-
-                  <p className="small book-card-desc">{book.description}</p>
-
-                  {started ? (
-                    <>
-                      <div className="progress-track" style={{ marginBottom: 4 }}>
-                        <div className="progress-fill" style={{ width: `${pct}%` }} />
-                      </div>
-                      <p className="muted small continue-line" style={{ margin: 0 }}>
-                        {progress.bookCompleted
-                          ? '✓ 완독! 언제든 다시 읽기'
-                          : `이어 읽기 · ${pct}% 진행`}
-                      </p>
-                    </>
-                  ) : (
-                    <p className="muted small" style={{ margin: 0 }}>
-                      {book.chapterCount}개 챕터 · {book.wordCount.toLocaleString()} 단어
-                    </p>
-                  )}
-                </div>
-              </button>
-            );
-          })}
+          {group.books.map(renderBookCard)}
         </div>
       ))}
     </section>
