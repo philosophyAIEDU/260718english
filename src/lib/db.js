@@ -2,7 +2,8 @@
  * IndexedDB wrapper built on the `idb` library.
  *
  * Everything Read & Build persists lives here, in the user's browser only:
- *  - `settings`     : key/value store (Gemini API key, theme preference).
+ *  - `settings`     : key/value store (Gemini API key, theme preference,
+ *                      pinned "favorite" library books).
  *  - `vocab`        : starred vocabulary entries with spaced-repetition state.
  *  - `activity`     : one record per completed analysis (photo or library
  *                      page), used to compute reading streaks and badges.
@@ -202,6 +203,20 @@ export async function getAllBookProgress() {
 export async function saveBookProgress(record) {
   const db = await getDB();
   return db.put('bookProgress', record);
+}
+
+/* ------------------------------ favoriteBooks ---------------------------- */
+
+/** Library books a learner has pinned to the top of the shelf. Stored as a
+ * plain array of bookIds in the settings store — small, no need for a
+ * dedicated object store. */
+export async function getFavoriteBookIds() {
+  const ids = await getSetting('favoriteBookIds');
+  return Array.isArray(ids) ? ids : [];
+}
+
+export async function saveFavoriteBookIds(ids) {
+  return setSetting('favoriteBookIds', ids);
 }
 
 /* -------------------------------- modernPages ---------------------------- */
