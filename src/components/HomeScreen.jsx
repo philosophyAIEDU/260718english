@@ -185,7 +185,7 @@ export default function HomeScreen({
         )}
       </div>
 
-      <ChallengeCheckin />
+      <ChallengeCheckin onGoToLibrary={onLibrary} />
 
       {thisWeekClass && (
         <button className="class-banner" onClick={onOpenClass}>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { logActivity, getAllActivity } from '../lib/db.js';
+import { logActivity, getAllActivity, getSetting } from '../lib/db.js';
 import { isActiveToday } from '../lib/streaks.js';
 import { isFirebaseConfigured, CHALLENGE_CONFIG } from '../lib/challengeConfig.js';
 import {
@@ -45,13 +45,21 @@ import {
  *
  * Renders nothing when CHALLENGE_CONFIG.firebase.projectId is empty, so a
  * deployment that isn't running this cohort is unaffected.
+ *
+ * "들었어요" can't be filed as a bare self-report: the Library reader
+ * (BookReaderScreen.jsx) tracks genuinely-played narration seconds and
+ * writes a `listenGoalMet:<date>` flag once today's assigned pages' worth
+ * has actually played, and this card only allows submitting "listen" mode
+ * for today once that flag is set — otherwise the button is disabled with
+ * an explanation and a link straight to the Library. "읽었어요" stays a
+ * plain self-report, same as always — there's no way to verify reading.
  */
-export default function ChallengeCheckin() {
+export default function ChallengeCheckin({ onGoToLibrary }) {
   if (!isFirebaseConfigured()) return null;
-  return <ChallengeCheckinInner />;
+  return <ChallengeCheckinInner onGoToLibrary={onGoToLibrary} />;
 }
 
-function ChallengeCheckinInner() {
+function ChallengeCheckinInner({ onGoToLibrary }) {
   const [user, setUser] = useState(undefined); // undefined = still checking
   const [me, setMe] = useState(undefined); // undefined = not loaded, null = not joined
   const [error, setError] = useState('');
@@ -66,7 +74,22 @@ function ChallengeCheckinInner() {
   const [existing, setExisting] = useState(undefined); // undefined = loading, null = none yet
   const [editingSubmission, setEditingSubmission] = useState(false);
   const [inApp] = useState(detectInAppBrowser);
+  const [listenVerifiedToday, setListenVerifiedToday] = useState(false);
   const todayISO = today();
+
+  // Set by BookReaderScreen once genuinely-played narration reaches
+  // today's assigned amount (see its maybeAutoCheckin). Only listening
+  // done today is ever tracked, so "들었어요" is only ever certifiable for
+  // today's date — not a past date from the certify-date picker below.
+  useEffect(() => {
+    let alive = true;
+    getSetting(`listenGoalMet:${todayISO}`)
+      .then((v) => alive && setListenVerifiedToday(Boolean(v)))
+      .catch(() => {});
+    return () => {
+      alive = false;
+    };
+  }, [todayISO]);
 
   useEffect(() => onAuthReady(setUser), []);
 
@@ -171,7 +194,17 @@ function ChallengeCheckinInner() {
       }
     );
 
+  // "들었어요" requires the Library reader to have actually recorded enough
+  // genuinely-played narration today (see the listenVerifiedToday effect
+  // above) — never a bare self-report. Only ever checkable for today: past
+  // dates from the certify-date picker have no listening record to verify.
+  const canSubmitListen = mode !== 'listen' || (selectedDate === todayISO && listenVerifiedToday);
+
   const handleSubmit = () => {
+    if (!canSubmitListen) {
+      setError('오늘 분량의 듣기 파일을 실제로 들어야 "들었어요"로 인증돼요. 라이브러리에서 먼저 들어주세요.');
+      return;
+    }
     // saveSubmission's result — not the `existing` state, which run()'s
     // onDone would otherwise read from a stale closure — decides whether
     // the message below reports a late submission.
@@ -483,6 +516,28 @@ function ChallengeCheckinInner() {
               <SpeakerIcon size={16} /> 들었어요
             </button>
           </div>
+          <p className="muted small" style={{ margin: '6px 0 0' }}>
+            "들었어요"는 자기 신고가 아니에요 — 라이브러리에서 오늘 분량의 듣기 파일을
+            실제로 재생해야 자동으로 인증 가능 상태가 됩니다.
+          </p>
+          {mode === 'listen' && !canSubmitListen && (
+            <p className="notice notice-warn" style={{ marginTop: 8 }}>
+              <AlertIcon size={16} />
+              <span>
+                {selectedDate !== todayISO
+                  ? '지난 날짜의 듣기는 확인할 수 없어서, 오늘 날짜로만 "들었어요" 인증이 가능해요.'
+                  : '아직 오늘 분량을 다 듣지 않았어요. 라이브러리에서 오늘 챕터를 끝까지 들으면 이 버튼이 활성화돼요.'}
+                {onGoToLibrary && selectedDate === todayISO && (
+                  <>
+                    {' '}
+                    <button className="link-button" onClick={onGoToLibrary}>
+                      라이브러리에서 듣기
+                    </button>
+                  </>
+                )}
+              </span>
+            </p>
+          )}
           <input
             className="text-input"
             style={{ marginTop: 8 }}
@@ -494,7 +549,7 @@ function ChallengeCheckinInner() {
             className="btn btn-primary btn-block"
             style={{ marginTop: 10 }}
             onClick={handleSubmit}
-            disabled={busy}
+            disabled={busy || !canSubmitListen}
           >
             {busy ? '저장 중…' : existing ? '인증 수정하기' : selectedDate === todayISO ? '오늘 인증하기' : '인증하기'}
           </button>

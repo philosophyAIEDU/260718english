@@ -501,9 +501,17 @@ export default function BookReaderScreen({
   // participant to file for, nothing filed yet today, and it's a real
   // played-through amount (see handleAudioTimeUpdate's seek guarding).
   const maybeAutoCheckin = () => {
+    if (!listenTargetSec || listenSecRef.current < listenTargetSec * LISTEN_CHECKIN_FRACTION) return;
+    // Record — device-locally, regardless of whether there's a challenge
+    // participant to file a Firestore submission for — that today's
+    // listening goal was genuinely met (a real played-through amount, per
+    // handleAudioTimeUpdate's seek/rate guarding). ChallengeCheckin.jsx's
+    // Home check-in card reads this to gate its own "들었어요" option, so
+    // certifying as "listened" always requires actually having listened —
+    // never a bare self-report the way "읽었어요" (unverifiable) is.
+    setSetting(`listenGoalMet:${todayISO}`, true).catch(() => {});
     if (checkinAttemptRef.current || listenCheckedIn) return;
     if (!challengeMe || challengeMe.status === 'out') return;
-    if (!listenTargetSec || listenSecRef.current < listenTargetSec * LISTEN_CHECKIN_FRACTION) return;
     checkinAttemptRef.current = true;
     (async () => {
       try {
