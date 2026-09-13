@@ -20,8 +20,8 @@ export function buildDailyNotice(date = today()) {
     lines.push('챌린지가 모두 끝났어요. 한 달간 정말 고생 많으셨습니다! 🎉');
   } else {
     lines.push(`Day ${day} 인증 안내드려요.`);
-    lines.push('영어 원서 읽기 또는 듣기, 오늘 안에 인증 부탁드립니다 (마감: 오늘 밤 24시).');
-    lines.push('읽기가 부담되시면 라이브러리의 듣기 파일만 들으셔도 인증됩니다 🎧');
+    lines.push('라이브러리에서 오늘 분량의 듣기 파일을 실제로 재생하면 자동으로 인증됩니다 (마감: 오늘 밤 24시).');
+    lines.push('읽기만 하거나 버튼만 눌러서는 인증되지 않으니, 꼭 오디오를 재생해주세요 🎧');
     if (lesson) {
       lines.push('');
       lines.push(`🧑‍💻 이번 주(${week}주차) 앱 빌드 수업: ${lesson.title}`);
