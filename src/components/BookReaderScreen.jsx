@@ -535,7 +535,7 @@ export default function BookReaderScreen({
         setAutoCheckinMsg('오늘 듣기 인증이 자동으로 완료됐어요! 🎧');
       } catch {
         checkinAttemptRef.current = false; // let the next threshold tick retry
-        setAutoCheckinMsg('듣기 인증 자동 저장에 실패했어요. 홈 화면에서 "들었어요"로 인증해주세요.');
+        setAutoCheckinMsg('듣기 인증 자동 저장에 실패했어요. 홈 화면에서 다시 인증해주세요.');
       }
     })();
   };
@@ -757,10 +757,10 @@ export default function BookReaderScreen({
             <strong>{isDayPerChapter ? '명대사 이어 듣기' : '이 챕터 듣기'}</strong>
             <span className="muted small">
               {isDayPerChapter
-                ? '재생을 누르면 이 Day부터 마지막 Day까지 명대사가 자동으로 이어서 낭독돼요. 들어도 챌린지 인증에 인정됩니다.'
+                ? '재생을 누르면 이 Day부터 마지막 Day까지 명대사가 자동으로 이어서 낭독돼요. 챌린지 인증은 이렇게 실제로 듣는 것으로만 확인됩니다.'
                 : listenTargetSec > 0
-                  ? '읽기가 부담스러우면 들어도 됩니다. 오늘 배정된 분량만큼 들으면 아래에서 자동으로 "들었어요" 인증되고, 챕터가 끝나면 다음 챕터로 페이지도 자동으로 넘어가요.'
-                  : '읽기가 부담스러우면 들어도 챌린지 인증에 인정돼요. 다 들었으면 홈 화면에서 "들었어요"로 인증하세요. 챕터가 끝나면 다음 챕터로 페이지가 자동으로 넘어가요.'}
+                  ? '챌린지 인증은 이 오디오를 실제로 듣는 것으로만 확인돼요. 오늘 배정된 분량만큼 들으면 아래에서 자동으로 인증되고, 챕터가 끝나면 다음 챕터로 페이지도 자동으로 넘어가요.'
+                  : '챌린지 인증은 이 오디오를 실제로 듣는 것으로만 확인돼요. 다 들었으면 홈 화면에서 인증하세요. 챕터가 끝나면 다음 챕터로 페이지가 자동으로 넘어가요.'}
               {book.bible && ' 본문의 절 번호를 탭하면 그 절부터 들을 수 있어요 (정확한 타이밍이 아닌 어림값이에요).'}
             </span>
             <audio
@@ -821,7 +821,7 @@ export default function BookReaderScreen({
                     오늘 배정된 분량을 다 들었어요.{' '}
                     {isFirebaseConfigured() && challengeMe
                       ? '인증을 저장하는 중…'
-                      : '홈 화면에서 "들었어요"로 인증하세요.'}
+                      : '홈 화면에서 인증하세요.'}
                   </p>
                 ) : (
                   <p className="muted small" style={{ margin: '6px 0 0' }}>
