@@ -171,10 +171,19 @@ export function normalizeNick(s) {
   return String(s || '').trim().replace(/\s+/g, ' ');
 }
 
-/** Is this date a challenge-wide holiday (CHALLENGE_CONFIG.holidays)? Everyone
- * is exempt on these dates — no per-participant setup needed. */
+/** Is this date a day nobody needs to certify on — a specific listed holiday
+ * (CHALLENGE_CONFIG.holidays) or, when excludeWeekends is on, a Saturday or
+ * Sunday? Both are evaluated fresh from plain date arithmetic every time,
+ * not stored per participant, so turning excludeWeekends on retroactively
+ * exempts every weekend already in the past too — nothing to migrate or
+ * fix up per participant. */
 export function isHoliday(date) {
-  return (CHALLENGE_CONFIG.holidays || []).includes(date);
+  if ((CHALLENGE_CONFIG.holidays || []).includes(date)) return true;
+  if (CHALLENGE_CONFIG.excludeWeekends) {
+    const day = toDate(date).getUTCDay(); // 0 = Sunday, 6 = Saturday
+    if (day === 0 || day === 6) return true;
+  }
+  return false;
 }
 
 /**
