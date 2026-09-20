@@ -156,7 +156,7 @@ export default function HomeScreen({
           <div className="hero-stats">
             <div className="hero-stat">
               <strong>{progress.totalDays}일</strong>
-              <span>주 7일 인증</span>
+              <span>주 5일 인증</span>
             </div>
             <div className="hero-stat">
               <strong>{CURRICULUM.length}회</strong>
@@ -234,10 +234,10 @@ export default function HomeScreen({
 
       <div className="section-head">
         <span className="eyebrow">오늘의 학습</span>
-        <h2>읽거나, 들으세요</h2>
+        <h2>읽으면서, 들으세요</h2>
         <p>
-          읽기가 부담스러우면 라이브러리에서 듣기 파일을 재생해도 인증으로
-          인정됩니다.
+          라이브러리에서 그날 분량의 듣기 파일을 실제로 재생해야 인증됩니다.
+          눈으로 함께 읽어도 좋아요.
         </p>
       </div>
       <div className="entry-grid">
@@ -310,9 +310,9 @@ export default function HomeScreen({
                 1일 → 3일 → 7일 → 14일 간격으로 Review 탭에 다시 나타납니다.
               </li>
               <li>
-                <strong>매일 인증하기</strong> — 홈 화면의 “오늘 인증하기”로 읽기
-                또는 듣기를 인증하세요. 주 7일, 미인증 {CHALLENGE_CONFIG.kickoutThreshold}
-                회가 되면 킥아웃 대상이 됩니다.
+                <strong>매일 인증하기</strong> — 평일마다 그날 mp3를 실제로 들으면
+                홈 화면에서 자동으로 인증됩니다(주말 제외). 미인증{' '}
+                {CHALLENGE_CONFIG.kickoutThreshold}회가 되면 킥아웃 대상이 됩니다.
               </li>
               <li>
                 <strong>주 1회 앱 빌드 수업</strong> — 이번 주 수업에서 무엇을

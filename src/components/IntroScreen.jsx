@@ -43,7 +43,7 @@ export default function IntroScreen({ onStart, onBack, startLabel = '시작하�
         <div className="hero-stats">
           <div className="hero-stat">
             <strong>{totalDays}일</strong>
-            <span>주 7일 인증</span>
+            <span>주 5일 인증</span>
           </div>
           <div className="hero-stat">
             <strong>{CURRICULUM.length}회</strong>
